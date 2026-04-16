@@ -26,15 +26,13 @@ if ! command -v flutter >/dev/null 2>&1; then
     exit 1
 fi
 
-# Detect browser
-if command -v chromium >/dev/null 2>&1; then
-    BROWSER="chromium"
-elif command -v google-chrome >/dev/null 2>&1; then
+# Detect browser (Flutter expects 'chrome' as device name)
+if command -v google-chrome >/dev/null 2>&1 || command -v google-chrome-stable >/dev/null 2>&1; then
     BROWSER="chrome"
-elif command -v brave-browser >/dev/null 2>&1; then
-    BROWSER="brave"
+elif command -v chromium >/dev/null 2>&1; then
+    BROWSER="chrome"  # Flutter uses 'chrome' for Chromium too
 else
-    echo -e "${RED}Error: No supported browser found (Chrome/Chromium/Brave)${RESET}"
+    echo -e "${RED}Error: Chrome/Chromium not found${RESET}"
     exit 1
 fi
 
