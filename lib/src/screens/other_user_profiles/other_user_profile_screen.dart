@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../providers/auth/auth_provider.dart';
-import '../../../providers/social/social_provider.dart';
+import '../../providers/auth/auth_provider.dart';
+import '../../providers/social/social_provider.dart';
 import 'profile_reviews_section.dart';
 
 const _kForestGreen = Color(0xFF2D6A4F);

@@ -10,8 +10,8 @@ import '../screens/dashboard/finance/finance_dashboard.dart';
 import '../screens/dashboard/home-owner/home_owner_dashboard.dart';
 import '../screens/dashboard/operartions/operations_dashboard.dart';
 import '../screens/dashboard/support/support_dashboard.dart';
+import '../screens/other_user_profiles/other_user_profile_screen.dart';
 import '../screens/profile/profile_screen.dart';
-import '../screens/shared/profiles/other_user_profile_screen.dart';
 import '../screens/splash_screen.dart';
 import '../services/secure_storage.dart';
 

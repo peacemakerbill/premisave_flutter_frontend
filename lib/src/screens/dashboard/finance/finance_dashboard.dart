@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../models/auth/user_model.dart';
 import '../../../providers/auth/auth_provider.dart';
-import '../../shared/profiles/users_content.dart';
+import '../../other_user_profiles/users_content.dart';
 
 class FinanceDashboard extends ConsumerStatefulWidget {
   const FinanceDashboard({super.key});
