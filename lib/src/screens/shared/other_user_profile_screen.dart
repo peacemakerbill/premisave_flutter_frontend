@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth/auth_provider.dart';
 import '../../providers/social/social_provider.dart';
+import 'profile_reviews_section.dart';
 
 const _kForestGreen = Color(0xFF2D6A4F);
 const _kGreenLight = Color(0xFF52B788);
@@ -37,7 +38,6 @@ class _OtherUserProfileScreenState
 
   Future<void> _load() async {
     final notifier = ref.read(socialProvider.notifier);
-    // Record view (fire-and-forget, don't await before showing UI)
     notifier.recordProfileView(widget.userId);
 
     final profile = await notifier.getUserProfile(widget.userId);
@@ -85,8 +85,7 @@ class _OtherUserProfileScreenState
           children: [
             Icon(Icons.person_off_rounded, size: 64, color: Colors.grey[300]),
             const SizedBox(height: 16),
-            Text(_error!,
-                style: TextStyle(color: Colors.grey[500], fontSize: 16)),
+            Text(_error!, style: TextStyle(color: Colors.grey[500], fontSize: 16)),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
@@ -135,6 +134,15 @@ class _OtherUserProfileScreenState
                   const SizedBox(height: 16),
                 ],
                 _buildRoleCard(profile),
+                if (profile.country != null && profile.country!.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  _buildInfoCard(Icons.location_on_rounded, 'Country', profile.country!),
+                ],
+                const SizedBox(height: 16),
+                ReviewsSection(
+                  targetId: profile.id,
+                  isOwnProfile: isOwnProfile,
+                ),
                 const SizedBox(height: 80),
               ],
             ),
@@ -165,15 +173,12 @@ class _OtherUserProfileScreenState
             icon: AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
               child: Icon(
-                isLiked
-                    ? Icons.favorite_rounded
-                    : Icons.favorite_border_rounded,
+                isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
                 key: ValueKey(isLiked),
                 color: isLiked ? Colors.red[300] : Colors.white,
               ),
             ),
-            onPressed: () =>
-                ref.read(socialProvider.notifier).toggleLike(profile.id),
+            onPressed: () => ref.read(socialProvider.notifier).toggleLike(profile.id),
           ),
         IconButton(
           icon: const Icon(Icons.share_rounded, color: Colors.white),
@@ -226,11 +231,9 @@ class _OtherUserProfileScreenState
                         decoration: BoxDecoration(
                           color: _kAmber,
                           shape: BoxShape.circle,
-                          border:
-                          Border.all(color: Colors.white, width: 2),
+                          border: Border.all(color: Colors.white, width: 2),
                         ),
-                        child: const Icon(Icons.verified,
-                            size: 13, color: Colors.white),
+                        child: const Icon(Icons.verified, size: 13, color: Colors.white),
                       ),
                     ),
                 ],
@@ -264,64 +267,67 @@ class _OtherUserProfileScreenState
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 10,
-              offset: const Offset(0, 3)),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 10, offset: const Offset(0, 3))],
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: _kGreenSurface,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.person_rounded,
-                color: _kForestGreen, size: 22),
+            decoration: BoxDecoration(color: _kGreenSurface, borderRadius: BorderRadius.circular(12)),
+            child: const Icon(Icons.person_rounded, color: _kForestGreen, size: 22),
           ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  profile.fullName,
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+                Text(profile.fullName, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
                 const SizedBox(height: 3),
-                Text(
-                  '@${profile.username}',
-                  style: TextStyle(fontSize: 13, color: Colors.grey[500]),
-                ),
+                Text('@${profile.username}', style: TextStyle(fontSize: 13, color: Colors.grey[500])),
               ],
             ),
           ),
           if (profile.verified)
             Container(
-              padding:
-              const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: _kAmberSurface,
-                borderRadius: BorderRadius.circular(20),
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(color: _kAmberSurface, borderRadius: BorderRadius.circular(20)),
               child: Row(
                 children: const [
                   Icon(Icons.verified_rounded, size: 13, color: _kAmber),
                   SizedBox(width: 4),
-                  Text('Verified',
-                      style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: _kAmber)),
+                  Text('Verified', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _kAmber)),
                 ],
               ),
             ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoCard(IconData icon, String label, String value) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: _kSoilLight,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _kSoil.withOpacity(0.15)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: _kSoil.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+            child: Icon(icon, color: _kSoil, size: 22),
+          ),
+          const SizedBox(width: 14),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: TextStyle(fontSize: 11, color: _kSoil, fontWeight: FontWeight.w500)),
+              const SizedBox(height: 2),
+              Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _kSoil)),
+            ],
+          ),
         ],
       ),
     );
@@ -331,14 +337,8 @@ class _OtherUserProfileScreenState
     if (_isLoadingStats) {
       return Container(
         height: 100,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: const Center(
-          child: CircularProgressIndicator(
-              strokeWidth: 2, color: _kGreenLight),
-        ),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+        child: const Center(child: CircularProgressIndicator(strokeWidth: 2, color: _kGreenLight)),
       );
     }
 
@@ -349,99 +349,49 @@ class _OtherUserProfileScreenState
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 10,
-              offset: const Offset(0, 3)),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 10, offset: const Offset(0, 3))],
       ),
       child: Row(
         children: [
-          _StatCell(
-            value: '${s.followerCount}',
-            label: 'Followers',
-            color: _kForestGreen,
-          ),
+          _StatCell(value: '${s.followerCount}', label: 'Followers', color: _kForestGreen),
           _divider(),
-          _StatCell(
-            value: '${s.followingCount}',
-            label: 'Following',
-            color: _kGreenLight,
-          ),
+          _StatCell(value: '${s.followingCount}', label: 'Following', color: _kGreenLight),
           _divider(),
-          _StatCell(
-            value: '${s.likeCount}',
-            label: 'Likes',
-            color: Colors.red[400]!,
-          ),
+          _StatCell(value: '${s.likeCount}', label: 'Likes', color: Colors.red[400]!),
           _divider(),
-          _StatCell(
-            value: '${s.totalProfileViews}',
-            label: 'Views',
-            color: _kSoil,
-          ),
+          _StatCell(value: '${s.totalProfileViews}', label: 'Views', color: _kSoil),
           _divider(),
-          _StatCell(
-            value: s.averageRating.toStringAsFixed(1),
-            label: 'Rating',
-            color: _kAmber,
-            icon: Icons.star_rounded,
-          ),
+          _StatCell(value: s.averageRating.toStringAsFixed(1), label: 'Rating', color: _kAmber, icon: Icons.star_rounded),
         ],
       ),
     );
   }
 
-  Widget _divider() => Container(
-    width: 1,
-    height: 40,
-    color: Colors.grey[200],
-  );
+  Widget _divider() => Container(width: 1, height: 40, color: Colors.grey[200]);
 
-  Widget _buildActionButtons(
-      PublicUserProfile profile,
-      bool isLiked,
-      bool isFollowing,
-      ) {
+  Widget _buildActionButtons(PublicUserProfile profile, bool isLiked, bool isFollowing) {
     return Row(
       children: [
         Expanded(
           flex: 3,
           child: GestureDetector(
-            onTap: () =>
-                ref.read(socialProvider.notifier).toggleFollow(profile.id),
+            onTap: () => ref.read(socialProvider.notifier).toggleFollow(profile.id),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 250),
               padding: const EdgeInsets.symmetric(vertical: 14),
               decoration: BoxDecoration(
                 color: isFollowing ? _kGreenSurface : _kForestGreen,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: isFollowing
-                      ? _kForestGreen.withOpacity(0.4)
-                      : Colors.transparent,
-                ),
+                border: Border.all(color: isFollowing ? _kForestGreen.withOpacity(0.4) : Colors.transparent),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    isFollowing
-                        ? Icons.how_to_reg_rounded
-                        : Icons.person_add_alt_1_rounded,
-                    size: 18,
-                    color: isFollowing ? _kForestGreen : Colors.white,
-                  ),
+                  Icon(isFollowing ? Icons.how_to_reg_rounded : Icons.person_add_alt_1_rounded,
+                      size: 18, color: isFollowing ? _kForestGreen : Colors.white),
                   const SizedBox(width: 8),
-                  Text(
-                    isFollowing ? 'Following' : 'Follow',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: isFollowing ? _kForestGreen : Colors.white,
-                    ),
-                  ),
+                  Text(isFollowing ? 'Following' : 'Follow',
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: isFollowing ? _kForestGreen : Colors.white)),
                 ],
               ),
             ),
@@ -451,39 +401,23 @@ class _OtherUserProfileScreenState
         Expanded(
           flex: 2,
           child: GestureDetector(
-            onTap: () =>
-                ref.read(socialProvider.notifier).toggleLike(profile.id),
+            onTap: () => ref.read(socialProvider.notifier).toggleLike(profile.id),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 250),
               padding: const EdgeInsets.symmetric(vertical: 14),
               decoration: BoxDecoration(
-                color: isLiked
-                    ? Colors.red[50]
-                    : Colors.white,
+                color: isLiked ? Colors.red[50] : Colors.white,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: isLiked ? Colors.red[300]! : Colors.grey[300]!,
-                ),
+                border: Border.all(color: isLiked ? Colors.red[300]! : Colors.grey[300]!),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    isLiked
-                        ? Icons.favorite_rounded
-                        : Icons.favorite_border_rounded,
-                    size: 18,
-                    color: isLiked ? Colors.red[400] : Colors.grey[500],
-                  ),
+                  Icon(isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                      size: 18, color: isLiked ? Colors.red[400] : Colors.grey[500]),
                   const SizedBox(width: 8),
-                  Text(
-                    isLiked ? 'Liked' : 'Like',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: isLiked ? Colors.red[400] : Colors.grey[600],
-                    ),
-                  ),
+                  Text(isLiked ? 'Liked' : 'Like',
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: isLiked ? Colors.red[400] : Colors.grey[600])),
                 ],
               ),
             ),
@@ -505,33 +439,18 @@ class _OtherUserProfileScreenState
         children: [
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: _kSoil.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
+            decoration: BoxDecoration(color: _kSoil.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
             child: const Icon(Icons.badge_rounded, color: _kSoil, size: 22),
           ),
           const SizedBox(width: 14),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Account Type',
-                style: TextStyle(
-                    fontSize: 11,
-                    color: _kSoil,
-                    fontWeight: FontWeight.w500),
-              ),
+              const Text('Account Type', style: TextStyle(fontSize: 11, color: _kSoil, fontWeight: FontWeight.w500)),
               const SizedBox(height: 2),
               Text(
-                profile.displayRole.isNotEmpty
-                    ? '${profile.displayRole[0].toUpperCase()}${profile.displayRole.substring(1)}'
-                    : profile.role,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: _kSoil,
-                ),
+                profile.displayRole.isNotEmpty ? profile.displayRole.capitalize() : profile.role,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _kSoil),
               ),
             ],
           ),
@@ -541,20 +460,13 @@ class _OtherUserProfileScreenState
   }
 }
 
-// ─── Stat Cell ────────────────────────────────────────────────────────────────
-
 class _StatCell extends StatelessWidget {
   final String value;
   final String label;
   final Color color;
   final IconData? icon;
 
-  const _StatCell({
-    required this.value,
-    required this.label,
-    required this.color,
-    this.icon,
-  });
+  const _StatCell({required this.value, required this.label, required this.color, this.icon});
 
   @override
   Widget build(BuildContext context) {
@@ -567,31 +479,14 @@ class _StatCell extends StatelessWidget {
               children: [
                 Icon(icon, size: 14, color: color),
                 const SizedBox(width: 3),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: color,
-                  ),
-                ),
+                Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: color)),
               ],
             ),
           ] else ...[
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: color,
-              ),
-            ),
+            Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: color)),
           ],
           const SizedBox(height: 3),
-          Text(
-            label,
-            style: const TextStyle(fontSize: 11, color: Colors.grey),
-          ),
+          Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
         ],
       ),
     );

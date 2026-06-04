@@ -181,8 +181,7 @@ class _UsersContentState extends ConsumerState<UsersContent> {
           )
               : null,
           border: InputBorder.none,
-          contentPadding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
       ),
     );
@@ -273,8 +272,7 @@ class _UsersContentState extends ConsumerState<UsersContent> {
               isFollowing: socialState.followingUserIds.contains(user.id),
               onTap: () => _openProfile(context, user),
               onLike: () => ref.read(socialProvider.notifier).toggleLike(user.id),
-              onFollow: () =>
-                  ref.read(socialProvider.notifier).toggleFollow(user.id),
+              onFollow: () => ref.read(socialProvider.notifier).toggleFollow(user.id),
             );
           },
         ),
@@ -288,8 +286,7 @@ class _UsersContentState extends ConsumerState<UsersContent> {
         padding: const EdgeInsets.symmetric(vertical: 60),
         child: Column(
           children: [
-            Icon(Icons.people_outline_rounded,
-                size: 64, color: Colors.grey[300]),
+            Icon(Icons.people_outline_rounded, size: 64, color: Colors.grey[300]),
             const SizedBox(height: 16),
             Text(
               _isSearchActive ? 'No users match your search' : 'No users found',
@@ -313,19 +310,16 @@ class _UsersContentState extends ConsumerState<UsersContent> {
           children: [
             Icon(Icons.error_outline_rounded, size: 52, color: Colors.red[300]),
             const SizedBox(height: 12),
-            Text(error,
-                style: TextStyle(color: Colors.red[400], fontSize: 14)),
+            Text(error, style: TextStyle(color: Colors.red[400], fontSize: 14)),
             const SizedBox(height: 16),
             ElevatedButton.icon(
-              onPressed: () =>
-                  ref.read(socialProvider.notifier).loadAllUsers(),
+              onPressed: () => ref.read(socialProvider.notifier).loadAllUsers(),
               icon: const Icon(Icons.refresh_rounded, size: 18),
               label: const Text('Retry'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: _kForestGreen,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
           ],
@@ -414,8 +408,7 @@ class _UserCard extends StatelessWidget {
                           color: _kGreenLight,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.check,
-                            size: 11, color: Colors.white),
+                        child: const Icon(Icons.check, size: 11, color: Colors.white),
                       ),
                     ),
                 ],
@@ -443,8 +436,7 @@ class _UserCard extends StatelessWidget {
               const SizedBox(height: 4),
               // Role badge
               Container(
-                padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: _kAmberSurface,
                   borderRadius: BorderRadius.circular(8),
@@ -464,9 +456,7 @@ class _UserCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   _ActionIconBtn(
-                    icon: isLiked
-                        ? Icons.favorite_rounded
-                        : Icons.favorite_border_rounded,
+                    icon: isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
                     color: isLiked ? Colors.red : Colors.grey[400]!,
                     onTap: onLike,
                   ),
@@ -478,8 +468,7 @@ class _UserCard extends StatelessWidget {
                         duration: const Duration(milliseconds: 200),
                         padding: const EdgeInsets.symmetric(vertical: 7),
                         decoration: BoxDecoration(
-                          color:
-                          isFollowing ? _kGreenSurface : _kForestGreen,
+                          color: isFollowing ? _kGreenSurface : _kForestGreen,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(

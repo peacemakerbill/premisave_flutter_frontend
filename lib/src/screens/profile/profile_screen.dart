@@ -23,7 +23,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Future<void> _refreshProfile() async {
     setState(() => _isRefreshing = true);
-    await Future.delayed(const Duration(milliseconds: 500));
+    await Future.delayed(const Duration(milliseconds: 800));
     setState(() => _isRefreshing = false);
   }
 
@@ -85,10 +85,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         title: const Text('Select Profile Picture'),
         content: const Text('Choose an image from your gallery.'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
@@ -225,7 +222,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => context.go('/'),
-          tooltip: 'Back',
         ),
         actions: [
           IconButton(
@@ -233,11 +229,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                 : const Icon(Icons.refresh_rounded),
             onPressed: (_isRefreshing || _isUploading) ? null : _refreshProfile,
-            tooltip: 'Refresh',
           ),
           IconButton(
             icon: const Icon(Icons.logout_rounded),
-            tooltip: 'Logout',
             onPressed: () => ref.read(authProvider.notifier).confirmLogout(context),
           ),
         ],
@@ -253,6 +247,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               _buildHeroSection(user, theme, isLargeScreen),
               const SizedBox(height: 24),
               _buildCompletionCard(user, theme),
+              const SizedBox(height: 20),
+              _buildDetailedInfoSection(user, theme),
               const SizedBox(height: 20),
               _buildActionCards(context, user, theme),
               const SizedBox(height: 20),
@@ -272,75 +268,98 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [BoxShadow(color: theme.colorScheme.primary.withOpacity(0.08), blurRadius: 24)],
       ),
-      child: Column(children: [
-        GestureDetector(
-          onTap: _isUploading ? null : _showImagePickerDialog,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: theme.colorScheme.background,
-                  boxShadow: [BoxShadow(color: theme.colorScheme.primary.withOpacity(0.2), blurRadius: 16)],
-                ),
-                child: UserAvatar(
-                  imageUrl: user.profilePictureUrl.isNotEmpty ? user.profilePictureUrl : null,
-                  radius: isLargeScreen ? 70 : 56,
-                  onTap: null,
-                ),
-              ),
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: Container(
-                  padding: const EdgeInsets.all(10),
+      child: Column(
+        children: [
+          GestureDetector(
+            onTap: _isUploading ? null : _showImagePickerDialog,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Container(
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.primary,
                     shape: BoxShape.circle,
-                    boxShadow: [BoxShadow(color: theme.colorScheme.primary.withOpacity(0.3), blurRadius: 8)],
+                    color: theme.colorScheme.background,
+                    boxShadow: [BoxShadow(color: theme.colorScheme.primary.withOpacity(0.2), blurRadius: 16)],
                   ),
-                  child: Icon(Icons.camera_alt_rounded, color: theme.colorScheme.onPrimary, size: 18),
+                  child: UserAvatar(
+                    imageUrl: user.profilePictureUrl.isNotEmpty ? user.profilePictureUrl : null,
+                    radius: isLargeScreen ? 70 : 56,
+                  ),
                 ),
-              ),
-            ],
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary,
+                      shape: BoxShape.circle,
+                      boxShadow: [BoxShadow(color: theme.colorScheme.primary.withOpacity(0.3), blurRadius: 8)],
+                    ),
+                    child: Icon(Icons.camera_alt_rounded, color: theme.colorScheme.onPrimary, size: 18),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: 20),
-        Text(
-          '${user.firstName} ${user.lastName}',
-          style: TextStyle(fontSize: isLargeScreen ? 24 : 20, fontWeight: FontWeight.w700, color: theme.colorScheme.onSurface),
-          textAlign: TextAlign.center,
-        ),
-        if (user.username.isNotEmpty) ...[
-          const SizedBox(height: 6),
-          Text('@${user.username}', style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.w500)),
+          const SizedBox(height: 20),
+          Text(
+            '${user.firstName} ${user.lastName}',
+            style: TextStyle(fontSize: isLargeScreen ? 24 : 20, fontWeight: FontWeight.w700, color: theme.colorScheme.onSurface),
+            textAlign: TextAlign.center,
+          ),
+          if (user.username.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text('@${user.username}', style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.w500)),
+          ],
         ],
-        const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(children: [
-            _buildContactRow(Icons.email_rounded, user.email, theme, true),
-            if (user.phoneNumber.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              _buildContactRow(Icons.phone_rounded, user.phoneNumber, theme, false),
-            ],
-          ]),
-        ),
-      ]),
+      ),
     );
   }
 
-  Widget _buildContactRow(IconData icon, String text, ThemeData theme, bool primary) {
-    return Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-      Icon(icon, size: 18, color: primary ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant),
-      const SizedBox(width: 10),
-      Flexible(child: Text(text, style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: primary ? FontWeight.w500 : FontWeight.w400))),
-    ]);
+  Widget _buildDetailedInfoSection(user, ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Account Information', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface)),
+          const SizedBox(height: 16),
+          _buildInfoRow(Icons.email_rounded, 'Email', user.email, theme),
+          if (user.phoneNumber.isNotEmpty) _buildInfoRow(Icons.phone_rounded, 'Phone Number', user.phoneNumber, theme),
+          if (user.address1.isNotEmpty) _buildInfoRow(Icons.home_rounded, 'Address Line 1', user.address1, theme),
+          if (user.address2.isNotEmpty) _buildInfoRow(Icons.home_work_rounded, 'Address Line 2', user.address2, theme),
+          if (user.country.isNotEmpty) _buildInfoRow(Icons.location_on_rounded, 'Country', user.country, theme),
+          if (user.language.isNotEmpty) _buildInfoRow(Icons.language_rounded, 'Preferred Language', user.language, theme),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String label, String value, ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        children: [
+          Icon(icon, color: theme.colorScheme.primary, size: 24),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurface.withOpacity(0.7))),
+                Text(value, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildCompletionCard(user, ThemeData theme) {
@@ -357,10 +376,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               children: [
                 Container(
                   padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
+                  decoration: BoxDecoration(color: theme.colorScheme.primary.withOpacity(0.1), shape: BoxShape.circle),
                   child: Icon(Icons.analytics_rounded, color: theme.colorScheme.primary, size: 22),
                 ),
                 const SizedBox(width: 12),
@@ -375,10 +391,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               children: [
                 Text('${completionPercentage.toInt()}% Complete', style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurface.withOpacity(0.6))),
                 if (completionPercentage < 100)
-                  TextButton(
-                    onPressed: () => _showEditProfileDialog(context, user),
-                    child: const Text('Complete Profile'),
-                  ),
+                  TextButton(onPressed: () => _showEditProfileDialog(context, user), child: const Text('Complete Profile')),
               ],
             ),
           ],
