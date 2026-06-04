@@ -5,6 +5,7 @@ import '../../../models/auth/user_model.dart';
 import '../../../providers/auth/auth_provider.dart';
 import '../../shared/about_content.dart';
 import '../../shared/contact_content.dart';
+import '../../shared/users_content.dart';
 import 'contents/client_dashboard_content.dart';
 import 'contents/client_explore_content.dart';
 import 'contents/client_bookings_content.dart';
@@ -44,6 +45,7 @@ class _ClientDashboardState extends ConsumerState<ClientDashboard> {
       'route': '/client/transactions'
     },
     {'icon': Icons.message, 'label': 'Messages', 'route': '/client/messages'},
+    {'icon': Icons.people_rounded, 'label': 'People', 'route': '/client/people'},
   ];
 
   void _navigateToRoute(String route) {
@@ -66,6 +68,8 @@ class _ClientDashboardState extends ConsumerState<ClientDashboard> {
         return const ClientTransactionsContent();
       case '/client/messages':
         return const ClientMessagesContent();
+      case '/client/people':
+        return const UsersContent();
       case '/client/about':
         return const AboutContent();
       case '/client/contact':
