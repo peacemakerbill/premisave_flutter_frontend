@@ -456,7 +456,9 @@ class _UserCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   _ActionIconBtn(
-                    icon: isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                    icon: isLiked
+                        ? Icons.favorite_rounded
+                        : Icons.favorite_border_rounded,
                     color: isLiked ? Colors.red : Colors.grey[400]!,
                     onTap: onLike,
                   ),

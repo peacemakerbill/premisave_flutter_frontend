@@ -218,7 +218,7 @@ class SocialNotifier extends StateNotifier<SocialState> {
     );
   }
 
-  // ==================== BASIC METHODS ====================
+  // ==================== USERS ====================
   Future<void> loadAllUsers() async {
     state = state.copyWith(isLoadingUsers: true, error: null);
     try {
@@ -239,7 +239,11 @@ class SocialNotifier extends StateNotifier<SocialState> {
     }
     state = state.copyWith(isSearching: true, error: null);
     try {
-      final res = await _dio.get('/profile/search', queryParameters: {'query': query.trim()}, options: _auth);
+      final res = await _dio.get(
+        '/profile/search',
+        queryParameters: {'query': query.trim()},
+        options: _auth,
+      );
       final results = (res.data as List)
           .map((e) => PublicUserProfile.fromJson(e as Map<String, dynamic>))
           .toList();
@@ -266,7 +270,10 @@ class SocialNotifier extends StateNotifier<SocialState> {
         _dio.get('/social/stats/$userId', options: _auth),
         _dio.get('/profile/views/stats', queryParameters: {'userId': userId}, options: _auth),
       ]);
-      return UserStats.fromSocialAndViews(results[0].data as Map<String, dynamic>, results[1].data as Map<String, dynamic>);
+      return UserStats.fromSocialAndViews(
+        results[0].data as Map<String, dynamic>,
+        results[1].data as Map<String, dynamic>,
+      );
     } catch (_) {
       return const UserStats();
     }
@@ -278,7 +285,7 @@ class SocialNotifier extends StateNotifier<SocialState> {
     } catch (_) {}
   }
 
-  // ==================== SOCIAL ACTIONS ====================
+  // ==================== LIKE / FOLLOW ====================
   Future<void> toggleLike(String targetId) async {
     final isLiked = state.likedUserIds.contains(targetId);
     final updated = Set<String>.from(state.likedUserIds);
@@ -349,13 +356,19 @@ class SocialNotifier extends StateNotifier<SocialState> {
   Future<List<UserReview>> getReviews(String targetId) async {
     try {
       final res = await _dio.get('/social/reviews/$targetId', options: _auth);
-      return (res.data as List).map((e) => UserReview.fromJson(e as Map<String, dynamic>)).toList();
+      return (res.data as List)
+          .map((e) => UserReview.fromJson(e as Map<String, dynamic>))
+          .toList();
     } catch (_) {
       return [];
     }
   }
 
-  Future<String?> submitReview({required String targetId, required int rating, String? comment}) async {
+  Future<String?> submitReview({
+    required String targetId,
+    required int rating,
+    String? comment,
+  }) async {
     return _performReviewAction('/social/review', 'POST', {
       'targetId': targetId,
       'rating': rating,
@@ -363,7 +376,11 @@ class SocialNotifier extends StateNotifier<SocialState> {
     });
   }
 
-  Future<String?> editReview({required String reviewId, required int rating, String? comment}) async {
+  Future<String?> editReview({
+    required String reviewId,
+    required int rating,
+    String? comment,
+  }) async {
     return _performReviewAction('/social/review', 'PUT', {
       'reviewId': reviewId,
       'rating': rating,
