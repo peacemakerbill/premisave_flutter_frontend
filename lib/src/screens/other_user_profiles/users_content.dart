@@ -28,7 +28,10 @@ class _UsersContentState extends ConsumerState<UsersContent> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(socialProvider.notifier).loadAllUsers();
+      final notifier = ref.read(socialProvider.notifier);
+      notifier.loadAllUsers();
+      notifier.loadMyLikes();
+      notifier.loadMyFollowing();
     });
     _searchCtrl.addListener(_onSearchChanged);
   }
@@ -373,7 +376,6 @@ class _UserCard extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Avatar
               Stack(
                 children: [
                   CircleAvatar(
@@ -414,7 +416,6 @@ class _UserCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 10),
-              // Name
               Text(
                 user.fullName,
                 style: const TextStyle(
@@ -434,7 +435,6 @@ class _UserCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 4),
-              // Role badge
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
@@ -451,7 +451,6 @@ class _UserCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              // Action buttons
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

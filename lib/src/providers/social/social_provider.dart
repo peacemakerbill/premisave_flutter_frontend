@@ -212,6 +212,17 @@ class SocialNotifier extends StateNotifier<SocialState> {
       connectTimeout: const Duration(seconds: 15),
       receiveTimeout: const Duration(seconds: 15),
     ));
+
+    // Auto load likes and following when provider initializes
+    _loadInitialSocialData();
+  }
+
+  Future<void> _loadInitialSocialData() async {
+    await Future.delayed(const Duration(milliseconds: 150)); // Give time for auth
+    await Future.wait([
+      loadMyLikes(),
+      loadMyFollowing(),
+    ]);
   }
 
   String? get _token => _ref.read(authProvider).token;
@@ -234,7 +245,13 @@ class SocialNotifier extends StateNotifier<SocialState> {
       final likes = (res.data as List)
           .map((e) => PublicUserProfile.fromJson(e as Map<String, dynamic>))
           .toList();
-      state = state.copyWith(myLikedUsers: likes);
+
+      final likeIds = likes.map((u) => u.id).toSet();
+
+      state = state.copyWith(
+        myLikedUsers: likes,
+        likedUserIds: likeIds,
+      );
     } catch (e) {
       print('Failed to load my likes: $e');
     }
@@ -246,7 +263,13 @@ class SocialNotifier extends StateNotifier<SocialState> {
       final following = (res.data as List)
           .map((e) => PublicUserProfile.fromJson(e as Map<String, dynamic>))
           .toList();
-      state = state.copyWith(myFollowingUsers: following);
+
+      final followingIds = following.map((u) => u.id).toSet();
+
+      state = state.copyWith(
+        myFollowingUsers: following,
+        followingUserIds: followingIds,
+      );
     } catch (e) {
       print('Failed to load my following: $e');
     }
