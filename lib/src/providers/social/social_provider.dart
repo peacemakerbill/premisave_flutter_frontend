@@ -42,7 +42,7 @@ class PublicUserProfile {
   factory PublicUserProfile.fromJson(Map<String, dynamic> json) {
     return PublicUserProfile(
       id: json['id'] ?? '',
-      username: json['username'] ?? json['displayUsername'] ?? '',
+      username: json['username'] ?? '',
       firstName: json['firstName'] ?? '',
       middleName: json['middleName'] ?? '',
       lastName: json['lastName'] ?? '',
@@ -160,6 +160,8 @@ class SocialState {
   final String? error;
   final Set<String> likedUserIds;
   final Set<String> followingUserIds;
+  final List<PublicUserProfile> myLikedUsers;
+  final List<PublicUserProfile> myFollowingUsers;
 
   const SocialState({
     this.users = const [],
@@ -169,6 +171,8 @@ class SocialState {
     this.error,
     this.likedUserIds = const {},
     this.followingUserIds = const {},
+    this.myLikedUsers = const [],
+    this.myFollowingUsers = const [],
   });
 
   SocialState copyWith({
@@ -179,6 +183,8 @@ class SocialState {
     String? error,
     Set<String>? likedUserIds,
     Set<String>? followingUserIds,
+    List<PublicUserProfile>? myLikedUsers,
+    List<PublicUserProfile>? myFollowingUsers,
   }) {
     return SocialState(
       users: users ?? this.users,
@@ -188,6 +194,8 @@ class SocialState {
       error: error,
       likedUserIds: likedUserIds ?? this.likedUserIds,
       followingUserIds: followingUserIds ?? this.followingUserIds,
+      myLikedUsers: myLikedUsers ?? this.myLikedUsers,
+      myFollowingUsers: myFollowingUsers ?? this.myFollowingUsers,
     );
   }
 }
@@ -218,7 +226,34 @@ class SocialNotifier extends StateNotifier<SocialState> {
     );
   }
 
+  // ==================== LOAD MY LIKES & FOLLOWING ====================
+
+  Future<void> loadMyLikes() async {
+    try {
+      final res = await _dio.get('/social/my-likes', options: _auth);
+      final likes = (res.data as List)
+          .map((e) => PublicUserProfile.fromJson(e as Map<String, dynamic>))
+          .toList();
+      state = state.copyWith(myLikedUsers: likes);
+    } catch (e) {
+      print('Failed to load my likes: $e');
+    }
+  }
+
+  Future<void> loadMyFollowing() async {
+    try {
+      final res = await _dio.get('/social/my-following', options: _auth);
+      final following = (res.data as List)
+          .map((e) => PublicUserProfile.fromJson(e as Map<String, dynamic>))
+          .toList();
+      state = state.copyWith(myFollowingUsers: following);
+    } catch (e) {
+      print('Failed to load my following: $e');
+    }
+  }
+
   // ==================== USERS ====================
+
   Future<void> loadAllUsers() async {
     state = state.copyWith(isLoadingUsers: true, error: null);
     try {
@@ -286,6 +321,7 @@ class SocialNotifier extends StateNotifier<SocialState> {
   }
 
   // ==================== LIKE / FOLLOW ====================
+
   Future<void> toggleLike(String targetId) async {
     final isLiked = state.likedUserIds.contains(targetId);
     final updated = Set<String>.from(state.likedUserIds);
@@ -299,13 +335,12 @@ class SocialNotifier extends StateNotifier<SocialState> {
 
       final data = res.data as Map<String, dynamic>;
       final success = data['success'] ?? true;
-      final message = data['message']?.toString() ?? (isLiked ? 'Unliked' : 'Liked');
 
       if (success) {
-        _showToast(message);
+        _showToast(isLiked ? 'Unliked' : 'Liked');
+        await loadMyLikes();
       } else {
         _rollbackLike(targetId, isLiked);
-        _showToast(message, isError: true);
       }
     } catch (e) {
       _rollbackLike(targetId, isLiked);
@@ -332,13 +367,12 @@ class SocialNotifier extends StateNotifier<SocialState> {
 
       final data = res.data as Map<String, dynamic>;
       final success = data['success'] ?? true;
-      final message = data['message']?.toString() ?? (isFollowing ? 'Unfollowed' : 'Following');
 
       if (success) {
-        _showToast(message);
+        _showToast(isFollowing ? 'Unfollowed' : 'Following');
+        await loadMyFollowing();
       } else {
         _rollbackFollow(targetId, isFollowing);
-        _showToast(message, isError: true);
       }
     } catch (e) {
       _rollbackFollow(targetId, isFollowing);
@@ -353,6 +387,7 @@ class SocialNotifier extends StateNotifier<SocialState> {
   }
 
   // ==================== REVIEWS ====================
+
   Future<List<UserReview>> getReviews(String targetId) async {
     try {
       final res = await _dio.get('/social/reviews/$targetId', options: _auth);

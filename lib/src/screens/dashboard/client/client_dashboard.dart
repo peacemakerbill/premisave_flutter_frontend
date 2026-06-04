@@ -5,7 +5,7 @@ import '../../../models/auth/user_model.dart';
 import '../../../providers/auth/auth_provider.dart';
 import '../../shared/about_content.dart';
 import '../../shared/contact_content.dart';
-import '../../shared/users_content.dart';
+import '../../shared/profiles/users_content.dart';
 import 'contents/client_dashboard_content.dart';
 import 'contents/client_explore_content.dart';
 import 'contents/client_bookings_content.dart';
