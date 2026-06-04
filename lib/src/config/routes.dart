@@ -11,6 +11,7 @@ import '../screens/dashboard/home-owner/home_owner_dashboard.dart';
 import '../screens/dashboard/operartions/operations_dashboard.dart';
 import '../screens/dashboard/support/support_dashboard.dart';
 import '../screens/profile/profile_screen.dart';
+import '../screens/shared/other_user_profile_screen.dart';
 import '../screens/splash_screen.dart';
 import '../services/secure_storage.dart';
 
@@ -36,13 +37,20 @@ final GoRouter router = GoRouter(
 
     if (isAuthenticated && publicRoutes.contains(currentLocation)) {
       switch (role?.toUpperCase()) {
-        case 'CLIENT': return '/dashboard/client';
-        case 'HOME_OWNER': return '/dashboard/home-owner';
-        case 'ADMIN': return '/dashboard/admin';
-        case 'OPERATIONS': return '/dashboard/operations';
-        case 'FINANCE': return '/dashboard/finance';
-        case 'SUPPORT': return '/dashboard/support';
-        default: return '/dashboard/client';
+        case 'CLIENT':
+          return '/dashboard/client';
+        case 'HOME_OWNER':
+          return '/dashboard/home-owner';
+        case 'ADMIN':
+          return '/dashboard/admin';
+        case 'OPERATIONS':
+          return '/dashboard/operations';
+        case 'FINANCE':
+          return '/dashboard/finance';
+        case 'SUPPORT':
+          return '/dashboard/support';
+        default:
+          return '/dashboard/client';
       }
     }
 
@@ -67,35 +75,20 @@ final GoRouter router = GoRouter(
     GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
     GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
     GoRoute(path: '/signup', builder: (_, __) => const SignupScreen()),
-    GoRoute(path: '/forgot-password', builder: (_, __) => const ForgotPasswordScreen()),
-
-    // Single route that handles both query parameters and path parameters
+    GoRoute(
+        path: '/forgot-password',
+        builder: (_, __) => const ForgotPasswordScreen()),
     GoRoute(
       path: '/reset-password',
       builder: (_, state) {
         String? token;
-
-        // 1. Try to get token from query parameters (for: /reset-password?token=abc123)
         token = state.uri.queryParameters['token'];
-
-        // 2. If not found in query, try path parameters (for: /reset-password/abc123)
-        // Note: This won't be used currently since backend sends query params, but kept for compatibility
         if (token == null || token.isEmpty) {
           token = state.pathParameters['token'];
         }
-
-        // Debug logging - remove in production
-        print('Reset Password Route Debug:');
-        print('  - Full URI: ${state.uri}');
-        print('  - Path: ${state.uri.path}');
-        print('  - Query parameters: ${state.uri.queryParameters}');
-        print('  - Extracted token: $token');
-        print('  - Token valid: ${token != null && token.isNotEmpty}');
-
         return ResetPasswordScreen(resetToken: token);
       },
     ),
-
     GoRoute(
       path: '/verify',
       builder: (_, __) => const VerifyScreen(),
@@ -107,12 +100,31 @@ final GoRouter router = GoRouter(
         return VerifyScreen(verificationToken: token);
       },
     ),
-    GoRoute(path: '/dashboard/client', builder: (_, __) => const ClientDashboard()),
-    GoRoute(path: '/dashboard/home-owner', builder: (_, __) => const HomeOwnerDashboard()),
-    GoRoute(path: '/dashboard/admin', builder: (_, __) => const AdminDashboard()),
-    GoRoute(path: '/dashboard/operations', builder: (_, __) => const OperationsDashboard()),
-    GoRoute(path: '/dashboard/finance', builder: (_, __) => const FinanceDashboard()),
-    GoRoute(path: '/dashboard/support', builder: (_, __) => const SupportDashboard()),
+    GoRoute(
+        path: '/dashboard/client', builder: (_, __) => const ClientDashboard()),
+    GoRoute(
+        path: '/dashboard/home-owner',
+        builder: (_, __) => const HomeOwnerDashboard()),
+    GoRoute(
+        path: '/dashboard/admin', builder: (_, __) => const AdminDashboard()),
+    GoRoute(
+        path: '/dashboard/operations',
+        builder: (_, __) => const OperationsDashboard()),
+    GoRoute(
+        path: '/dashboard/finance',
+        builder: (_, __) => const FinanceDashboard()),
+    GoRoute(
+        path: '/dashboard/support',
+        builder: (_, __) => const SupportDashboard()),
     GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
+
+    // Other user's public profile — accessible from any dashboard
+    GoRoute(
+      path: '/profile/user/:userId',
+      builder: (_, state) {
+        final userId = state.pathParameters['userId'] ?? '';
+        return OtherUserProfileScreen(userId: userId);
+      },
+    ),
   ],
 );
