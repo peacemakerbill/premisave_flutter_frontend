@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/auth/auth_provider.dart';
 import '../../utils/toast_utils.dart';
-import '../public/contact_content.dart';
+import '../shared/contact_content.dart';
 
 class VerifyScreen extends ConsumerStatefulWidget {
   final String? verificationToken;
