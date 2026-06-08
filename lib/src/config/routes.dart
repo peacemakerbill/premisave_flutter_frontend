@@ -22,7 +22,9 @@ final GoRouter router = GoRouter(
   redirect: (context, state) async {
     final token = await SecureStorage.getToken();
     final role = await SecureStorage.getRole();
-    final isAuthenticated = token != null;
+    final isAuthenticated = token != null && role != null;
+
+    final currentLocation = state.uri.path;
 
     final publicRoutes = [
       '/',
@@ -35,27 +37,22 @@ final GoRouter router = GoRouter(
       '/verify/:token',
     ];
 
-    final currentLocation = state.uri.path;
-
+    // If user is authenticated and tries to access public routes → redirect to their dashboard
     if (isAuthenticated && publicRoutes.contains(currentLocation)) {
-      switch (role?.toUpperCase()) {
-        case 'CLIENT':
-          return '/dashboard/client';
-        case 'HOME_OWNER':
-          return '/dashboard/home-owner';
-        case 'ADMIN':
-          return '/dashboard/admin';
-        case 'OPERATIONS':
-          return '/dashboard/operations';
-        case 'FINANCE':
-          return '/dashboard/finance';
-        case 'SUPPORT':
-          return '/dashboard/support';
-        default:
-          return '/dashboard/client';
+      return _getDashboardRoute(role);
+    }
+
+    // Role-based dashboard protection
+    if (isAuthenticated) {
+      final userDashboard = _getDashboardRoute(role);
+
+      // If user tries to access a different dashboard → redirect to their own
+      if (currentLocation.startsWith('/dashboard/') && currentLocation != userDashboard) {
+        return userDashboard;
       }
     }
 
+    // Protect private routes
     final privateRoutes = [
       '/dashboard/client',
       '/dashboard/home-owner',
@@ -64,9 +61,10 @@ final GoRouter router = GoRouter(
       '/dashboard/finance',
       '/dashboard/support',
       '/profile',
+      '/profile/user/:userId',
     ];
 
-    if (!isAuthenticated && privateRoutes.contains(currentLocation)) {
+    if (!isAuthenticated && privateRoutes.any((route) => currentLocation.startsWith(route.split(':')[0]))) {
       return '/login';
     }
 
@@ -77,54 +75,52 @@ final GoRouter router = GoRouter(
     GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
     GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
     GoRoute(path: '/signup', builder: (_, __) => const SignupScreen()),
-    GoRoute(
-        path: '/forgot-password',
-        builder: (_, __) => const ForgotPasswordScreen()),
+    GoRoute(path: '/forgot-password', builder: (_, __) => const ForgotPasswordScreen()),
     GoRoute(
       path: '/reset-password',
       builder: (_, state) {
-        String? token;
-        token = state.uri.queryParameters['token'];
-        if (token == null || token.isEmpty) {
-          token = state.pathParameters['token'];
-        }
+        String? token = state.uri.queryParameters['token'] ?? state.pathParameters['token'];
         return ResetPasswordScreen(resetToken: token);
       },
     ),
-    GoRoute(
-      path: '/verify',
-      builder: (_, __) => const VerifyScreen(),
-    ),
+    GoRoute(path: '/verify', builder: (_, __) => const VerifyScreen()),
     GoRoute(
       path: '/verify/:token',
-      builder: (_, state) {
-        final token = state.pathParameters['token'];
-        return VerifyScreen(verificationToken: token);
-      },
+      builder: (_, state) => VerifyScreen(verificationToken: state.pathParameters['token']),
     ),
-    GoRoute(
-        path: '/dashboard/client', builder: (_, __) => const ClientDashboard()),
-    GoRoute(
-        path: '/dashboard/home-owner',
-        builder: (_, __) => const HomeOwnerDashboard()),
-    GoRoute(
-        path: '/dashboard/admin', builder: (_, __) => const AdminDashboard()),
-    GoRoute(
-        path: '/dashboard/operations',
-        builder: (_, __) => const OperationsDashboard()),
-    GoRoute(
-        path: '/dashboard/finance',
-        builder: (_, __) => const FinanceDashboard()),
-    GoRoute(
-        path: '/dashboard/support',
-        builder: (_, __) => const SupportDashboard()),
+
+    // Protected Dashboards
+    GoRoute(path: '/dashboard/client', builder: (_, __) => const ClientDashboard()),
+    GoRoute(path: '/dashboard/home-owner', builder: (_, __) => const HomeOwnerDashboard()),
+    GoRoute(path: '/dashboard/admin', builder: (_, __) => const AdminDashboard()),
+    GoRoute(path: '/dashboard/operations', builder: (_, __) => const OperationsDashboard()),
+    GoRoute(path: '/dashboard/finance', builder: (_, __) => const FinanceDashboard()),
+    GoRoute(path: '/dashboard/support', builder: (_, __) => const SupportDashboard()),
+
     GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
     GoRoute(
       path: '/profile/user/:userId',
-      builder: (_, state) {
-        final userId = state.pathParameters['userId'] ?? '';
-        return OtherUserProfileScreen(userId: userId);
-      },
+      builder: (_, state) => OtherUserProfileScreen(userId: state.pathParameters['userId'] ?? ''),
     ),
   ],
 );
+
+// Helper function to get correct dashboard route based on role
+String _getDashboardRoute(String? role) {
+  switch (role?.toUpperCase()) {
+    case 'CLIENT':
+      return '/dashboard/client';
+    case 'HOME_OWNER':
+      return '/dashboard/home-owner';
+    case 'ADMIN':
+      return '/dashboard/admin';
+    case 'OPERATIONS':
+      return '/dashboard/operations';
+    case 'FINANCE':
+      return '/dashboard/finance';
+    case 'SUPPORT':
+      return '/dashboard/support';
+    default:
+      return '/dashboard/client';
+  }
+}
