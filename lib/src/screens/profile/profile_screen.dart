@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shimmer/shimmer.dart';
+import '../../models/auth/user_model.dart';
 import '../../providers/auth/auth_provider.dart';
 import 'widgets/edit_profile_form.dart';
 import 'widgets/profile_completion_bar.dart';
@@ -98,7 +99,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  double _calculateProfileCompletion(user) {
+  double _calculateProfileCompletion(UserModel? user) {
+    if (user == null) return 0.0;
+
     int completedFields = 0;
     final fields = [
       user.username.isNotEmpty,
@@ -109,13 +112,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       user.address2.isNotEmpty,
       user.country.isNotEmpty,
       user.language.isNotEmpty,
-      user.profilePictureUrl.isNotEmpty,
+      (user.profilePictureUrl?.isNotEmpty ?? false),
     ];
     completedFields = fields.where((field) => field).length;
     return (completedFields / fields.length) * 100;
   }
 
-  void _showEditProfileDialog(BuildContext context, user) {
+  void _showEditProfileDialog(BuildContext context, UserModel user) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -260,7 +263,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildHeroSection(user, ThemeData theme, bool isLargeScreen) {
+  Widget _buildHeroSection(UserModel user, ThemeData theme, bool isLargeScreen) {
     return Container(
       padding: EdgeInsets.all(isLargeScreen ? 28 : 20),
       decoration: BoxDecoration(
@@ -282,7 +285,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     boxShadow: [BoxShadow(color: theme.colorScheme.primary.withOpacity(0.2), blurRadius: 16)],
                   ),
                   child: UserAvatar(
-                    imageUrl: user.profilePictureUrl.isNotEmpty ? user.profilePictureUrl : null,
+                    imageUrl: user.profilePictureUrl?.isNotEmpty == true ? user.profilePictureUrl : null,
                     radius: isLargeScreen ? 70 : 56,
                   ),
                 ),
@@ -317,7 +320,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildDetailedInfoSection(user, ThemeData theme) {
+  Widget _buildDetailedInfoSection(UserModel user, ThemeData theme) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -362,7 +365,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildCompletionCard(user, ThemeData theme) {
+  Widget _buildCompletionCard(UserModel user, ThemeData theme) {
     final completionPercentage = _calculateProfileCompletion(user);
     return Card(
       elevation: 8,
@@ -400,7 +403,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildActionCards(BuildContext context, user, ThemeData theme) {
+  Widget _buildActionCards(BuildContext context, UserModel user, ThemeData theme) {
     return Column(
       children: [
         _buildActionCard(
