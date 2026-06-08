@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import '../../config/app_config.dart';
+import '../../utils/toast_utils.dart';
 import '../auth/auth_provider.dart';
 
 final socialProvider = StateNotifierProvider<SocialNotifier, SocialState>(
@@ -229,12 +228,11 @@ class SocialNotifier extends StateNotifier<SocialState> {
   Options get _auth => Options(headers: {'Authorization': 'Bearer $_token'});
 
   void _showToast(String message, {bool isError = false}) {
-    Fluttertoast.showToast(
-      msg: message,
-      backgroundColor: isError ? Colors.red[700] : Colors.green[700],
-      textColor: Colors.white,
-      toastLength: Toast.LENGTH_SHORT,
-    );
+    if (isError) {
+      ToastUtils.showErrorToast(message);
+    } else {
+      ToastUtils.showSuccessToast(message);
+    }
   }
 
   // ==================== LOAD MY LIKES & FOLLOWING ====================

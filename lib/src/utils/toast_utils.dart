@@ -2,63 +2,95 @@ import 'package:flutter/material.dart';
 import '../../main.dart';
 
 class ToastUtils {
+  static OverlayEntry? _currentToast;
+
   static void showSuccessToast(String message) {
-    _show(message, Colors.green, Icons.check_circle);
+    _show(message, Colors.green, Icons.check_circle_rounded);
   }
 
   static void showErrorToast(String message) {
-    _show(message, Colors.red, Icons.error);
+    _show(message, Colors.red, Icons.error_rounded);
   }
 
   static void showInfoToast(String message) {
-    _show(message, Colors.blue, Icons.info);
+    _show(message, Colors.blue, Icons.info_rounded);
   }
 
   static void showWarningToast(String message) {
-    _show(message, Colors.orange, Icons.warning);
+    _show(message, Colors.orange, Icons.warning_rounded);
   }
 
-  static void _show(String message, Color color, IconData icon) {
-    // Use a try-catch to handle any context issues
-    try {
-      final messenger = scaffoldMessengerKey.currentState;
-      if (messenger == null) {
-        print('ToastUtils: ScaffoldMessengerKey is not available');
-        return;
-      }
+  static void _show(
+      String message,
+      Color color,
+      IconData icon,
+      ) {
+    final context = scaffoldMessengerKey.currentContext;
+    if (context == null) return;
 
-      messenger.showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              Icon(icon, color: Colors.white, size: 24),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  message,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+    final overlay = Overlay.of(context);
+
+    _currentToast?.remove();
+
+    final toast = OverlayEntry(
+      builder: (_) => Positioned(
+        top: 16,
+        right: 16,
+        child: SafeArea(
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 280),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 8,
               ),
-            ],
-          ),
-          backgroundColor: color,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          margin: const EdgeInsets.all(16),
-          duration: const Duration(seconds: 4),
-          action: SnackBarAction(
-            label: 'Dismiss',
-            textColor: Colors.white,
-            onPressed: () => messenger.hideCurrentSnackBar(),
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: const [
+                  BoxShadow(
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                    color: Colors.black26,
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    icon,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      message,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
-      );
-    } catch (e) {
-      print('ToastUtils error: $e');
-    }
+      ),
+    );
+
+    _currentToast = toast;
+    overlay.insert(toast);
+
+    Future.delayed(const Duration(seconds: 3), () {
+      if (_currentToast == toast) {
+        toast.remove();
+        _currentToast = null;
+      }
+    });
   }
 }
