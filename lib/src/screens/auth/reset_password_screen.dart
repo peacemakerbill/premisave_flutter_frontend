@@ -20,11 +20,12 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen>
 
   bool _hideNew = true;
   bool _hideConfirm = true;
-  int _strength = 0; // 0-4
+  int _strength = 0;
 
   static const _teal = Color(0xFF0D9488);
   static const _tealLight = Color(0xFFCCFBF1);
   static const _tealDark = Color(0xFF0F766E);
+  static const _ink = Color(0xFF1A1A1A);
 
   @override
   void initState() {
@@ -189,36 +190,40 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen>
       children: [
         if (widget.resetToken != null) _tokenBadge() else _invalidTokenBanner(),
         const SizedBox(height: 20),
-        TextField(
+
+        _passwordField(
           controller: _newPwCtrl,
-          obscureText: _hideNew,
+          label: 'New Password',
+          icon: Icons.lock_outline_rounded,
+          hidePassword: _hideNew,
+          onToggleVisibility: () => setState(() => _hideNew = !_hideNew),
           enabled: !s.isLoading && widget.resetToken != null,
-          decoration: _inputDeco(label: 'New Password', icon: Icons.lock_outline_rounded).copyWith(
-            suffixIcon: IconButton(icon: Icon(_hideNew ? Icons.visibility_outlined : Icons.visibility_off_outlined, color: Colors.grey[500]),
-                onPressed: () => setState(() => _hideNew = !_hideNew)),
-          ),
         ),
+
         if (_newPwCtrl.text.isNotEmpty) ...[
           const SizedBox(height: 10),
           _strengthBar(),
         ],
         const SizedBox(height: 16),
-        TextField(
+
+        _passwordField(
           controller: _confirmPwCtrl,
-          obscureText: _hideConfirm,
+          label: 'Confirm New Password',
+          icon: Icons.lock_clock_outlined,
+          hidePassword: _hideConfirm,
+          onToggleVisibility: () => setState(() => _hideConfirm = !_hideConfirm),
           enabled: !s.isLoading && widget.resetToken != null,
-          decoration: _inputDeco(label: 'Confirm New Password', icon: Icons.lock_clock_outlined).copyWith(
-            suffixIcon: IconButton(icon: Icon(_hideConfirm ? Icons.visibility_outlined : Icons.visibility_off_outlined, color: Colors.grey[500]),
-                onPressed: () => setState(() => _hideConfirm = !_hideConfirm)),
-          ),
+          onSubmitted: (_) => _submit(n),
         ),
+
         const SizedBox(height: 24),
         SizedBox(
           width: double.infinity, height: 52,
           child: ElevatedButton(
             onPressed: s.isLoading || widget.resetToken == null ? null : () => _submit(n),
             style: ElevatedButton.styleFrom(
-              backgroundColor: _teal, foregroundColor: Colors.white,
+              backgroundColor: _teal,
+              foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               elevation: 0,
             ),
@@ -237,6 +242,55 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen>
           ),
         ),
       ],
+    );
+  }
+
+  Widget _passwordField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    required bool hidePassword,
+    required VoidCallback onToggleVisibility,
+    bool enabled = true,
+    ValueChanged<String>? onSubmitted,
+  }) {
+    return TextField(
+      controller: controller,
+      obscureText: hidePassword,
+      enabled: enabled,
+      style: const TextStyle(fontSize: 16, color: _ink, fontWeight: FontWeight.w500),
+      onSubmitted: onSubmitted,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(
+          color: Color(0xFF334155),
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+        ),
+        prefixIcon: Icon(icon, color: Colors.grey[600], size: 22),
+        suffixIcon: IconButton(
+          icon: Icon(
+            hidePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+            color: Colors.grey[600],
+          ),
+          onPressed: onToggleVisibility,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: _teal, width: 2),
+        ),
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      ),
     );
   }
 
@@ -292,16 +346,5 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen>
       if (_strength > 0)
         Text("${labels[idx]} password", style: TextStyle(color: colors[idx], fontSize: 12, fontWeight: FontWeight.w600)),
     ]);
-  }
-
-  InputDecoration _inputDeco({required String label, required IconData icon}) {
-    return InputDecoration(
-      labelText: label,
-      prefixIcon: Icon(icon, color: Colors.grey[500]),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: _teal, width: 2)),
-      filled: true, fillColor: Colors.white,
-    );
   }
 }
