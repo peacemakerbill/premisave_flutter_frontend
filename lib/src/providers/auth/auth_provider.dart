@@ -22,7 +22,6 @@ class AuthState {
   final UserModel? currentUser;
   final bool isLoading;
   final String? error;
-  final String? redirectUrl;
   final bool shouldRedirectToLogin;
   final DateTime? tokenExpiry;
 
@@ -32,7 +31,6 @@ class AuthState {
     this.currentUser,
     this.isLoading = false,
     this.error,
-    this.redirectUrl,
     this.shouldRedirectToLogin = false,
     this.tokenExpiry,
   });
@@ -43,7 +41,6 @@ class AuthState {
     UserModel? currentUser,
     bool? isLoading,
     String? error,
-    String? redirectUrl,
     bool? shouldRedirectToLogin,
     DateTime? tokenExpiry,
   }) {
@@ -53,7 +50,6 @@ class AuthState {
       currentUser: currentUser ?? this.currentUser,
       isLoading: isLoading ?? this.isLoading,
       error: error,
-      redirectUrl: redirectUrl ?? this.redirectUrl,
       shouldRedirectToLogin: shouldRedirectToLogin ?? this.shouldRedirectToLogin,
       tokenExpiry: tokenExpiry ?? this.tokenExpiry,
     );
@@ -157,15 +153,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> signUp(Map<String, dynamic> data) async {
     state = state.copyWith(isLoading: true, error: null, shouldRedirectToLogin: false);
     try {
-      final response = await _dio.post('/auth/signup', data: data);
-      final authRes = AuthResponse.fromJson(response.data);
-
+      await _dio.post('/auth/signup', data: data);
       ToastUtils.showSuccessToast('Account created successfully! Please check your email to verify your account.');
-
-      state = state.copyWith(
-        isLoading: false,
-        shouldRedirectToLogin: true,
-      );
+      state = state.copyWith(isLoading: false, shouldRedirectToLogin: true);
     } catch (e) {
       _handleError(e, 'Failed to create account. Please try again.');
     }
@@ -192,7 +182,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = state.copyWith(
         token: authRes.token,
         role: authRes.role,
-        redirectUrl: authRes.redirectUrl,
         tokenExpiry: expiry,
         isLoading: false,
         shouldRedirectToLogin: false,
@@ -256,7 +245,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
         },
         options: Options(headers: {'Authorization': 'Bearer ${state.token}'}),
       );
-
       ToastUtils.showSuccessToast('Password changed successfully!');
       state = state.copyWith(isLoading: false);
     } catch (e) {
@@ -296,7 +284,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = state.copyWith(
         token: authRes.token,
         role: authRes.role,
-        redirectUrl: authRes.redirectUrl,
         tokenExpiry: expiry,
         isLoading: false,
       );
@@ -331,7 +318,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = state.copyWith(
         token: authRes.token,
         role: authRes.role,
-        redirectUrl: authRes.redirectUrl,
         tokenExpiry: expiry,
         isLoading: false,
       );
@@ -373,7 +359,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = state.copyWith(
         token: authRes.token,
         role: authRes.role,
-        redirectUrl: authRes.redirectUrl,
         tokenExpiry: expiry,
         isLoading: false,
       );
@@ -431,7 +416,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   // ==================== VERIFICATION ====================
   Future<bool> verifyEmailToken(String verificationToken) async {
     try {
-      final response = await _dio.get('/auth/verify/$verificationToken');
+      await _dio.get('/auth/verify/$verificationToken');
       ToastUtils.showSuccessToast('Account verified successfully!');
       return true;
     } catch (e) {
