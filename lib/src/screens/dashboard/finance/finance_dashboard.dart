@@ -36,13 +36,13 @@ class _FinanceDashboardState extends ConsumerState<FinanceDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    final authNotifier = ref.read(authProvider.notifier);
     final authState = ref.watch(authProvider);
+    final notifier = ref.read(authProvider.notifier);
     final isMobile = MediaQuery.of(context).size.width < 768;
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: _buildAppBar(context, authState.currentUser, authNotifier, isMobile),
+      appBar: _buildAppBar(context, authState.currentUser, notifier, isMobile),
       body: _getCurrentContent(),
       bottomNavigationBar: isMobile ? _buildBottomNav() : null,
     );
@@ -74,29 +74,19 @@ class _FinanceDashboardState extends ConsumerState<FinanceDashboard> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Center(
-                  child: Text('P',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold)),
+                  child: Text('P', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                 ),
               ),
               const SizedBox(width: 8),
-              const Text('Finance',
-                  style: TextStyle(
-                      color: Color(0xFF2D6A4F),
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700)),
+              const Text('Finance', style: TextStyle(color: Color(0xFF2D6A4F), fontSize: 18, fontWeight: FontWeight.w700)),
             ],
           ),
         ),
       ),
-      title: !isMobile
-          ? _buildDesktopNav()
-          : null,
+      title: !isMobile ? _buildDesktopNav() : null,
       centerTitle: !isMobile,
       actions: [
-        _buildProfileMenu(context, user, notifier, isMobile),
+        _buildProfileMenu(context, user, notifier),
         if (!isMobile) const SizedBox(width: 16),
       ],
     );
@@ -117,18 +107,14 @@ class _FinanceDashboardState extends ConsumerState<FinanceDashboard> {
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 2),
             child: TextButton.icon(
-              onPressed: () => _navigateToRoute(item['route']),
+              onPressed: () => _navigateToRoute(item['route'] as String),
               icon: Icon(item['icon'] as IconData, size: 16),
-              label: Text(item['label'] as String,
-                  style: TextStyle(
-                      fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-                      fontSize: 13)),
+              label: Text(item['label'] as String, style: TextStyle(fontWeight: isActive ? FontWeight.w600 : FontWeight.w500, fontSize: 13)),
               style: TextButton.styleFrom(
                 foregroundColor: isActive ? const Color(0xFF2D6A4F) : Colors.black87,
                 backgroundColor: isActive ? Colors.white : Colors.transparent,
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(25)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
               ),
             ),
           );
@@ -137,72 +123,65 @@ class _FinanceDashboardState extends ConsumerState<FinanceDashboard> {
     );
   }
 
-  Widget _buildProfileMenu(
-      BuildContext context,
-      UserModel? user,
-      AuthNotifier notifier,
-      bool isMobile,
-      ) {
-    return Container(
-      margin: const EdgeInsets.only(right: 12),
-      child: PopupMenuButton<String>(
-        position: PopupMenuPosition.under,
-        onSelected: (value) {
-          if (value == 'profile') context.push('/profile');
-        },
-        itemBuilder: (_) => [
-          PopupMenuItem(
-            value: 'profile',
-            child: ListTile(
-              leading: CircleAvatar(
-                radius: 16,
-                backgroundColor: const Color(0xFF2D6A4F),
-                child: Text(
-                  user?.firstName.substring(0, 1).toUpperCase() ?? 'U',
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                ),
-              ),
-              title: Text(user?.firstName ?? 'User',
-                  style: const TextStyle(fontWeight: FontWeight.w600)),
-              subtitle: Text(user?.email ?? '', style: const TextStyle(fontSize: 12)),
-            ),
-          ),
-          const PopupMenuDivider(),
-          PopupMenuItem(
-            value: 'logout',
-            child: ListTile(
-              leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text('Log out', style: TextStyle(color: Colors.red)),
-              onTap: () => notifier.confirmLogout(context),
-            ),
-          ),
-        ],
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey[300]!),
-            borderRadius: BorderRadius.circular(25),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.menu, color: Colors.grey, size: 20),
-              const SizedBox(width: 6),
-              CircleAvatar(
-                radius: 14,
-                backgroundColor: const Color(0xFF2D6A4F),
-                child: Text(
-                  user?.firstName.substring(0, 1).toUpperCase() ?? 'U',
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12),
-                ),
-              ),
-            ],
+  Widget _buildProfileMenu(BuildContext context, UserModel? user, AuthNotifier notifier) {
+    return PopupMenuButton<String>(
+      position: PopupMenuPosition.under,
+      onSelected: (value) {
+        if (value == 'profile') context.push('/profile');
+      },
+      itemBuilder: (_) => [
+        PopupMenuItem(
+          value: 'profile',
+          child: ListTile(
+            leading: _buildProfileAvatar(user),
+            title: Text(user?.firstName ?? 'User', style: const TextStyle(fontWeight: FontWeight.w600)),
+            subtitle: Text(user?.email ?? '', style: const TextStyle(fontSize: 12)),
           ),
         ),
+        const PopupMenuDivider(),
+        PopupMenuItem(
+          value: 'logout',
+          child: ListTile(
+            leading: const Icon(Icons.logout, color: Colors.red),
+            title: const Text('Log out', style: TextStyle(color: Colors.red)),
+            onTap: () => notifier.confirmLogout(context),
+          ),
+        ),
+      ],
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey[300]!),
+          borderRadius: BorderRadius.circular(25),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.menu, color: Colors.grey, size: 20),
+            const SizedBox(width: 6),
+            _buildProfileAvatar(user, radius: 14),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildProfileAvatar(UserModel? user, {double radius = 16}) {
+    if (user?.profilePictureUrl?.isNotEmpty == true) {
+      return CircleAvatar(
+        radius: radius,
+        backgroundImage: NetworkImage(user!.profilePictureUrl!),
+        onBackgroundImageError: (_, __) => CircleAvatar(
+          radius: radius,
+          backgroundColor: const Color(0xFF2D6A4F),
+          child: Text(user.firstName?.substring(0, 1).toUpperCase() ?? 'U', style: TextStyle(color: Colors.white, fontSize: radius > 14 ? 14 : 12)),
+        ),
+      );
+    }
+    return CircleAvatar(
+      radius: radius,
+      backgroundColor: const Color(0xFF2D6A4F),
+      child: Text(user?.firstName?.substring(0, 1).toUpperCase() ?? 'U', style: TextStyle(color: Colors.white, fontSize: radius > 14 ? 14 : 12)),
     );
   }
 
@@ -214,14 +193,7 @@ class _FinanceDashboardState extends ConsumerState<FinanceDashboard> {
       backgroundColor: Colors.white,
       selectedItemColor: const Color(0xFF2D6A4F),
       unselectedItemColor: Colors.grey[600],
-      selectedFontSize: 12,
-      unselectedFontSize: 12,
-      items: _menuItems
-          .map((i) => BottomNavigationBarItem(
-        icon: Icon(i['icon'] as IconData),
-        label: i['label'] as String,
-      ))
-          .toList(),
+      items: _menuItems.map((i) => BottomNavigationBarItem(icon: Icon(i['icon'] as IconData), label: i['label'] as String)).toList(),
     );
   }
 }
@@ -231,8 +203,6 @@ class _FinanceDashboardContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Text('Finance Dashboard', style: TextStyle(fontSize: 24)),
-    );
+    return const Center(child: Text('Finance Dashboard', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w600)));
   }
 }

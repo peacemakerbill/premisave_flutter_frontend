@@ -9,8 +9,7 @@ class OperationsDashboard extends ConsumerStatefulWidget {
   const OperationsDashboard({super.key});
 
   @override
-  ConsumerState<OperationsDashboard> createState() =>
-      _OperationsDashboardState();
+  ConsumerState<OperationsDashboard> createState() => _OperationsDashboardState();
 }
 
 class _OperationsDashboardState extends ConsumerState<OperationsDashboard> {
@@ -21,8 +20,9 @@ class _OperationsDashboardState extends ConsumerState<OperationsDashboard> {
     {'icon': Icons.people_rounded, 'label': 'People', 'route': '/operations/people'},
   ];
 
-  void _navigateToRoute(String route) =>
-      setState(() => _currentRoute = route);
+  void _navigateToRoute(String route) {
+    setState(() => _currentRoute = route);
+  }
 
   Widget _getCurrentContent() {
     switch (_currentRoute) {
@@ -36,13 +36,13 @@ class _OperationsDashboardState extends ConsumerState<OperationsDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    final authNotifier = ref.read(authProvider.notifier);
     final authState = ref.watch(authProvider);
+    final notifier = ref.read(authProvider.notifier);
     final isMobile = MediaQuery.of(context).size.width < 768;
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: _buildAppBar(context, authState.currentUser, authNotifier, isMobile),
+      appBar: _buildAppBar(context, authState.currentUser, notifier, isMobile),
       body: _getCurrentContent(),
       bottomNavigationBar: isMobile ? _buildBottomNav() : null,
     );
@@ -74,19 +74,11 @@ class _OperationsDashboardState extends ConsumerState<OperationsDashboard> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Center(
-                  child: Text('P',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold)),
+                  child: Text('P', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                 ),
               ),
               const SizedBox(width: 8),
-              const Text('Operations',
-                  style: TextStyle(
-                      color: Color(0xFF2D6A4F),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700)),
+              const Text('Operations', style: TextStyle(color: Color(0xFF2D6A4F), fontSize: 18, fontWeight: FontWeight.w700)),
             ],
           ),
         ),
@@ -95,7 +87,7 @@ class _OperationsDashboardState extends ConsumerState<OperationsDashboard> {
       centerTitle: !isMobile,
       actions: [
         _buildProfileMenu(context, user, notifier),
-        const SizedBox(width: 16),
+        if (!isMobile) const SizedBox(width: 16),
       ],
     );
   }
@@ -119,18 +111,14 @@ class _OperationsDashboardState extends ConsumerState<OperationsDashboard> {
               icon: Icon(item['icon'] as IconData, size: 16),
               label: Text(item['label'] as String,
                   style: TextStyle(
-                      fontWeight:
-                      isActive ? FontWeight.w600 : FontWeight.w500,
-                      fontSize: 13)),
+                    fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                    fontSize: 13,
+                  )),
               style: TextButton.styleFrom(
-                foregroundColor:
-                isActive ? const Color(0xFF2D6A4F) : Colors.black87,
-                backgroundColor:
-                isActive ? Colors.white : Colors.transparent,
-                padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(25)),
+                foregroundColor: isActive ? const Color(0xFF2D6A4F) : Colors.black87,
+                backgroundColor: isActive ? Colors.white : Colors.transparent,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
               ),
             ),
           );
@@ -139,90 +127,82 @@ class _OperationsDashboardState extends ConsumerState<OperationsDashboard> {
     );
   }
 
-  Widget _buildProfileMenu(
-      BuildContext context,
-      UserModel? user,
-      AuthNotifier notifier,
-      ) {
-    return Container(
-      margin: const EdgeInsets.only(right: 12),
-      child: PopupMenuButton<String>(
-        position: PopupMenuPosition.under,
-        onSelected: (value) {
-          if (value == 'profile') context.push('/profile');
-        },
-        itemBuilder: (_) => [
-          PopupMenuItem(
-            value: 'profile',
-            child: ListTile(
-              leading: CircleAvatar(
-                radius: 16,
-                backgroundColor: const Color(0xFF2D6A4F),
-                child: Text(
-                  user?.firstName.substring(0, 1).toUpperCase() ?? 'U',
-                  style: const TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold),
-                ),
-              ),
-              title: Text(user?.firstName ?? 'User',
-                  style: const TextStyle(fontWeight: FontWeight.w600)),
-              subtitle: Text(user?.email ?? '',
-                  style: const TextStyle(fontSize: 12)),
-            ),
+  Widget _buildProfileMenu(BuildContext context, UserModel? user, AuthNotifier notifier) {
+    return PopupMenuButton<String>(
+      position: PopupMenuPosition.under,
+      onSelected: (value) {
+        if (value == 'profile') context.push('/profile');
+      },
+      itemBuilder: (_) => [
+        PopupMenuItem(
+          value: 'profile',
+          child: ListTile(
+            leading: _buildProfileAvatar(user),
+            title: Text(user?.firstName ?? 'User', style: const TextStyle(fontWeight: FontWeight.w600)),
+            subtitle: Text(user?.email ?? '', style: const TextStyle(fontSize: 12)),
           ),
-          const PopupMenuDivider(),
-          PopupMenuItem(
-            value: 'logout',
-            child: ListTile(
-              leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text('Log out',
-                  style: TextStyle(color: Colors.red)),
-              onTap: () => notifier.confirmLogout(context),
-            ),
+        ),
+        const PopupMenuDivider(),
+        PopupMenuItem(
+          value: 'logout',
+          child: ListTile(
+            leading: const Icon(Icons.logout, color: Colors.red),
+            title: const Text('Log out', style: TextStyle(color: Colors.red)),
+            onTap: () => notifier.confirmLogout(context),
           ),
-        ],
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey[300]!),
-            borderRadius: BorderRadius.circular(25),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.menu, color: Colors.grey, size: 20),
-              const SizedBox(width: 6),
-              CircleAvatar(
-                radius: 14,
-                backgroundColor: const Color(0xFF2D6A4F),
-                child: Text(
-                  user?.firstName.substring(0, 1).toUpperCase() ?? 'U',
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12),
-                ),
-              ),
-            ],
-          ),
+        ),
+      ],
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey[300]!),
+          borderRadius: BorderRadius.circular(25),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.menu, color: Colors.grey, size: 20),
+            const SizedBox(width: 6),
+            _buildProfileAvatar(user, radius: 14),
+          ],
         ),
       ),
     );
   }
 
+  Widget _buildProfileAvatar(UserModel? user, {double radius = 16}) {
+    if (user?.profilePictureUrl?.isNotEmpty == true) {
+      return CircleAvatar(
+        radius: radius,
+        backgroundImage: NetworkImage(user!.profilePictureUrl!),
+        onBackgroundImageError: (_, __) => CircleAvatar(
+          radius: radius,
+          backgroundColor: const Color(0xFF2D6A4F),
+          child: Text(
+            user.firstName?.substring(0, 1).toUpperCase() ?? 'U',
+            style: TextStyle(color: Colors.white, fontSize: radius > 14 ? 14 : 12),
+          ),
+        ),
+      );
+    }
+    return CircleAvatar(
+      radius: radius,
+      backgroundColor: const Color(0xFF2D6A4F),
+      child: Text(
+        user?.firstName?.substring(0, 1).toUpperCase() ?? 'U',
+        style: TextStyle(color: Colors.white, fontSize: radius > 14 ? 14 : 12),
+      ),
+    );
+  }
+
   Widget _buildBottomNav() {
-    final idx = _menuItems
-        .indexWhere((i) => i['route'] == _currentRoute)
-        .clamp(0, _menuItems.length - 1);
     return BottomNavigationBar(
-      currentIndex: idx,
+      currentIndex: _menuItems.indexWhere((i) => i['route'] == _currentRoute).clamp(0, _menuItems.length - 1),
       onTap: (i) => _navigateToRoute(_menuItems[i]['route'] as String),
       type: BottomNavigationBarType.fixed,
       backgroundColor: Colors.white,
       selectedItemColor: const Color(0xFF2D6A4F),
       unselectedItemColor: Colors.grey[600],
-      selectedFontSize: 12,
-      unselectedFontSize: 12,
       items: _menuItems
           .map((i) => BottomNavigationBarItem(
         icon: Icon(i['icon'] as IconData),
@@ -239,7 +219,7 @@ class _OperationsDashboardContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Center(
-      child: Text('Operations Dashboard', style: TextStyle(fontSize: 24)),
+      child: Text('Operations Dashboard', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w600)),
     );
   }
 }
