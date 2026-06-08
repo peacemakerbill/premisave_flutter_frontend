@@ -9,6 +9,7 @@ import 'src/providers/auth/auth_provider.dart';
 import 'src/services/notification_service.dart';
 
 final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> _backgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -23,10 +24,7 @@ Future<void> main() async {
   FirebaseMessaging.onBackgroundMessage(_backgroundHandler);
   await NotificationService.initialize();
 
-  // Create provider container
   final container = ProviderContainer();
-
-  // Check and restore auth status before running app
   await container.read(authProvider.notifier).checkAuthStatus();
 
   runApp(

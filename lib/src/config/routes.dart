@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import '../../main.dart';
 import '../screens/auth/forgot_password_screen.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/reset_password_screen.dart';
@@ -16,6 +17,7 @@ import '../screens/splash_screen.dart';
 import '../services/secure_storage.dart';
 
 final GoRouter router = GoRouter(
+  navigatorKey: navigatorKey,
   initialLocation: '/',
   redirect: (context, state) async {
     final token = await SecureStorage.getToken();
@@ -117,8 +119,6 @@ final GoRouter router = GoRouter(
         path: '/dashboard/support',
         builder: (_, __) => const SupportDashboard()),
     GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
-
-    // Other user's public profile — accessible from any dashboard
     GoRoute(
       path: '/profile/user/:userId',
       builder: (_, state) {
