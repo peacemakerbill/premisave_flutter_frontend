@@ -19,22 +19,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   late final Animation<double> _fadeAnim;
   bool _hidePassword = true;
 
-  static const _green     = Color(0xFF1B5E20);
-  static const _greenMid  = Color(0xFF2E7D32);
-  static const _gold      = Color(0xFFB8860B);
+  static const _green = Color(0xFF1B5E20);
+  static const _greenMid = Color(0xFF2E7D32);
+  static const _gold = Color(0xFFB8860B);
   static const _goldLight = Color(0xFFD4A017);
-  static const _cream     = Color(0xFFFAF7F0);
-  static const _surface   = Color(0xFFFFFFFF);
-  static const _ink       = Color(0xFF1A1A1A);
+  static const _cream = Color(0xFFFAF7F0);
+  static const _surface = Color(0xFFFFFFFF);
+  static const _ink = Color(0xFF1A1A1A);
 
   @override
   void initState() {
     super.initState();
     _emailCtrl = TextEditingController();
-    _pwCtrl    = TextEditingController();
-    _formKey   = GlobalKey<FormState>();
-    _animCtrl  = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
-    _fadeAnim  = CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut);
+    _pwCtrl = TextEditingController();
+    _formKey = GlobalKey<FormState>();
+    _animCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
+    _fadeAnim = CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut);
     _animCtrl.forward();
   }
 
@@ -55,8 +55,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
-    final notifier  = ref.read(authProvider.notifier);
-    final isWide    = MediaQuery.of(context).size.width > 900;
+    final notifier = ref.read(authProvider.notifier);
+    final isWide = MediaQuery.of(context).size.width > 900;
 
     ref.listen<AuthState>(authProvider, (_, next) {
       if (next.token != null && next.role != null && !next.isLoading) {
@@ -74,8 +74,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       ),
     );
   }
-
-  // ── LAYOUTS ──────────────────────────────────────────────────────────────────
 
   Widget _wideLayout(AuthState s, AuthNotifier n) {
     return Row(children: [
@@ -96,8 +94,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     );
   }
 
-  // ── BRAND PANEL ──────────────────────────────────────────────────────────────
-
   Widget _brandPanel() {
     return Container(
       decoration: const BoxDecoration(
@@ -115,11 +111,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           Text('Your smart real estate investment\nplatform. Sign in to continue.',
               style: TextStyle(fontSize: 16, color: Colors.white.withOpacity(0.75), height: 1.6)),
           const SizedBox(height: 52),
-          _featureTile(Icons.trending_up_rounded,     'Portfolio Tracking', 'Monitor all your property investments in real time'),
+          _featureTile(Icons.trending_up_rounded, 'Portfolio Tracking', 'Monitor all your property investments in real time'),
           const SizedBox(height: 20),
-          _featureTile(Icons.shield_outlined,          'Secure Platform',   'Bank-grade encryption for all your data'),
+          _featureTile(Icons.shield_outlined, 'Secure Platform', 'Bank-grade encryption for all your data'),
           const SizedBox(height: 20),
-          _featureTile(Icons.notifications_outlined,   'Smart Alerts',      'Never miss a critical property update'),
+          _featureTile(Icons.notifications_outlined, 'Smart Alerts', 'Never miss a critical property update'),
         ],
       ),
     );
@@ -150,13 +146,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       ),
       const SizedBox(width: 14),
       Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(title,    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14)),
+        Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14)),
         Text(subtitle, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12)),
       ]),
     ]);
   }
-
-  // ── FORM PANEL ───────────────────────────────────────────────────────────────
 
   Widget _formPanel(AuthState s, AuthNotifier n) {
     return Container(
@@ -210,13 +204,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         const SizedBox(height: 16),
 
         _field(
-          ctrl: _pwCtrl, label: 'Password', icon: Icons.lock_outline, enabled: !s.isLoading,
+          ctrl: _pwCtrl,
+          label: 'Password',
+          icon: Icons.lock_outline,
+          enabled: !s.isLoading,
           obscureText: _hidePassword,
           suffix: IconButton(
             icon: Icon(_hidePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined, color: Colors.grey[400], size: 20),
             onPressed: () => setState(() => _hidePassword = !_hidePassword),
           ),
           validator: (v) => v == null || v.isEmpty ? 'Password is required' : null,
+          onFieldSubmitted: (_) => _submit(n),
         ),
         const SizedBox(height: 8),
 
@@ -251,8 +249,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     );
   }
 
-  // ── SHARED WIDGETS ───────────────────────────────────────────────────────────
-
   Widget _field({
     required TextEditingController ctrl,
     required String label,
@@ -262,6 +258,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     TextInputType keyboardType = TextInputType.text,
     Widget? suffix,
     String? Function(String?)? validator,
+    ValueChanged<String>? onFieldSubmitted,
   }) {
     return TextFormField(
       controller: ctrl,
@@ -277,13 +274,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         filled: true,
         fillColor: const Color(0xFFF8F8F8),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        border:             OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
-        enabledBorder:      OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
-        focusedBorder:      OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: _green, width: 1.5)),
-        errorBorder:        OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.red[300]!)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: _green, width: 1.5)),
+        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.red[300]!)),
         focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.red[400]!, width: 1.5)),
       ),
       validator: validator,
+      onFieldSubmitted: onFieldSubmitted,
     );
   }
 
@@ -329,11 +327,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
   Widget _socialRow(AuthState s, AuthNotifier n) {
     return Row(children: [
-      Expanded(child: _socialBtn('Google',   Icons.g_mobiledata, const Color(0xFFDB4437), () => n.googleSignIn(context))),
+      Expanded(child: _socialBtn('Google', Icons.g_mobiledata, const Color(0xFFDB4437), () => n.googleSignIn(context))),
       const SizedBox(width: 10),
-      Expanded(child: _socialBtn('Facebook', Icons.facebook,     const Color(0xFF1877F2), () => n.facebookSignIn(context))),
+      Expanded(child: _socialBtn('Facebook', Icons.facebook, const Color(0xFF1877F2), () => n.facebookSignIn(context))),
       const SizedBox(width: 10),
-      Expanded(child: _socialBtn('Apple',    Icons.apple,        Colors.black,             () => n.appleSignIn(context))),
+      Expanded(child: _socialBtn('Apple', Icons.apple, Colors.black, () => n.appleSignIn(context))),
     ]);
   }
 

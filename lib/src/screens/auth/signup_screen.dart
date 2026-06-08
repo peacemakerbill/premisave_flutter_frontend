@@ -19,33 +19,33 @@ class _SignupScreenState extends ConsumerState<SignupScreen>
   bool _hidePassword = true;
   int _pwStrength = 0;
 
-  static const _green     = Color(0xFF1B5E20);
-  static const _greenMid  = Color(0xFF2E7D32);
-  static const _gold      = Color(0xFFB8860B);
+  static const _green = Color(0xFF1B5E20);
+  static const _greenMid = Color(0xFF2E7D32);
+  static const _gold = Color(0xFFB8860B);
   static const _goldLight = Color(0xFFD4A017);
-  static const _cream     = Color(0xFFFAF7F0);
-  static const _surface   = Color(0xFFFFFFFF);
-  static const _ink       = Color(0xFF1A1A1A);
+  static const _cream = Color(0xFFFAF7F0);
+  static const _surface = Color(0xFFFFFFFF);
+  static const _ink = Color(0xFF1A1A1A);
 
   @override
   void initState() {
     super.initState();
-    _formKey  = GlobalKey<FormState>();
+    _formKey = GlobalKey<FormState>();
     _animCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
     _fadeAnim = CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut);
     _animCtrl.forward();
     ctrl = {
-      'username':   TextEditingController(),
-      'firstName':  TextEditingController(),
+      'username': TextEditingController(),
+      'firstName': TextEditingController(),
       'middleName': TextEditingController(),
-      'lastName':   TextEditingController(),
-      'email':      TextEditingController(),
-      'phone':      TextEditingController(),
-      'address1':   TextEditingController(),
-      'address2':   TextEditingController(),
-      'country':    TextEditingController(),
-      'language':   TextEditingController(text: 'English'),
-      'password':   TextEditingController()..addListener(_calcStrength),
+      'lastName': TextEditingController(),
+      'email': TextEditingController(),
+      'phone': TextEditingController(),
+      'address1': TextEditingController(),
+      'address2': TextEditingController(),
+      'country': TextEditingController(),
+      'language': TextEditingController(text: 'English'),
+      'password': TextEditingController()..addListener(_calcStrength),
     };
   }
 
@@ -69,17 +69,17 @@ class _SignupScreenState extends ConsumerState<SignupScreen>
   void _submit(AuthNotifier n) {
     if (_formKey.currentState!.validate()) {
       n.signUp({
-        'username':    ctrl['username']!.text.trim(),
-        'firstName':   ctrl['firstName']!.text.trim(),
-        'middleName':  ctrl['middleName']!.text.trim(),
-        'lastName':    ctrl['lastName']!.text.trim(),
-        'email':       ctrl['email']!.text.trim(),
+        'username': ctrl['username']!.text.trim(),
+        'firstName': ctrl['firstName']!.text.trim(),
+        'middleName': ctrl['middleName']!.text.trim(),
+        'lastName': ctrl['lastName']!.text.trim(),
+        'email': ctrl['email']!.text.trim(),
         'phoneNumber': ctrl['phone']!.text.trim(),
-        'address1':    ctrl['address1']!.text.trim(),
-        'address2':    ctrl['address2']!.text.trim(),
-        'country':     ctrl['country']!.text.trim(),
-        'language':    ctrl['language']!.text.trim(),
-        'password':    ctrl['password']!.text,
+        'address1': ctrl['address1']!.text.trim(),
+        'address2': ctrl['address2']!.text.trim(),
+        'country': ctrl['country']!.text.trim(),
+        'language': ctrl['language']!.text.trim(),
+        'password': ctrl['password']!.text,
       });
     }
   }
@@ -87,8 +87,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen>
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
-    final notifier  = ref.read(authProvider.notifier);
-    final isWide    = MediaQuery.of(context).size.width > 900;
+    final notifier = ref.read(authProvider.notifier);
+    final isWide = MediaQuery.of(context).size.width > 900;
 
     ref.listen<AuthState>(authProvider, (_, next) {
       if (next.shouldRedirectToLogin && !next.isLoading) {
@@ -109,8 +109,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen>
     );
   }
 
-  // ── LAYOUTS ──────────────────────────────────────────────────────────────────
-
   Widget _wideLayout(AuthState s, AuthNotifier n) {
     return Row(children: [
       Expanded(flex: 4, child: _brandPanel()),
@@ -125,8 +123,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen>
           child: Form(key: _formKey, child: _formBody(s, n))),
     ]));
   }
-
-  // ── BRAND PANEL ──────────────────────────────────────────────────────────────
 
   Widget _brandPanel() {
     return Container(
@@ -145,11 +141,11 @@ class _SignupScreenState extends ConsumerState<SignupScreen>
           Text('Join thousands of investors\nbuilding wealth through real estate.',
               style: TextStyle(fontSize: 15, color: Colors.white.withOpacity(0.75), height: 1.6)),
           const SizedBox(height: 48),
-          _featureTile(Icons.verified_user_outlined,    'Verified Platform',  'KYC-verified investors and listings'),
+          _featureTile(Icons.verified_user_outlined, 'Verified Platform', 'KYC-verified investors and listings'),
           const SizedBox(height: 20),
-          _featureTile(Icons.account_balance_outlined,  'Smart Savings',      'Automated savings plans for property'),
+          _featureTile(Icons.account_balance_outlined, 'Smart Savings', 'Automated savings plans for property'),
           const SizedBox(height: 20),
-          _featureTile(Icons.bar_chart_rounded,         'Growth Analytics',   'Track your portfolio performance'),
+          _featureTile(Icons.bar_chart_rounded, 'Growth Analytics', 'Track your portfolio performance'),
           const SizedBox(height: 48),
           Container(
             padding: const EdgeInsets.all(16),
@@ -208,8 +204,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen>
     );
   }
 
-  // ── FORM PANEL ───────────────────────────────────────────────────────────────
-
   Widget _formPanel(AuthState s, AuthNotifier n) {
     return Container(
       color: _surface,
@@ -232,7 +226,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen>
       Text('Fill in your details to get started', style: TextStyle(color: Colors.grey[500], fontSize: 13)),
       const SizedBox(height: 28),
 
-      // Personal
       _sectionLabel('Personal Information'),
       const SizedBox(height: 12),
       Row(children: [
@@ -249,7 +242,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen>
           validator: (v) => v == null || v.isEmpty ? 'Username is required' : null),
 
       const SizedBox(height: 24),
-      // Contact
       _sectionLabel('Contact Details'),
       const SizedBox(height: 12),
       _field(ctrl: ctrl['email']!, label: 'Email Address', icon: Icons.email_outlined, enabled: !s.isLoading,
@@ -261,7 +253,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen>
           validator: (v) => v == null || v.isEmpty ? 'Phone number is required' : null),
 
       const SizedBox(height: 24),
-      // Location
       _sectionLabel('Location (Optional)'),
       const SizedBox(height: 12),
       _field(ctrl: ctrl['address1']!, label: 'Address Line 1', icon: Icons.home_outlined, enabled: !s.isLoading),
@@ -269,17 +260,19 @@ class _SignupScreenState extends ConsumerState<SignupScreen>
       _field(ctrl: ctrl['address2']!, label: 'Address Line 2', icon: Icons.home_outlined, enabled: !s.isLoading),
       const SizedBox(height: 12),
       Row(children: [
-        Expanded(child: _field(ctrl: ctrl['country']!,  label: 'Country',  icon: Icons.location_on_outlined, enabled: !s.isLoading)),
+        Expanded(child: _field(ctrl: ctrl['country']!, label: 'Country', icon: Icons.location_on_outlined, enabled: !s.isLoading)),
         const SizedBox(width: 12),
-        Expanded(child: _field(ctrl: ctrl['language']!, label: 'Language', icon: Icons.language_outlined,    enabled: !s.isLoading)),
+        Expanded(child: _field(ctrl: ctrl['language']!, label: 'Language', icon: Icons.language_outlined, enabled: !s.isLoading)),
       ]),
 
       const SizedBox(height: 24),
-      // Security
       _sectionLabel('Account Security'),
       const SizedBox(height: 12),
       _field(
-        ctrl: ctrl['password']!, label: 'Password', icon: Icons.lock_outline, enabled: !s.isLoading,
+        ctrl: ctrl['password']!,
+        label: 'Password',
+        icon: Icons.lock_outline,
+        enabled: !s.isLoading,
         obscureText: _hidePassword,
         suffix: IconButton(
           icon: Icon(_hidePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined, color: Colors.grey[500], size: 20),
@@ -293,6 +286,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen>
           }
           return null;
         },
+        onFieldSubmitted: (_) => _submit(n),
       ),
       if (ctrl['password']!.text.isNotEmpty) ...[
         const SizedBox(height: 10),
@@ -318,8 +312,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen>
     ]);
   }
 
-  // ── SHARED WIDGETS ───────────────────────────────────────────────────────────
-
   Widget _sectionLabel(String label) {
     return Row(children: [
       Container(width: 3, height: 16, decoration: BoxDecoration(color: _gold, borderRadius: BorderRadius.circular(2))),
@@ -337,6 +329,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen>
     TextInputType keyboardType = TextInputType.text,
     Widget? suffix,
     String? Function(String?)? validator,
+    ValueChanged<String>? onFieldSubmitted,
   }) {
     return TextFormField(
       controller: ctrl,
@@ -352,20 +345,21 @@ class _SignupScreenState extends ConsumerState<SignupScreen>
         filled: true,
         fillColor: const Color(0xFFF8F8F8),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        border:             OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
-        enabledBorder:      OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
-        focusedBorder:      OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: _green, width: 1.5)),
-        errorBorder:        OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.red[300]!)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: _green, width: 1.5)),
+        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.red[300]!)),
         focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.red[400]!, width: 1.5)),
       ),
       validator: validator,
+      onFieldSubmitted: onFieldSubmitted,
     );
   }
 
   Widget _strengthBar() {
     final labels = ['Weak', 'Fair', 'Good', 'Strong'];
     final colors = [Colors.red, Colors.orange, Colors.amber, Colors.green];
-    final idx    = (_pwStrength - 1).clamp(0, 3);
+    final idx = (_pwStrength - 1).clamp(0, 3);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(children: List.generate(4, (i) => Expanded(child: Container(height: 4, margin: EdgeInsets.only(right: i < 3 ? 4 : 0),
           decoration: BoxDecoration(color: i < _pwStrength ? colors[idx] : Colors.grey.shade200, borderRadius: BorderRadius.circular(4)))))),
@@ -432,11 +426,11 @@ class _SignupScreenState extends ConsumerState<SignupScreen>
 
   Widget _socialRow(AuthState s, AuthNotifier n) {
     return Row(children: [
-      Expanded(child: _socialBtn('Google',   Icons.g_mobiledata, const Color(0xFFDB4437), () => n.googleSignIn(context))),
+      Expanded(child: _socialBtn('Google', Icons.g_mobiledata, const Color(0xFFDB4437), () => n.googleSignIn(context))),
       const SizedBox(width: 10),
-      Expanded(child: _socialBtn('Facebook', Icons.facebook,     const Color(0xFF1877F2), () => n.facebookSignIn(context))),
+      Expanded(child: _socialBtn('Facebook', Icons.facebook, const Color(0xFF1877F2), () => n.facebookSignIn(context))),
       const SizedBox(width: 10),
-      Expanded(child: _socialBtn('Apple',    Icons.apple,        Colors.black,             () => n.appleSignIn(context))),
+      Expanded(child: _socialBtn('Apple', Icons.apple, Colors.black, () => n.appleSignIn(context))),
     ]);
   }
 
