@@ -152,21 +152,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     ]);
   }
 
-  Widget _formPanel(AuthState s, AuthNotifier n) {
-    return Container(
-      color: _surface,
-      child: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 40),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400),
-            child: Form(key: _formKey, child: _formBody(s, n)),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _mobileHero() {
     return Container(
       width: double.infinity,
@@ -186,6 +171,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         const SizedBox(height: 10),
         Text('Sign in to your investment platform', style: TextStyle(color: Colors.white.withOpacity(0.75), fontSize: 15)),
       ]),
+    );
+  }
+
+  Widget _formPanel(AuthState s, AuthNotifier n) {
+    return Container(
+      color: _surface,
+      child: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 40),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 400),
+            child: Form(key: _formKey, child: _formBody(s, n)),
+          ),
+        ),
+      ),
     );
   }
 
@@ -226,6 +226,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             child: const Text('Forgot Password?', style: TextStyle(color: _gold, fontSize: 13)),
           ),
         ),
+
+        const SizedBox(height: 12),
+        Center(
+          child: TextButton.icon(
+            onPressed: () => context.go('/resend-activation'),
+            icon: const Icon(Icons.email_outlined, size: 18),
+            label: const Text('Resend Activation Email'),
+            style: TextButton.styleFrom(
+              foregroundColor: _green,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            ),
+          ),
+        ),
+
         const SizedBox(height: 20),
 
         _primaryBtn(label: 'Sign In', loading: s.isLoading, onPressed: () => _submit(n)),

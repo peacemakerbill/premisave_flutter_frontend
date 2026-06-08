@@ -3,6 +3,7 @@ import '../../main.dart';
 import '../screens/auth/forgot_password_screen.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/reset_password_screen.dart';
+import '../screens/auth/resend_activation_screen.dart';
 import '../screens/auth/signup_screen.dart';
 import '../screens/auth/verify_screen.dart';
 import '../screens/dashboard/admin/admin_dashboard.dart';
@@ -35,24 +36,20 @@ final GoRouter router = GoRouter(
       '/reset-password',
       '/verify',
       '/verify/:token',
+      '/resend-activation',
     ];
 
-    // If user is authenticated and tries to access public routes → redirect to their dashboard
     if (isAuthenticated && publicRoutes.contains(currentLocation)) {
       return _getDashboardRoute(role);
     }
 
-    // Role-based dashboard protection
     if (isAuthenticated) {
       final userDashboard = _getDashboardRoute(role);
-
-      // If user tries to access a different dashboard → redirect to their own
       if (currentLocation.startsWith('/dashboard/') && currentLocation != userDashboard) {
         return userDashboard;
       }
     }
 
-    // Protect private routes
     final privateRoutes = [
       '/dashboard/client',
       '/dashboard/home-owner',
@@ -88,6 +85,10 @@ final GoRouter router = GoRouter(
       path: '/verify/:token',
       builder: (_, state) => VerifyScreen(verificationToken: state.pathParameters['token']),
     ),
+    GoRoute(
+      path: '/resend-activation',
+      builder: (_, __) => const ResendActivationScreen(),
+    ),
 
     // Protected Dashboards
     GoRoute(path: '/dashboard/client', builder: (_, __) => const ClientDashboard()),
@@ -105,7 +106,6 @@ final GoRouter router = GoRouter(
   ],
 );
 
-// Helper function to get correct dashboard route based on role
 String _getDashboardRoute(String? role) {
   switch (role?.toUpperCase()) {
     case 'CLIENT':

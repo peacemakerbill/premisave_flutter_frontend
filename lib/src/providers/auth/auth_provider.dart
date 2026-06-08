@@ -426,9 +426,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<bool> resendActivationEmail(String email) async {
+    state = state.copyWith(isLoading: true, error: null);
     try {
-      await _dio.post('/auth/resend-activation', data: {'email': email});
-      ToastUtils.showSuccessToast('Activation email resent successfully!');
+      await _dio.post(
+        '/auth/resend-activation',
+        queryParameters: {'email': email.trim()},   // Use queryParameters
+      );
+
+      ToastUtils.showSuccessToast('Activation email sent successfully! Check your inbox.');
+      state = state.copyWith(isLoading: false);
       return true;
     } catch (e) {
       _handleError(e, 'Failed to resend activation email');
