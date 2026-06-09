@@ -10,6 +10,11 @@ import 'widgets/profile_completion_bar.dart';
 import 'widgets/user_avatar.dart';
 import 'widgets/change_password_dialog.dart';
 
+const _brand = Color(0xFF1A3C34);
+const _gold = Color(0xFFC9A84C);
+const _stone = Color(0xFFF5F0E8);
+const _slate = Color(0xFF6B7280);
+
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
@@ -18,345 +23,394 @@ class ProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
-  final ImagePicker _picker = ImagePicker();
-  bool _isRefreshing = false;
+  final _picker = ImagePicker();
   bool _isUploading = false;
 
-  Future<void> _refreshProfile() async {
-    setState(() => _isRefreshing = true);
-    await Future.delayed(const Duration(milliseconds: 800));
-    setState(() => _isRefreshing = false);
+  double _completion(UserModel? u) {
+    if (u == null) return 0;
+    final fields = [
+      u.username.isNotEmpty, u.firstName.isNotEmpty, u.lastName.isNotEmpty,
+      u.phoneNumber.isNotEmpty, u.address1.isNotEmpty, u.address2.isNotEmpty,
+      u.country.isNotEmpty, u.language.isNotEmpty,
+      (u.profilePictureUrl?.isNotEmpty ?? false),
+    ];
+    return fields.where((f) => f).length / fields.length * 100;
   }
 
   Future<void> _pickImage() async {
+    final picked = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 85, maxWidth: 800, maxHeight: 800);
+    if (picked == null || !mounted) return;
+    setState(() => _isUploading = true);
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const _UploadingDialog(),
+    );
     try {
-      final picked = await _picker.pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 85,
-        maxWidth: 800,
-        maxHeight: 800,
-      );
-
-      if (picked != null) {
-        setState(() => _isUploading = true);
-
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => const AlertDialog(
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircularProgressIndicator(),
-                SizedBox(height: 16),
-                Text('Uploading profile picture...'),
-              ],
-            ),
-          ),
-        );
-
-        try {
-          await ref.read(authProvider.notifier).uploadProfilePicture(picked);
-          if (context.mounted) {
-            Navigator.pop(context);
-            _refreshProfile();
-          }
-        } catch (e) {
-          if (context.mounted) Navigator.pop(context);
-        } finally {
-          setState(() => _isUploading = false);
-        }
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to pick image: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      await ref.read(authProvider.notifier).uploadProfilePicture(picked);
+      if (mounted) Navigator.pop(context);
+    } catch (_) {
+      if (mounted) Navigator.pop(context);
+    } finally {
+      if (mounted) setState(() => _isUploading = false);
     }
   }
 
-  void _showImagePickerDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Select Profile Picture'),
-        content: const Text('Choose an image from your gallery.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _pickImage();
-            },
-            child: const Text('Choose from Gallery'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  double _calculateProfileCompletion(UserModel? user) {
-    if (user == null) return 0.0;
-
-    int completedFields = 0;
-    final fields = [
-      user.username.isNotEmpty,
-      user.firstName.isNotEmpty,
-      user.lastName.isNotEmpty,
-      user.phoneNumber.isNotEmpty,
-      user.address1.isNotEmpty,
-      user.address2.isNotEmpty,
-      user.country.isNotEmpty,
-      user.language.isNotEmpty,
-      (user.profilePictureUrl?.isNotEmpty ?? false),
-    ];
-    completedFields = fields.where((field) => field).length;
-    return (completedFields / fields.length) * 100;
-  }
-
-  void _showEditProfileDialog(BuildContext context, UserModel user) {
+  void _showEditSheet(BuildContext context, UserModel user) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.background,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(24),
-            topRight: Radius.circular(24),
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                height: 4,
-                width: 48,
-                margin: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).dividerColor,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Edit Profile',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.close_rounded),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: EditProfileForm(
-                  onSuccess: () {
-                    Navigator.pop(context);
-                    _refreshProfile();
-                  },
-                  initialData: {
-                    'username': user.username,
-                    'firstName': user.firstName,
-                    'middleName': user.middleName,
-                    'lastName': user.lastName,
-                    'phoneNumber': user.phoneNumber,
-                    'address1': user.address1,
-                    'address2': user.address2,
-                    'country': user.country,
-                    'language': user.language,
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
+      builder: (_) => _EditSheet(
+        user: user,
+        onSuccess: () => setState(() {}),
       ),
     );
   }
 
-  void _showChangePasswordDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => const ChangePasswordDialog(),
-    );
-  }
-
-  void _showComingSoon(BuildContext context, String feature) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$feature coming soon!'),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
+  void _showPasswordDialog() =>
+      showDialog(context: context, builder: (_) => const ChangePasswordDialog());
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final screenSize = MediaQuery.of(context).size;
-    final isLargeScreen = screenSize.width > 768;
-    final authState = ref.watch(authProvider);
-    final user = authState.currentUser;
+    final user = ref.watch(authProvider).currentUser;
+    final wide = MediaQuery.of(context).size.width > 768;
 
     return Scaffold(
-      backgroundColor: theme.colorScheme.background,
+      backgroundColor: _stone,
       appBar: AppBar(
-        title: const Text('My Profile', style: TextStyle(fontWeight: FontWeight.bold)),
-        centerTitle: true,
+        backgroundColor: Colors.white,
         elevation: 0,
-        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.white,
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1, color: Color(0xFFEAE6DE)),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
+          icon: const Icon(Icons.arrow_back_rounded, color: _brand),
           onPressed: () => context.go('/'),
         ),
+        title: const Text('Profile',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _brand, letterSpacing: -0.3)),
+        centerTitle: true,
         actions: [
           IconButton(
-            icon: _isRefreshing || _isUploading
-                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                : const Icon(Icons.refresh_rounded),
-            onPressed: (_isRefreshing || _isUploading) ? null : _refreshProfile,
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout_rounded),
+            icon: const Icon(Icons.logout_rounded, color: _slate, size: 20),
             onPressed: () => ref.read(authProvider.notifier).confirmLogout(context),
           ),
+          const SizedBox(width: 4),
         ],
       ),
       body: user == null
-          ? _buildShimmerLoader()
+          ? _Shimmer()
           : RefreshIndicator(
-        onRefresh: _refreshProfile,
+        color: _brand,
+        onRefresh: () async => setState(() {}),
         child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: isLargeScreen ? 32 : 16, vertical: 16),
-          child: Column(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.symmetric(horizontal: wide ? 40 : 20, vertical: 24),
+          child: wide
+              ? Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeroSection(user, theme, isLargeScreen),
-              const SizedBox(height: 24),
-              _buildCompletionCard(user, theme),
-              const SizedBox(height: 20),
-              _buildDetailedInfoSection(user, theme),
-              const SizedBox(height: 20),
-              _buildActionCards(context, user, theme),
-              const SizedBox(height: 20),
-              _buildQuickActions(theme),
+              SizedBox(width: 280, child: _LeftColumn(user: user, isUploading: _isUploading, onPickImage: _pickImage, completion: _completion(user))),
+              const SizedBox(width: 20),
+              Expanded(child: _RightColumn(user: user, onEdit: () => _showEditSheet(context, user), onPassword: _showPasswordDialog)),
+            ],
+          )
+              : Column(
+            children: [
+              _HeroCard(user: user, isUploading: _isUploading, onPickImage: _pickImage),
+              const SizedBox(height: 16),
+              _CompletionCard(pct: _completion(user), onTap: () => _showEditSheet(context, user)),
+              const SizedBox(height: 16),
+              _InfoCard(user: user),
+              const SizedBox(height: 16),
+              _ActionsCard(onEdit: () => _showEditSheet(context, user), onPassword: _showPasswordDialog),
             ],
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildHeroSection(UserModel user, ThemeData theme, bool isLargeScreen) {
+// ── Upload Dialog ──────────────────────────────────────────────────────────
+
+class _UploadingDialog extends StatelessWidget {
+  const _UploadingDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: const Padding(
+        padding: EdgeInsets.all(28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(color: _brand, strokeWidth: 2.5),
+            SizedBox(height: 16),
+            Text('Uploading photo…', style: TextStyle(fontSize: 14, color: _slate)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Edit Bottom Sheet ──────────────────────────────────────────────────────
+
+class _EditSheet extends StatelessWidget {
+  final UserModel user;
+  final VoidCallback onSuccess;
+  const _EditSheet({required this.user, required this.onSuccess});
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.92,
+      maxChildSize: 0.95,
+      minChildSize: 0.5,
+      builder: (_, ctrl) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: const Color(0xFFEAE6DE), borderRadius: BorderRadius.circular(2))),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Edit Profile', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: _brand, letterSpacing: -0.4)),
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(color: _stone, borderRadius: BorderRadius.circular(8)),
+                      child: const Icon(Icons.close_rounded, size: 18, color: _slate),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 4),
+            const Divider(color: Color(0xFFEAE6DE)),
+            Expanded(
+              child: EditProfileForm(
+                scrollController: ctrl,
+                onSuccess: () { Navigator.pop(context); onSuccess(); },
+                initialData: {
+                  'username': user.username, 'firstName': user.firstName,
+                  'middleName': user.middleName, 'lastName': user.lastName,
+                  'phoneNumber': user.phoneNumber, 'address1': user.address1,
+                  'address2': user.address2, 'country': user.country, 'language': user.language,
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Layout blocks ─────────────────────────────────────────────────────────
+
+class _LeftColumn extends StatelessWidget {
+  final UserModel user;
+  final bool isUploading;
+  final VoidCallback onPickImage;
+  final double completion;
+  const _LeftColumn({required this.user, required this.isUploading, required this.onPickImage, required this.completion});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        _HeroCard(user: user, isUploading: isUploading, onPickImage: onPickImage),
+        const SizedBox(height: 16),
+        _CompletionCard(pct: completion, onTap: () {}),
+      ],
+    );
+  }
+}
+
+class _RightColumn extends StatelessWidget {
+  final UserModel user;
+  final VoidCallback onEdit, onPassword;
+  const _RightColumn({required this.user, required this.onEdit, required this.onPassword});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        _InfoCard(user: user),
+        const SizedBox(height: 16),
+        _ActionsCard(onEdit: onEdit, onPassword: onPassword),
+      ],
+    );
+  }
+}
+
+// ── Hero Card ──────────────────────────────────────────────────────────────
+
+class _HeroCard extends StatelessWidget {
+  final UserModel user;
+  final bool isUploading;
+  final VoidCallback onPickImage;
+  const _HeroCard({required this.user, required this.isUploading, required this.onPickImage});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(isLargeScreen ? 28 : 20),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [BoxShadow(color: theme.colorScheme.primary.withOpacity(0.08), blurRadius: 24)],
+        color: _brand,
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
         children: [
           GestureDetector(
-            onTap: _isUploading ? null : _showImagePickerDialog,
+            onTap: isUploading ? null : onPickImage,
             child: Stack(
-              alignment: Alignment.center,
               children: [
                 Container(
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: theme.colorScheme.background,
-                    boxShadow: [BoxShadow(color: theme.colorScheme.primary.withOpacity(0.2), blurRadius: 16)],
+                    border: Border.all(color: _gold, width: 2.5),
                   ),
                   child: UserAvatar(
                     imageUrl: user.profilePictureUrl?.isNotEmpty == true ? user.profilePictureUrl : null,
-                    radius: isLargeScreen ? 70 : 56,
+                    radius: 44,
                   ),
                 ),
                 Positioned(
-                  bottom: 0,
-                  right: 0,
+                  bottom: 0, right: 0,
                   child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary,
-                      shape: BoxShape.circle,
-                      boxShadow: [BoxShadow(color: theme.colorScheme.primary.withOpacity(0.3), blurRadius: 8)],
-                    ),
-                    child: Icon(Icons.camera_alt_rounded, color: theme.colorScheme.onPrimary, size: 18),
+                    padding: const EdgeInsets.all(7),
+                    decoration: BoxDecoration(color: _gold, shape: BoxShape.circle, border: Border.all(color: _brand, width: 2)),
+                    child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 14),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 20),
-          Text(
-            '${user.firstName} ${user.lastName}',
-            style: TextStyle(fontSize: isLargeScreen ? 24 : 20, fontWeight: FontWeight.w700, color: theme.colorScheme.onSurface),
-            textAlign: TextAlign.center,
-          ),
+          const SizedBox(height: 14),
+          Text('${user.firstName} ${user.lastName}',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.5)),
           if (user.username.isNotEmpty) ...[
-            const SizedBox(height: 6),
-            Text('@${user.username}', style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.w500)),
+            const SizedBox(height: 4),
+            Text('@${user.username}',
+                style: const TextStyle(fontSize: 13, color: _gold, fontWeight: FontWeight.w500)),
+          ],
+          const SizedBox(height: 6),
+          Text(user.email,
+              style: const TextStyle(fontSize: 12, color: Color(0xFF9DC4B8))),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Completion Card ────────────────────────────────────────────────────────
+
+class _CompletionCard extends StatelessWidget {
+  final double pct;
+  final VoidCallback onTap;
+  const _CompletionCard({required this.pct, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Profile strength', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _brand)),
+              Text('${pct.toInt()}%', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: _gold)),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ProfileCompletionBar(percentage: pct),
+          if (pct < 100) ...[
+            const SizedBox(height: 10),
+            GestureDetector(
+              onTap: onTap,
+              child: const Text('Complete your profile →',
+                  style: TextStyle(fontSize: 12, color: _gold, fontWeight: FontWeight.w600)),
+            ),
           ],
         ],
       ),
     );
   }
+}
 
-  Widget _buildDetailedInfoSection(UserModel user, ThemeData theme) {
+// ── Info Card ──────────────────────────────────────────────────────────────
+
+class _InfoCard extends StatelessWidget {
+  final UserModel user;
+  const _InfoCard({required this.user});
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = [
+      if (user.email.isNotEmpty) _Row(Icons.mail_outline_rounded, 'Email', user.email),
+      if (user.phoneNumber.isNotEmpty) _Row(Icons.phone_outlined, 'Phone', user.phoneNumber),
+      if (user.address1.isNotEmpty) _Row(Icons.home_outlined, 'Address', user.address1),
+      if (user.country.isNotEmpty) _Row(Icons.location_on_outlined, 'Country', user.country),
+      if (user.language.isNotEmpty) _Row(Icons.language_rounded, 'Language', user.language),
+    ];
+
+    if (rows.isEmpty) return const SizedBox.shrink();
+
     return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
-      ),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Account Information', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface)),
-          const SizedBox(height: 16),
-          _buildInfoRow(Icons.email_rounded, 'Email', user.email, theme),
-          if (user.phoneNumber.isNotEmpty) _buildInfoRow(Icons.phone_rounded, 'Phone Number', user.phoneNumber, theme),
-          if (user.address1.isNotEmpty) _buildInfoRow(Icons.home_rounded, 'Address Line 1', user.address1, theme),
-          if (user.address2.isNotEmpty) _buildInfoRow(Icons.home_work_rounded, 'Address Line 2', user.address2, theme),
-          if (user.country.isNotEmpty) _buildInfoRow(Icons.location_on_rounded, 'Country', user.country, theme),
-          if (user.language.isNotEmpty) _buildInfoRow(Icons.language_rounded, 'Preferred Language', user.language, theme),
+          const Text('Details', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: _brand, letterSpacing: -0.2)),
+          const SizedBox(height: 4),
+          const Divider(color: Color(0xFFEAE6DE)),
+          ...rows.map((r) => _InfoRow(row: r)),
         ],
       ),
     );
   }
+}
 
-  Widget _buildInfoRow(IconData icon, String label, String value, ThemeData theme) {
+class _Row { final IconData icon; final String label, value; const _Row(this.icon, this.label, this.value); }
+
+class _InfoRow extends StatelessWidget {
+  final _Row row;
+  const _InfoRow({required this.row});
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         children: [
-          Icon(icon, color: theme.colorScheme.primary, size: 24),
-          const SizedBox(width: 16),
+          Icon(row.icon, size: 17, color: _gold),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurface.withOpacity(0.7))),
-                Text(value, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+                Text(row.label, style: const TextStyle(fontSize: 11, color: _slate)),
+                Text(row.value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _brand)),
               ],
             ),
           ),
@@ -364,181 +418,85 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       ),
     );
   }
+}
 
-  Widget _buildCompletionCard(UserModel user, ThemeData theme) {
-    final completionPercentage = _calculateProfileCompletion(user);
-    return Card(
-      elevation: 8,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+// ── Actions Card ───────────────────────────────────────────────────────────
+
+class _ActionsCard extends StatelessWidget {
+  final VoidCallback onEdit, onPassword;
+  const _ActionsCard({required this.onEdit, required this.onPassword});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+      child: Column(
+        children: [
+          _ActionTile(icon: Icons.person_outline_rounded, label: 'Edit Profile', sub: 'Update your information', onTap: onEdit),
+          const Divider(height: 1, indent: 56, color: Color(0xFFEAE6DE)),
+          _ActionTile(icon: Icons.lock_outline_rounded, label: 'Change Password', sub: 'Update security credentials', onTap: onPassword, iconColor: _gold),
+        ],
+      ),
+    );
+  }
+}
+
+class _ActionTile extends StatelessWidget {
+  final IconData icon;
+  final String label, sub;
+  final VoidCallback onTap;
+  final Color iconColor;
+  const _ActionTile({required this.icon, required this.label, required this.sub, required this.onTap, this.iconColor = _brand});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(9),
+              decoration: BoxDecoration(color: iconColor.withOpacity(0.08), borderRadius: BorderRadius.circular(10)),
+              child: Icon(icon, size: 18, color: iconColor),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _brand)),
+                  Text(sub, style: const TextStyle(fontSize: 11, color: _slate)),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded, size: 18, color: _slate),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Shimmer ────────────────────────────────────────────────────────────────
+
+class _Shimmer extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer.fromColors(
+      baseColor: const Color(0xFFEAE6DE),
+      highlightColor: Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(color: theme.colorScheme.primary.withOpacity(0.1), shape: BoxShape.circle),
-                  child: Icon(Icons.analytics_rounded, color: theme.colorScheme.primary, size: 22),
-                ),
-                const SizedBox(width: 12),
-                Text('Profile Completion', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface)),
-              ],
-            ),
-            const SizedBox(height: 16),
-            ProfileCompletionBar(percentage: completionPercentage),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('${completionPercentage.toInt()}% Complete', style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurface.withOpacity(0.6))),
-                if (completionPercentage < 100)
-                  TextButton(onPressed: () => _showEditProfileDialog(context, user), child: const Text('Complete Profile')),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActionCards(BuildContext context, UserModel user, ThemeData theme) {
-    return Column(
-      children: [
-        _buildActionCard(
-          title: 'Edit Profile',
-          subtitle: 'Update personal information',
-          icon: Icons.person_rounded,
-          color: theme.colorScheme.primary,
-          onTap: () => _showEditProfileDialog(context, user),
-        ),
-        const SizedBox(height: 12),
-        _buildActionCard(
-          title: 'Change Password',
-          subtitle: 'Update security credentials',
-          icon: Icons.lock_rounded,
-          color: const Color(0xFFF57C00),
-          onTap: () => _showChangePasswordDialog(context),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActionCard({
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    final theme = Theme.of(context);
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          decoration: BoxDecoration(
-            color: theme.cardColor,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [BoxShadow(color: theme.shadowColor.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
-                  child: Icon(icon, color: color, size: 24),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(title, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: theme.colorScheme.onSurface)),
-                      const SizedBox(height: 4),
-                      Text(subtitle, style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withOpacity(0.6))),
-                    ],
-                  ),
-                ),
-                Icon(Icons.arrow_forward_ios_rounded, color: theme.colorScheme.onSurface.withOpacity(0.4), size: 16),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickActions(ThemeData theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Quick Actions', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface)),
-        const SizedBox(height: 16),
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: [
-            _buildQuickActionButton(icon: Icons.share_rounded, label: 'Share Profile', color: theme.colorScheme.primary, onTap: () => _showComingSoon(context, 'Share Profile')),
-            _buildQuickActionButton(icon: Icons.qr_code_rounded, label: 'QR Code', color: const Color(0xFF7B1FA2), onTap: () => _showComingSoon(context, 'QR Code')),
-            _buildQuickActionButton(icon: Icons.help_rounded, label: 'Support', color: const Color(0xFFF57C00), onTap: () => _showComingSoon(context, 'Support')),
-            _buildQuickActionButton(icon: Icons.history_rounded, label: 'Activity', color: const Color(0xFF388E3C), onTap: () => _showComingSoon(context, 'Activity')),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildQuickActionButton({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: color.withOpacity(0.2)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, color: color, size: 18),
-              const SizedBox(width: 8),
-              Text(label, style: TextStyle(color: color, fontWeight: FontWeight.w500, fontSize: 14)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildShimmerLoader() {
-    return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Container(width: double.infinity, height: 200, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20))),
-            const SizedBox(height: 20),
-            Container(width: double.infinity, height: 120, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16))),
-            const SizedBox(height: 20),
-            Container(width: double.infinity, height: 200, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16))),
-          ],
-        ),
+        child: Column(children: [
+          Container(height: 200, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20))),
+          const SizedBox(height: 16),
+          Container(height: 80, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16))),
+          const SizedBox(height: 16),
+          Container(height: 220, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16))),
+        ]),
       ),
     );
   }

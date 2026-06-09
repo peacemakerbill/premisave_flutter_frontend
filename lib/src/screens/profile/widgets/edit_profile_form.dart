@@ -1,17 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../providers/auth/auth_provider.dart';
-import '../../../widgets/custom_text_field.dart';
 
+const _brand = Color(0xFF1A3C34);
+const _gold = Color(0xFFC9A84C);
+const _stone = Color(0xFFF5F0E8);
+const _slate = Color(0xFF6B7280);
+const _border = Color(0xFFE2DDD6);
 
 class EditProfileForm extends ConsumerStatefulWidget {
   final VoidCallback onSuccess;
   final Map<String, String> initialData;
+  final ScrollController? scrollController;
 
   const EditProfileForm({
     Key? key,
     required this.onSuccess,
     required this.initialData,
+    this.scrollController,
   }) : super(key: key);
 
   @override
@@ -20,246 +26,216 @@ class EditProfileForm extends ConsumerStatefulWidget {
 
 class _EditProfileFormState extends ConsumerState<EditProfileForm> {
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController _usernameCtrl;
-  late TextEditingController _firstNameCtrl;
-  late TextEditingController _middleNameCtrl;
-  late TextEditingController _lastNameCtrl;
-  late TextEditingController _phoneCtrl;
-  late TextEditingController _address1Ctrl;
-  late TextEditingController _address2Ctrl;
-  late TextEditingController _countryCtrl;
-  late TextEditingController _languageCtrl;
+  late final Map<String, TextEditingController> _ctrl;
 
   @override
   void initState() {
     super.initState();
-    _initializeControllers();
-  }
-
-  void _initializeControllers() {
-    _usernameCtrl = TextEditingController(text: widget.initialData['username'] ?? '');
-    _firstNameCtrl = TextEditingController(text: widget.initialData['firstName'] ?? '');
-    _middleNameCtrl = TextEditingController(text: widget.initialData['middleName'] ?? '');
-    _lastNameCtrl = TextEditingController(text: widget.initialData['lastName'] ?? '');
-    _phoneCtrl = TextEditingController(text: widget.initialData['phoneNumber'] ?? '');
-    _address1Ctrl = TextEditingController(text: widget.initialData['address1'] ?? '');
-    _address2Ctrl = TextEditingController(text: widget.initialData['address2'] ?? '');
-    _countryCtrl = TextEditingController(text: widget.initialData['country'] ?? '');
-    _languageCtrl = TextEditingController(text: widget.initialData['language'] ?? '');
+    _ctrl = {
+      for (final k in ['username','firstName','middleName','lastName','phoneNumber','address1','address2','country','language'])
+        k: TextEditingController(text: widget.initialData[k] ?? ''),
+    };
   }
 
   @override
   void dispose() {
-    _usernameCtrl.dispose();
-    _firstNameCtrl.dispose();
-    _middleNameCtrl.dispose();
-    _lastNameCtrl.dispose();
-    _phoneCtrl.dispose();
-    _address1Ctrl.dispose();
-    _address2Ctrl.dispose();
-    _countryCtrl.dispose();
-    _languageCtrl.dispose();
+    for (final c in _ctrl.values) c.dispose();
     super.dispose();
   }
 
-  void _handleSubmit() {
-    if (_formKey.currentState?.validate() ?? false) {
-      final authNotifier = ref.read(authProvider.notifier);
-      final data = {
-        'username': _usernameCtrl.text.trim(),
-        'firstName': _firstNameCtrl.text.trim(),
-        'middleName': _middleNameCtrl.text.trim(),
-        'lastName': _lastNameCtrl.text.trim(),
-        'phoneNumber': _phoneCtrl.text.trim(),
-        'address1': _address1Ctrl.text.trim(),
-        'address2': _address2Ctrl.text.trim(),
-        'country': _countryCtrl.text.trim(),
-        'language': _languageCtrl.text.trim(),
-      };
-      authNotifier.updateProfile(data);
-      widget.onSuccess();
-    }
+  void _submit() {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    ref.read(authProvider.notifier).updateProfile({
+      for (final e in _ctrl.entries) e.key: e.value.text.trim(),
+    });
+    widget.onSuccess();
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
-
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: isDarkMode
-              ? [Colors.grey[900]!, Colors.grey[850]!]
-              : [Colors.white, Colors.grey[50]!],
-        ),
-      ),
-      child: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildSectionHeader(theme, Icons.person, 'Basic Information'),
-              const SizedBox(height: 16),
-              _buildTextFieldRow(
-                left: CustomTextField(
-                  controller: _firstNameCtrl,
-                  label: 'First Name',
-                  hintText: 'Enter first name',
-                  prefixIcon: const Icon(Icons.person_outline_rounded),
-                  validator: (value) => value!.isEmpty ? 'First name is required' : null,
-                ),
-                right: CustomTextField(
-                  controller: _lastNameCtrl,
-                  label: 'Last Name',
-                  hintText: 'Enter last name',
-                  prefixIcon: const Icon(Icons.person_outline_rounded),
-                  validator: (value) => value!.isEmpty ? 'Last name is required' : null,
-                ),
-              ),
-              const SizedBox(height: 12),
-              CustomTextField(
-                controller: _usernameCtrl,
-                label: 'Username',
-                hintText: 'Enter username',
-                prefixIcon: const Icon(Icons.alternate_email_rounded),
-              ),
-              const SizedBox(height: 12),
-              CustomTextField(
-                controller: _middleNameCtrl,
-                label: 'Middle Name (Optional)',
-                hintText: 'Enter middle name',
-                prefixIcon: const Icon(Icons.person_outline_rounded),
-              ),
-              const SizedBox(height: 24),
-              _buildSectionHeader(theme, Icons.contact_phone, 'Contact Details'),
-              const SizedBox(height: 16),
-              CustomTextField(
-                controller: _phoneCtrl,
-                label: 'Phone Number',
-                hintText: 'Enter phone number',
-                prefixIcon: const Icon(Icons.phone_rounded),
-                keyboardType: TextInputType.phone,
-              ),
-              const SizedBox(height: 24),
-              _buildSectionHeader(theme, Icons.home, 'Address Information'),
-              const SizedBox(height: 16),
-              CustomTextField(
-                controller: _address1Ctrl,
-                label: 'Address Line 1',
-                hintText: 'Enter primary address',
-                prefixIcon: const Icon(Icons.home_rounded),
-              ),
-              const SizedBox(height: 12),
-              CustomTextField(
-                controller: _address2Ctrl,
-                label: 'Address Line 2 (Optional)',
-                hintText: 'Apartment, suite, etc.',
-                prefixIcon: const Icon(Icons.home_work_rounded),
-              ),
-              _buildTextFieldRow(
-                left: CustomTextField(
-                  controller: _countryCtrl,
-                  label: 'Country',
-                  hintText: 'Enter country',
-                  prefixIcon: const Icon(Icons.location_on_rounded),
-                ),
-                right: CustomTextField(
-                  controller: _languageCtrl,
-                  label: 'Language',
-                  hintText: 'e.g., English',
-                  prefixIcon: const Icon(Icons.language_rounded),
-                ),
-              ),
-              const SizedBox(height: 32),
-              _buildActionButtons(theme),
-            ],
-          ),
+    return Form(
+      key: _formKey,
+      child: SingleChildScrollView(
+        controller: widget.scrollController,
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 36),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _section('Basic Information', Icons.person_outline_rounded),
+            _row(
+              _field('firstName', 'First Name', Icons.badge_outlined, required: true),
+              _field('lastName', 'Last Name', Icons.badge_outlined, required: true),
+            ),
+            const SizedBox(height: 12),
+            _field('username', 'Username', Icons.alternate_email_rounded),
+            const SizedBox(height: 12),
+            _field('middleName', 'Middle Name (optional)', Icons.person_outline_rounded),
+            const SizedBox(height: 24),
+            _section('Contact', Icons.contact_phone_outlined),
+            _field('phoneNumber', 'Phone Number', Icons.phone_outlined, type: TextInputType.phone),
+            const SizedBox(height: 24),
+            _section('Address', Icons.home_outlined),
+            _field('address1', 'Address Line 1', Icons.location_on_outlined),
+            const SizedBox(height: 12),
+            _field('address2', 'Address Line 2 (optional)', Icons.add_location_alt_outlined),
+            const SizedBox(height: 12),
+            _row(
+              _field('country', 'Country', Icons.public_outlined),
+              _field('language', 'Language', Icons.language_rounded),
+            ),
+            const SizedBox(height: 36),
+            _Buttons(onCancel: () => Navigator.pop(context), onSave: _submit),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildSectionHeader(ThemeData theme, IconData icon, String title) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.primary.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: theme.colorScheme.primary, size: 20),
-        ),
-        const SizedBox(width: 12),
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: theme.colorScheme.onSurface,
-          ),
-        ),
-      ],
+  Widget _section(String title, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Row(children: [
+        Icon(icon, size: 15, color: _gold),
+        const SizedBox(width: 7),
+        Text(title.toUpperCase(),
+            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: _gold, letterSpacing: 1.1)),
+      ]),
     );
   }
 
-  Widget _buildTextFieldRow({required Widget left, required Widget right}) {
-    return Row(
-      children: [
-        Expanded(child: left),
-        const SizedBox(width: 12),
-        Expanded(child: right),
-      ],
-    );
+  Widget _row(Widget left, Widget right) {
+    return Row(children: [
+      Expanded(child: left),
+      const SizedBox(width: 12),
+      Expanded(child: right),
+    ]);
   }
 
-  Widget _buildActionButtons(ThemeData theme) {
-    return Row(
-      children: [
-        Expanded(
-          child: OutlinedButton(
-            onPressed: () => Navigator.pop(context),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              side: BorderSide(color: theme.dividerColor),
-            ),
-            child: const Text('Cancel'),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: ElevatedButton(
-            onPressed: _handleSubmit,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: theme.colorScheme.primary,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              elevation: 2,
-              shadowColor: theme.colorScheme.primary.withValues(alpha: 0.3),
-            ),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.check_rounded, size: 20),
-                SizedBox(width: 8),
-                Text('Save Changes'),
-              ],
-            ),
-          ),
-        ),
-      ],
+  Widget _field(String key, String label, IconData icon, {bool required = false, TextInputType? type}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 0),
+      child: _PremField(
+        controller: _ctrl[key]!,
+        label: label,
+        icon: icon,
+        keyboardType: type,
+        validator: required ? (v) => (v == null || v.trim().isEmpty) ? 'Required' : null : null,
+      ),
     );
+  }
+}
+
+// ── Clean field that owns its own decoration ──────────────────────────────
+
+class _PremField extends StatefulWidget {
+  final TextEditingController controller;
+  final String label;
+  final IconData icon;
+  final TextInputType? keyboardType;
+  final String? Function(String?)? validator;
+
+  const _PremField({
+    required this.controller,
+    required this.label,
+    required this.icon,
+    this.keyboardType,
+    this.validator,
+  });
+
+  @override
+  State<_PremField> createState() => _PremFieldState();
+}
+
+class _PremFieldState extends State<_PremField> {
+  bool _focused = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Focus(
+        onFocusChange: (f) => setState(() => _focused = f),
+        child: TextFormField(
+          controller: widget.controller,
+          keyboardType: widget.keyboardType,
+          validator: widget.validator,
+          style: const TextStyle(fontSize: 14, color: _brand, fontWeight: FontWeight.w500),
+          cursorColor: _brand,
+          decoration: InputDecoration(
+            labelText: widget.label,
+            labelStyle: TextStyle(
+              fontSize: 13,
+              color: _focused ? _brand : _slate,
+              fontWeight: _focused ? FontWeight.w500 : FontWeight.normal,
+            ),
+            floatingLabelStyle: const TextStyle(fontSize: 12, color: _gold, fontWeight: FontWeight.w600),
+            prefixIcon: Padding(
+              padding: const EdgeInsets.only(left: 14, right: 10),
+              child: Icon(widget.icon, size: 17, color: _focused ? _brand : _slate),
+            ),
+            prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: _border, width: 1.2),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: _brand, width: 1.5),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: Colors.red, width: 1.2),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: Colors.red, width: 1.5),
+            ),
+            errorStyle: const TextStyle(fontSize: 11, color: Colors.red),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Buttons ───────────────────────────────────────────────────────────────
+
+class _Buttons extends StatelessWidget {
+  final VoidCallback onCancel, onSave;
+  const _Buttons({required this.onCancel, required this.onSave});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(children: [
+      Expanded(
+        child: OutlinedButton(
+          onPressed: onCancel,
+          style: OutlinedButton.styleFrom(
+            foregroundColor: _slate,
+            side: const BorderSide(color: _border),
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+          child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w500)),
+        ),
+      ),
+      const SizedBox(width: 12),
+      Expanded(
+        child: ElevatedButton(
+          onPressed: onSave,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: _brand,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            elevation: 0,
+          ),
+          child: const Text('Save Changes', style: TextStyle(fontWeight: FontWeight.w700)),
+        ),
+      ),
+    ]);
   }
 }

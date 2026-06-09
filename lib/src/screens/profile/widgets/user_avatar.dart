@@ -6,31 +6,20 @@ class UserAvatar extends StatelessWidget {
   final double radius;
   final VoidCallback? onTap;
 
-  const UserAvatar({
-    super.key,
-    this.imageUrl,
-    this.radius = 40,
-    this.onTap,
-  });
+  const UserAvatar({super.key, this.imageUrl, this.radius = 40, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return GestureDetector(
       onTap: onTap,
       child: CircleAvatar(
         radius: radius,
-        backgroundColor: theme.colorScheme.surfaceVariant,
-        backgroundImage: imageUrl != null && imageUrl!.isNotEmpty
-            ? CachedNetworkImageProvider(imageUrl!)
+        backgroundColor: const Color(0xFF2A5446),
+        backgroundImage: (imageUrl != null && imageUrl!.isNotEmpty)
+            ? CachedNetworkImageProvider(imageUrl!) as ImageProvider
             : null,
-        child: imageUrl == null || imageUrl!.isEmpty
-            ? Icon(
-          Icons.person_rounded,
-          size: radius * 0.8,
-          color: theme.colorScheme.onSurfaceVariant,
-        )
+        child: (imageUrl == null || imageUrl!.isEmpty)
+            ? Icon(Icons.person_rounded, size: radius * 0.75, color: const Color(0xFF9DC4B8))
             : null,
       ),
     );

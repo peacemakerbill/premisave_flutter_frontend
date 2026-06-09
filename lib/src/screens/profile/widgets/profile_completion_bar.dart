@@ -2,49 +2,27 @@ import 'package:flutter/material.dart';
 
 class ProfileCompletionBar extends StatelessWidget {
   final double percentage;
-
   const ProfileCompletionBar({super.key, required this.percentage});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Column(
-      children: [
-        Stack(
-          children: [
-            Container(
-              height: 12,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceVariant,
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 800),
-              curve: Curves.easeOut,
-              height: 12,
-              width: percentage * 0.01 * (MediaQuery.of(context).size.width - 64),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    theme.colorScheme.primary,
-                    theme.colorScheme.primaryContainer,
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(10),
-                boxShadow: [
-                  BoxShadow(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.4),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-            ),
-          ],
+    return LayoutBuilder(builder: (_, c) {
+      return Stack(children: [
+        Container(
+          height: 6,
+          decoration: BoxDecoration(color: const Color(0xFFEAE6DE), borderRadius: BorderRadius.circular(4)),
         ),
-      ],
-    );
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 800),
+          curve: Curves.easeOut,
+          height: 6,
+          width: (percentage / 100).clamp(0.0, 1.0) * c.maxWidth,
+          decoration: BoxDecoration(
+            color: const Color(0xFFC9A84C),
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+      ]);
+    });
   }
 }
