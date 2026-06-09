@@ -236,6 +236,7 @@ class _DialogState extends ConsumerState<_ReviewDialog> {
   late TextEditingController _ctrl;
   bool _submitting = false;
   String? _error;
+  int _hoverRating = 0;
 
   @override
   void initState() {
@@ -248,7 +249,10 @@ class _DialogState extends ConsumerState<_ReviewDialog> {
   void dispose() { _ctrl.dispose(); super.dispose(); }
 
   Future<void> _submit() async {
-    if (_rating == 0) { setState(() => _error = 'Select a rating'); return; }
+    if (_rating == 0) {
+      setState(() => _error = 'Please select a rating');
+      return;
+    }
     setState(() { _submitting = true; _error = null; });
     final n = ref.read(socialProvider.notifier);
     final err = widget.existing != null
@@ -263,90 +267,160 @@ class _DialogState extends ConsumerState<_ReviewDialog> {
   @override
   Widget build(BuildContext context) {
     final editing = widget.existing != null;
+    final activeRating = _hoverRating > 0 ? _hoverRating : _rating;
+
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start,
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 28, vertical: 40),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 360),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Header
               Row(children: [
-                Container(width: 36, height: 36,
-                    decoration: BoxDecoration(color: _amberS, borderRadius: BorderRadius.circular(10)),
-                    child: const Icon(Icons.star_rounded, color: _amber, size: 18)),
-                const SizedBox(width: 10),
-                Text(editing ? 'Edit Review' : 'Write a Review',
-                    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: _soil)),
+                Container(
+                  width: 40, height: 40,
+                  decoration: BoxDecoration(
+                    color: _amberS,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.star_rounded, color: _amber, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  editing ? 'Edit review' : 'Write a review',
+                  style: const TextStyle(
+                    fontSize: 16, fontWeight: FontWeight.w700, color: _soil,
+                  ),
+                ),
               ]),
-              const SizedBox(height: 20),
-              const Text('Your rating', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600,
-                  color: Color(0xFF888888))),
-              const SizedBox(height: 8),
+              const SizedBox(height: 22),
+
+              // Rating label
+              const Text('Your rating',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600,
+                      color: Color(0xFF888888))),
+              const SizedBox(height: 10),
+
+              // Stars — hover-aware
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: List.generate(5, (i) {
                   final s = i + 1;
-                  return GestureDetector(
-                    onTap: () => setState(() => _rating = s),
-                    child: Padding(padding: const EdgeInsets.only(right: 4),
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 140),
-                        child: Icon(s <= _rating ? Icons.star_rounded : Icons.star_outline_rounded,
-                            key: ValueKey('$s-$_rating'), size: 34,
-                            color: s <= _rating ? _amber : Colors.grey[300]),
+                  final filled = s <= activeRating;
+                  return MouseRegion(
+                    onEnter: (_) => setState(() => _hoverRating = s),
+                    onExit: (_) => setState(() => _hoverRating = 0),
+                    child: GestureDetector(
+                      onTap: () => setState(() { _rating = s; _error = null; }),
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 6),
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 120),
+                          child: Icon(
+                            filled ? Icons.star_rounded : Icons.star_outline_rounded,
+                            key: ValueKey('$s-$filled'),
+                            size: 36,
+                            color: filled ? _amber : const Color(0xFFDDDDDD),
+                          ),
+                        ),
                       ),
                     ),
                   );
                 }),
               ),
-              const SizedBox(height: 16),
-              const Text('Comment (optional)', style: TextStyle(fontSize: 12,
-                  fontWeight: FontWeight.w600, color: Color(0xFF888888))),
+              const SizedBox(height: 18),
+
+              // Comment label
+              Row(children: const [
+                Text('Comment', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600,
+                    color: Color(0xFF888888))),
+                SizedBox(width: 4),
+                Text('(optional)', style: TextStyle(fontSize: 12, color: Color(0xFFBBBBBB))),
+              ]),
               const SizedBox(height: 8),
+
+              // Text field
               TextField(
                 controller: _ctrl,
-                maxLines: 3, maxLength: 1000,
+                maxLines: 3,
+                maxLength: 1000,
                 style: const TextStyle(fontSize: 13, color: _soil),
                 decoration: InputDecoration(
-                  hintText: 'Share your experience...',
+                  hintText: 'Share your experience…',
                   hintStyle: const TextStyle(color: Color(0xFFBBBBBB), fontSize: 13),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[200]!)),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: _greenL, width: 1.5)),
+                  filled: true,
+                  fillColor: const Color(0xFFFAFAFA),
+                  counterStyle: const TextStyle(fontSize: 11, color: Color(0xFFBBBBBB)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFEEEEEE)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFEEEEEE)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: _greenL, width: 1.5),
+                  ),
                   contentPadding: const EdgeInsets.all(12),
                 ),
               ),
+
+              // Error
               if (_error != null) ...[
                 const SizedBox(height: 4),
-                Text(_error!, style: const TextStyle(color: Colors.red, fontSize: 12)),
+                Row(children: [
+                  const Icon(Icons.info_outline_rounded, size: 13, color: Colors.red),
+                  const SizedBox(width: 4),
+                  Text(_error!,
+                      style: const TextStyle(color: Colors.red, fontSize: 12)),
+                ]),
               ],
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
+
+              // Actions
               Row(children: [
                 Expanded(child: OutlinedButton(
                   onPressed: () => Navigator.pop(context, false),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 13),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    side: BorderSide(color: Colors.grey[300]!),
-                    foregroundColor: const Color(0xFF666666),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    side: const BorderSide(color: Color(0xFFDDDDDD)),
+                    foregroundColor: const Color(0xFF888888),
+                    backgroundColor: Colors.transparent,
                   ),
-                  child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w600)),
+                  child: const Text('Cancel',
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
                 )),
                 const SizedBox(width: 10),
                 Expanded(child: FilledButton(
                   onPressed: _submitting ? null : _submit,
                   style: FilledButton.styleFrom(
                     backgroundColor: _green,
+                    disabledBackgroundColor: Color(0xFF2D6A4F80),
                     padding: const EdgeInsets.symmetric(vertical: 13),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
                   ),
                   child: _submitting
                       ? const SizedBox(width: 16, height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                       : Text(editing ? 'Update' : 'Submit',
-                      style: const TextStyle(fontWeight: FontWeight.w700)),
+                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
                 )),
               ]),
-            ]),
+            ],
+          ),
+        ),
       ),
     );
   }
