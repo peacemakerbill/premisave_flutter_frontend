@@ -124,26 +124,34 @@ class _KpiRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return isWide
-        ? Row(
-      children: _kpis
-          .map((k) => Expanded(
-        child: Padding(
-          padding: EdgeInsets.only(
-              right: k == _kpis.last ? 0 : 14),
-          child: _KpiCard(data: k),
-        ),
-      ))
-          .toList(),
-    )
-        : GridView.count(
-      crossAxisCount: 2,
-      crossAxisSpacing: 14,
-      mainAxisSpacing: 14,
+    if (isWide) {
+      return Row(
+        children: _kpis
+            .map((k) => Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(right: k == _kpis.last ? 0 : 14),
+            child: _KpiCard(data: k),
+          ),
+        ))
+            .toList(),
+      );
+    }
+
+    // Mobile: 2-column grid with mainAxisExtent instead of childAspectRatio.
+    // childAspectRatio: 1.25 was overflowing by ~8–9px on narrow screens because
+    // it computed height = cardWidth / 1.25, which fell below the actual content height.
+    // mainAxisExtent: 148 gives a guaranteed fixed height regardless of card width.
+    return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      childAspectRatio: 1.25,
-      children: _kpis.map((k) => _KpiCard(data: k)).toList(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 14,
+        mainAxisSpacing: 14,
+        mainAxisExtent: 148,
+      ),
+      itemCount: _kpis.length,
+      itemBuilder: (_, i) => _KpiCard(data: _kpis[i]),
     );
   }
 }
@@ -162,14 +170,15 @@ class _KpiCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border(left: BorderSide(color: const Color(0xFFC9A84C), width: 3)),
+        border: const Border(left: BorderSide(color: Color(0xFFC9A84C), width: 3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -192,22 +201,28 @@ class _KpiCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Text(data.value,
               style: const TextStyle(
-                  fontSize: 22,
+                  fontSize: 20,
                   fontWeight: FontWeight.w800,
                   color: Color(0xFF1A3C34),
-                  letterSpacing: -0.8)),
-          const SizedBox(height: 3),
+                  letterSpacing: -0.8),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis),
+          const SizedBox(height: 2),
           Text(data.label,
               style: const TextStyle(
-                  fontSize: 12,
+                  fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF374151))),
+                  color: Color(0xFF374151)),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis),
           const SizedBox(height: 2),
           Text(data.sub,
-              style: const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF))),
+              style: const TextStyle(fontSize: 10, color: Color(0xFF9CA3AF)),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis),
         ],
       ),
     );
@@ -279,7 +294,9 @@ class _ListingRow extends StatelessWidget {
                         style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF1A3C34))),
+                            color: Color(0xFF1A3C34)),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis),
                     const SizedBox(height: 2),
                     Text(listing.location,
                         style: const TextStyle(
@@ -287,6 +304,7 @@ class _ListingRow extends StatelessWidget {
                   ],
                 ),
               ),
+              const SizedBox(width: 8),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -297,8 +315,7 @@ class _ListingRow extends StatelessWidget {
                           color: Color(0xFF1A3C34))),
                   const SizedBox(height: 4),
                   Container(
-                    padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
                       color: Color(listing.badgeBg),
                       borderRadius: BorderRadius.circular(5),
@@ -383,13 +400,18 @@ class _EventRow extends StatelessWidget {
                         style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF1A3C34))),
+                            color: Color(0xFF1A3C34)),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis),
                     Text(event.sub,
                         style: const TextStyle(
-                            fontSize: 11, color: Color(0xFF9CA3AF))),
+                            fontSize: 11, color: Color(0xFF9CA3AF)),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis),
                   ],
                 ),
               ),
+              const SizedBox(width: 8),
               Text(event.time,
                   style: const TextStyle(
                       fontSize: 11, color: Color(0xFF9CA3AF))),
@@ -420,20 +442,31 @@ class _AgentLeaderboard extends StatelessWidget {
       trailing: 'This quarter',
       child: LayoutBuilder(builder: (context, c) {
         final isWide = c.maxWidth >= 500;
-        return isWide
-            ? Row(
-          children: _agents
-              .map((a) => Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(
-                  right: a == _agents.last ? 0 : 12),
-              child: _AgentCard(agent: a),
-            ),
-          ))
-              .toList(),
-        )
-            : Column(
-          children: _agents.map((a) => _AgentCard(agent: a)).toList(),
+        if (isWide) {
+          return Row(
+            children: _agents
+                .map((a) => Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(
+                    right: a == _agents.last ? 0 : 12),
+                child: _AgentCard(agent: a),
+              ),
+            ))
+                .toList(),
+          );
+        }
+        // Mobile: 2-column grid with fixed row height
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            mainAxisExtent: 162,
+          ),
+          itemCount: _agents.length,
+          itemBuilder: (_, i) => _AgentCard(agent: _agents[i]),
         );
       }),
     );
@@ -461,24 +494,25 @@ class _AgentCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final rankColor = _rankColors[(agent.rank - 1).clamp(0, 3)];
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               CircleAvatar(
-                radius: 18,
+                radius: 16,
                 backgroundColor: const Color(0xFFF5F0E8),
                 child: Text(
                   agent.name.substring(0, 1),
                   style: const TextStyle(
-                      fontSize: 14,
+                      fontSize: 13,
                       fontWeight: FontWeight.w700,
                       color: Color(0xFF1A3C34)),
                 ),
@@ -499,22 +533,24 @@ class _AgentCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 6),
           Text(agent.name,
               style: const TextStyle(
-                  fontSize: 13,
+                  fontSize: 12,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF1A3C34))),
+                  color: Color(0xFF1A3C34)),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis),
           Text(agent.role,
-              style: const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF))),
-          const SizedBox(height: 10),
+              style: const TextStyle(fontSize: 10, color: Color(0xFF9CA3AF))),
+          const SizedBox(height: 6),
           const Divider(height: 1, color: Color(0xFFF3EFE6)),
-          const SizedBox(height: 10),
+          const SizedBox(height: 6),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _Stat(label: 'Deals', value: '${agent.deals}'),
-              _Stat(label: 'Revenue', value: agent.revenue),
+              _Stat(label: 'Revenue', value: agent.revenue, alignEnd: true),
             ],
           ),
         ],
@@ -525,19 +561,23 @@ class _AgentCard extends StatelessWidget {
 
 class _Stat extends StatelessWidget {
   final String label, value;
-  const _Stat({required this.label, required this.value});
+  final bool alignEnd;
+  const _Stat({required this.label, required this.value, this.alignEnd = false});
 
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment:
+      alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       children: [
         Text(value,
             style: const TextStyle(
-                fontSize: 14,
+                fontSize: 13,
                 fontWeight: FontWeight.w700,
                 color: Color(0xFF1A3C34),
-                letterSpacing: -0.4)),
+                letterSpacing: -0.4),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis),
         Text(label,
             style: const TextStyle(fontSize: 10, color: Color(0xFF9CA3AF))),
       ],

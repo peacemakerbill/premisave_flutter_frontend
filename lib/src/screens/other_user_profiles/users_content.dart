@@ -41,9 +41,9 @@ class _State extends ConsumerState<UsersContent> {
 
   @override
   Widget build(BuildContext context) {
-    final ss = ref.watch(socialProvider);
-    final me = ref.watch(authProvider).currentUser;
-    final w = MediaQuery.of(context).size.width;
+    final ss   = ref.watch(socialProvider);
+    final me   = ref.watch(authProvider).currentUser;
+    final w    = MediaQuery.of(context).size.width;
     final list = _searching
         ? ss.searchResults
         : ss.users.where((u) => u.id != me?.id).toList();
@@ -69,24 +69,29 @@ class _State extends ConsumerState<UsersContent> {
           colors: [Color(0xFF1B4332), _green, _greenL],
           begin: Alignment.topLeft, end: Alignment.bottomRight),
       borderRadius: BorderRadius.circular(20),
-      boxShadow: [BoxShadow(color: _green.withOpacity(0.28), blurRadius: 14, offset: const Offset(0, 5))],
+      boxShadow: [BoxShadow(color: _green.withOpacity(0.28),
+          blurRadius: 14, offset: const Offset(0, 5))],
     ),
     child: Row(children: [
       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const Text('People', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800,
             color: Colors.white, letterSpacing: -0.5)),
         const SizedBox(height: 4),
-        Text('Discover and connect', style: TextStyle(fontSize: 13,
-            color: Colors.white.withOpacity(0.8))),
+        Text('Discover and connect',
+            style: TextStyle(fontSize: 13, color: Colors.white.withOpacity(0.8))),
       ])),
-      Container(width: 50, height: 50,
-          decoration: BoxDecoration(color: Colors.white.withOpacity(0.15), shape: BoxShape.circle),
-          child: const Icon(Icons.people_rounded, color: Colors.white, size: 26)),
+      Container(
+        width: 50, height: 50,
+        decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.15), shape: BoxShape.circle),
+        child: const Icon(Icons.people_rounded, color: Colors.white, size: 26),
+      ),
     ]),
   );
 
   Widget _searchBar(SocialState ss) => Container(
-    decoration: BoxDecoration(color: Colors.white,
+    decoration: BoxDecoration(
+      color: Colors.white,
       borderRadius: BorderRadius.circular(14),
       border: Border.all(color: _greenL.withOpacity(0.3)),
       boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05),
@@ -100,10 +105,15 @@ class _State extends ConsumerState<UsersContent> {
         hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
         prefixIcon: const Icon(Icons.search_rounded, color: _greenL, size: 20),
         suffixIcon: _searching
-            ? IconButton(icon: const Icon(Icons.close_rounded, size: 18, color: Colors.grey),
-            onPressed: () { _searchCtrl.clear(); ref.read(socialProvider.notifier).clearSearch(); })
+            ? IconButton(
+            icon: const Icon(Icons.close_rounded, size: 18, color: Colors.grey),
+            onPressed: () {
+              _searchCtrl.clear();
+              ref.read(socialProvider.notifier).clearSearch();
+            })
             : ss.isSearching
-            ? const Padding(padding: EdgeInsets.all(14),
+            ? const Padding(
+            padding: EdgeInsets.all(14),
             child: SizedBox(width: 16, height: 16,
                 child: CircularProgressIndicator(strokeWidth: 2, color: _greenL)))
             : null,
@@ -113,21 +123,25 @@ class _State extends ConsumerState<UsersContent> {
     ),
   );
 
-  Widget _statsRow(SocialState ss) => Row(children: [
-    _Chip(Icons.people_outline_rounded, '${ss.users.length} users', _green, _greenS),
-    const SizedBox(width: 8),
-    _Chip(Icons.favorite_border_rounded, '${ss.likedUserIds.length} liked', _amber, _amberS),
-    const SizedBox(width: 8),
-    _Chip(Icons.person_add_alt_1_rounded, '${ss.followingUserIds.length} following', _soil, _soilS),
-  ]);
+  Widget _statsRow(SocialState ss) => Wrap(
+    spacing: 8,
+    runSpacing: 8,
+    children: [
+      _Chip(Icons.people_outline_rounded, '${ss.users.length} users', _green, _greenS),
+      _Chip(Icons.favorite_border_rounded, '${ss.likedUserIds.length} liked', _amber, _amberS),
+      _Chip(Icons.person_add_alt_1_rounded, '${ss.followingUserIds.length} following', _soil, _soilS),
+    ],
+  );
 
   Widget _grid(BuildContext ctx, List<PublicUserProfile> users, SocialState ss, double w) {
     if (ss.isLoadingUsers && users.isEmpty) {
-      return const Center(child: Padding(padding: EdgeInsets.symmetric(vertical: 60),
+      return const Center(child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 60),
           child: CircularProgressIndicator(color: _green)));
     }
     if (ss.error != null && users.isEmpty) {
-      return Center(child: Padding(padding: const EdgeInsets.symmetric(vertical: 40),
+      return Center(child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 40),
         child: Column(children: [
           Icon(Icons.error_outline_rounded, size: 48, color: Colors.red[300]),
           const SizedBox(height: 10),
@@ -144,7 +158,8 @@ class _State extends ConsumerState<UsersContent> {
       ));
     }
     if (users.isEmpty) {
-      return Center(child: Padding(padding: const EdgeInsets.symmetric(vertical: 60),
+      return Center(child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 60),
         child: Column(children: [
           Icon(Icons.people_outline_rounded, size: 56, color: Colors.grey[300]),
           const SizedBox(height: 12),
@@ -154,16 +169,31 @@ class _State extends ConsumerState<UsersContent> {
       ));
     }
 
-    final cols = w < 768 ? 2 : (w > 1200 ? 4 : 3);
+    // Columns: 2 on mobile, 3 on tablet, 4 on desktop
+    final cols = w < 600 ? 2 : (w > 1200 ? 4 : 3);
+
+    // Fixed row height instead of aspect ratio — avoids overflow regardless of
+    // card width. 200px fits: avatar(48) + name + username + role pill + actions
+    // with comfortable padding on the smallest supported width (~160px card).
+    const double cardHeight = 200;
+
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(_searching ? '${users.length} result${users.length == 1 ? '' : 's'}' : 'All Users',
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _soil)),
+      Text(
+        _searching
+            ? '${users.length} result${users.length == 1 ? '' : 's'}'
+            : 'All Users',
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _soil),
+      ),
       const SizedBox(height: 14),
       GridView.builder(
-        shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: cols, crossAxisSpacing: 12, mainAxisSpacing: 12,
-            childAspectRatio: 0.8),
+          crossAxisCount: cols,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          mainAxisExtent: cardHeight,   // ← fixed height, no overflow
+        ),
         itemCount: users.length,
         itemBuilder: (_, i) {
           final u = users[i];
@@ -173,7 +203,7 @@ class _State extends ConsumerState<UsersContent> {
             isFollowing: ss.followingUserIds.contains(u.id),
             onTap: () => Navigator.push(ctx,
                 MaterialPageRoute(builder: (_) => OtherUserProfileScreen(userId: u.id))),
-            onLike: () => ref.read(socialProvider.notifier).toggleLike(u.id),
+            onLike:   () => ref.read(socialProvider.notifier).toggleLike(u.id),
             onFollow: () => ref.read(socialProvider.notifier).toggleFollow(u.id),
           );
         },
@@ -188,8 +218,10 @@ class _UserCard extends StatelessWidget {
   final PublicUserProfile user;
   final bool isLiked, isFollowing;
   final VoidCallback onTap, onLike, onFollow;
-  const _UserCard({required this.user, required this.isLiked, required this.isFollowing,
-    required this.onTap, required this.onLike, required this.onFollow});
+  const _UserCard({
+    required this.user, required this.isLiked, required this.isFollowing,
+    required this.onTap, required this.onLike, required this.onFollow,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -207,78 +239,121 @@ class _UserCard extends StatelessWidget {
           boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06),
               blurRadius: 10, offset: const Offset(0, 3))],
         ),
-        padding: const EdgeInsets.all(14),
-        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          // Avatar
-          Stack(children: [
-            CircleAvatar(
-              radius: 30,
-              backgroundColor: _greenS,
-              backgroundImage: (user.profilePictureUrl?.isNotEmpty ?? false)
-                  ? NetworkImage(user.profilePictureUrl!) : null,
-              child: (user.profilePictureUrl?.isNotEmpty ?? false) ? null
-                  : Text(user.firstName.isNotEmpty ? user.firstName[0].toUpperCase() : '?',
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800,
-                      color: _green)),
-            ),
-            if (user.verified)
-              Positioned(bottom: 0, right: 0,
-                  child: Container(width: 16, height: 16,
-                      decoration: const BoxDecoration(color: _greenL, shape: BoxShape.circle),
-                      child: const Icon(Icons.check, size: 10, color: Colors.white))),
-          ]),
-          const SizedBox(height: 10),
-          // Name
-          Text(user.fullName,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF1A1A1A)),
-              maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center),
-          const SizedBox(height: 2),
-          Text('@${user.username}',
-              style: const TextStyle(fontSize: 11, color: Color(0xFF9E9E9E)),
-              maxLines: 1, overflow: TextOverflow.ellipsis),
-          const SizedBox(height: 6),
-          // Role pill
-          Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(color: _amberS, borderRadius: BorderRadius.circular(8)),
-              child: Text(user.displayRole,
-                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: _amber))),
-          const SizedBox(height: 12),
-          // Actions
-          Row(children: [
-            GestureDetector(
-              onTap: onLike,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                width: 34, height: 34,
-                decoration: BoxDecoration(
-                  color: isLiked ? Colors.red[50] : Colors.grey[100],
-                  borderRadius: BorderRadius.circular(10),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Avatar — radius 24 (48px diameter) keeps it compact on narrow cards
+            Stack(clipBehavior: Clip.none, children: [
+              CircleAvatar(
+                radius: 24,
+                backgroundColor: _greenS,
+                backgroundImage: (user.profilePictureUrl?.isNotEmpty ?? false)
+                    ? NetworkImage(user.profilePictureUrl!) : null,
+                child: (user.profilePictureUrl?.isNotEmpty ?? false)
+                    ? null
+                    : Text(
+                  user.firstName.isNotEmpty
+                      ? user.firstName[0].toUpperCase() : '?',
+                  style: const TextStyle(fontSize: 18,
+                      fontWeight: FontWeight.w800, color: _green),
                 ),
-                child: Icon(isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                    size: 16, color: isLiked ? Colors.red[400] : Colors.grey[500]),
               ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: GestureDetector(
-                onTap: onFollow,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(vertical: 7),
-                  decoration: BoxDecoration(
-                    color: isFollowing ? _greenS : _green,
-                    borderRadius: BorderRadius.circular(10),
+              if (user.verified)
+                Positioned(
+                  bottom: 0, right: 0,
+                  child: Container(
+                    width: 14, height: 14,
+                    decoration: const BoxDecoration(
+                        color: _greenL, shape: BoxShape.circle),
+                    child: const Icon(Icons.check, size: 9, color: Colors.white),
                   ),
-                  child: Text(isFollowing ? 'Following' : 'Follow',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700,
-                          color: isFollowing ? _green : Colors.white)),
                 ),
+            ]),
+            const SizedBox(height: 8),
+
+            // Name
+            Text(
+              user.fullName,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700,
+                  color: Color(0xFF1A1A1A)),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 2),
+
+            // Username
+            Text(
+              '@${user.username}',
+              style: const TextStyle(fontSize: 10, color: Color(0xFF9E9E9E)),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 6),
+
+            // Role pill — constrained so long role names don't blow out the card
+            Container(
+              constraints: const BoxConstraints(maxWidth: double.infinity),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                  color: _amberS, borderRadius: BorderRadius.circular(8)),
+              child: Text(
+                user.displayRole,
+                style: const TextStyle(fontSize: 9,
+                    fontWeight: FontWeight.w600, color: _amber),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
               ),
             ),
-          ]),
-        ]),
+            const SizedBox(height: 10),
+
+            // Like + Follow actions
+            Row(children: [
+              GestureDetector(
+                onTap: onLike,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  width: 32, height: 32,
+                  decoration: BoxDecoration(
+                    color: isLiked ? Colors.red[50] : Colors.grey[100],
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                  child: Icon(
+                    isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                    size: 15,
+                    color: isLiked ? Colors.red[400] : Colors.grey[500],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: GestureDetector(
+                  onTap: onFollow,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: isFollowing ? _greenS : _green,
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      isFollowing ? 'Following' : 'Follow',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: isFollowing ? _green : Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ]),
+          ],
+        ),
       ),
     );
   }
@@ -291,6 +366,7 @@ class _Chip extends StatelessWidget {
   final String label;
   final Color fg, bg;
   const _Chip(this.icon, this.label, this.fg, this.bg);
+
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),

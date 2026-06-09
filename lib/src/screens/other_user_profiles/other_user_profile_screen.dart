@@ -33,7 +33,11 @@ class _State extends ConsumerState<OtherUserProfileScreen> {
     n.recordProfileView(widget.userId);
     final p = await n.getUserProfile(widget.userId);
     if (!mounted) return;
-    setState(() { _profile = p; _loadingProfile = false; _error = p == null ? 'Profile not found' : null; });
+    setState(() {
+      _profile = p;
+      _loadingProfile = false;
+      _error = p == null ? 'Profile not found' : null;
+    });
     final s = await n.getUserStats(widget.userId);
     if (!mounted) return;
     setState(() { _stats = s; _loadingStats = false; });
@@ -41,9 +45,10 @@ class _State extends ConsumerState<OtherUserProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final ss   = ref.watch(socialProvider);
-    final me   = ref.watch(authProvider).currentUser;
+    final ss    = ref.watch(socialProvider);
+    final me    = ref.watch(authProvider).currentUser;
     final isOwn = _profile?.id == me?.id;
+    final wide  = MediaQuery.of(context).size.width >= 768;
 
     return Scaffold(
       backgroundColor: _stone,
@@ -61,7 +66,8 @@ class _State extends ConsumerState<OtherUserProfileScreen> {
         ),
         title: Text(
           _loadingProfile ? 'Profile' : (_profile?.fullName ?? 'Profile'),
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _brand, letterSpacing: -0.3),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700,
+              color: _brand, letterSpacing: -0.3),
         ),
         centerTitle: true,
         actions: [
@@ -76,38 +82,268 @@ class _State extends ConsumerState<OtherUserProfileScreen> {
       body: _loadingProfile
           ? const _Shimmer()
           : _error != null
-          ? _ErrorView(error: _error!, onRetry: () { setState(() { _loadingProfile = true; _error = null; }); _load(); })
+          ? _ErrorView(
+          error: _error!,
+          onRetry: () {
+            setState(() { _loadingProfile = true; _error = null; });
+            _load();
+          })
           : RefreshIndicator(
         color: _brand,
-        onRefresh: () async { setState(() { _loadingProfile = true; }); await _load(); },
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-          child: Column(children: [
-            _HeroCard(profile: _profile!),
-            const SizedBox(height: 16),
-            _StatsCard(stats: _stats, loading: _loadingStats),
-            const SizedBox(height: 16),
-            if (!isOwn) ...[
-              _SocialCard(
-                profile: _profile!,
-                isLiked: ss.likedUserIds.contains(_profile!.id),
-                isFollowing: ss.followingUserIds.contains(_profile!.id),
-              ),
-              const SizedBox(height: 16),
-            ],
-            _DetailsCard(profile: _profile!),
-            const SizedBox(height: 16),
-            ReviewsSection(targetId: _profile!.id, isOwnProfile: isOwn),
-            const SizedBox(height: 32),
-          ]),
+        onRefresh: () async {
+          setState(() { _loadingProfile = true; });
+          await _load();
+        },
+        child: wide
+            ? _WideLayout(
+          profile: _profile!,
+          stats: _stats,
+          loadingStats: _loadingStats,
+          isOwn: isOwn,
+          isLiked: ss.likedUserIds.contains(_profile!.id),
+          isFollowing: ss.followingUserIds.contains(_profile!.id),
+        )
+            : _NarrowLayout(
+          profile: _profile!,
+          stats: _stats,
+          loadingStats: _loadingStats,
+          isOwn: isOwn,
+          isLiked: ss.likedUserIds.contains(_profile!.id),
+          isFollowing: ss.followingUserIds.contains(_profile!.id),
         ),
       ),
     );
   }
 }
 
-// ── Hero Card (mirrors _HeroCard from own profile) ────────────────────────
+// ── Wide layout (GitHub-style: left sidebar + right content) ─────────────────
+
+class _WideLayout extends StatelessWidget {
+  final PublicUserProfile profile;
+  final UserStats? stats;
+  final bool loadingStats, isOwn, isLiked, isFollowing;
+  const _WideLayout({
+    required this.profile, required this.stats, required this.loadingStats,
+    required this.isOwn, required this.isLiked, required this.isFollowing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 28),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Left sidebar (fixed ~260px, like GitHub) ──────────────────────
+          SizedBox(
+            width: 260,
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              _SidebarAvatar(profile: profile),
+              const SizedBox(height: 16),
+              _SidebarIdentity(profile: profile),
+              if (!isOwn) ...[
+                const SizedBox(height: 12),
+                _SidebarActions(profile: profile, isLiked: isLiked, isFollowing: isFollowing),
+              ],
+              const SizedBox(height: 16),
+              _DetailsCard(profile: profile),
+            ]),
+          ),
+          const SizedBox(width: 24),
+          // ── Right content ─────────────────────────────────────────────────
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              _StatsCard(stats: stats, loading: loadingStats),
+              const SizedBox(height: 16),
+              ReviewsSection(targetId: profile.id, isOwnProfile: isOwn),
+              const SizedBox(height: 32),
+            ]),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Narrow layout (original stacked, mobile) ─────────────────────────────────
+
+class _NarrowLayout extends StatelessWidget {
+  final PublicUserProfile profile;
+  final UserStats? stats;
+  final bool loadingStats, isOwn, isLiked, isFollowing;
+  const _NarrowLayout({
+    required this.profile, required this.stats, required this.loadingStats,
+    required this.isOwn, required this.isLiked, required this.isFollowing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      child: Column(children: [
+        _HeroCard(profile: profile),
+        const SizedBox(height: 16),
+        _StatsCard(stats: stats, loading: loadingStats),
+        const SizedBox(height: 16),
+        if (!isOwn) ...[
+          _SocialCard(profile: profile, isLiked: isLiked, isFollowing: isFollowing),
+          const SizedBox(height: 16),
+        ],
+        _DetailsCard(profile: profile),
+        const SizedBox(height: 16),
+        ReviewsSection(targetId: profile.id, isOwnProfile: isOwn),
+        const SizedBox(height: 32),
+      ]),
+    );
+  }
+}
+
+// ── Sidebar: Avatar (large, centred, no dark card bg) ────────────────────────
+
+class _SidebarAvatar extends StatelessWidget {
+  final PublicUserProfile profile;
+  const _SidebarAvatar({required this.profile});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: _gold, width: 3),
+              boxShadow: [
+                BoxShadow(color: _brand.withOpacity(0.12),
+                    blurRadius: 18, offset: const Offset(0, 6)),
+              ],
+            ),
+            child: CircleAvatar(
+              radius: 60,
+              backgroundColor: const Color(0xFFE8F0ED),
+              backgroundImage: (profile.profilePictureUrl?.isNotEmpty ?? false)
+                  ? CachedNetworkImageProvider(profile.profilePictureUrl!) as ImageProvider
+                  : null,
+              child: (profile.profilePictureUrl?.isNotEmpty ?? false)
+                  ? null
+                  : Text(
+                profile.firstName.isNotEmpty
+                    ? profile.firstName[0].toUpperCase() : '?',
+                style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w800,
+                    color: _brand),
+              ),
+            ),
+          ),
+          if (profile.verified)
+            Positioned(
+              bottom: 4, right: 4,
+              child: Container(
+                width: 24, height: 24,
+                decoration: const BoxDecoration(color: _gold, shape: BoxShape.circle),
+                child: const Icon(Icons.check, size: 14, color: Colors.white),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Sidebar: Name / username / role pill ─────────────────────────────────────
+
+class _SidebarIdentity extends StatelessWidget {
+  final PublicUserProfile profile;
+  const _SidebarIdentity({required this.profile});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(profile.fullName,
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800,
+              color: _brand, letterSpacing: -0.5)),
+      if (profile.username.isNotEmpty) ...[
+        const SizedBox(height: 3),
+        Text('@${profile.username}',
+            style: const TextStyle(fontSize: 14, color: _slate, fontWeight: FontWeight.w400)),
+      ],
+      const SizedBox(height: 10),
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+        decoration: BoxDecoration(
+          color: _brand.withOpacity(0.07),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: _brand.withOpacity(0.12)),
+        ),
+        child: Text(
+          profile.displayRole.isNotEmpty ? profile.displayRole : profile.role,
+          style: const TextStyle(fontSize: 12, color: _brand, fontWeight: FontWeight.w600),
+        ),
+      ),
+    ]);
+  }
+}
+
+// ── Sidebar: Follow + Like buttons (compact, stacked) ────────────────────────
+
+class _SidebarActions extends ConsumerWidget {
+  final PublicUserProfile profile;
+  final bool isLiked, isFollowing;
+  const _SidebarActions({required this.profile, required this.isLiked, required this.isFollowing});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final n = ref.read(socialProvider.notifier);
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      // Follow button
+      AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        child: OutlinedButton.icon(
+          onPressed: () => n.toggleFollow(profile.id),
+          icon: Icon(
+            isFollowing ? Icons.how_to_reg_rounded : Icons.person_add_alt_1_rounded,
+            size: 16,
+          ),
+          label: Text(isFollowing ? 'Following' : 'Follow'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: isFollowing ? _brand : Colors.white,
+            backgroundColor: isFollowing ? Colors.transparent : _brand,
+            side: BorderSide(color: isFollowing ? _brand : Colors.transparent),
+            padding: const EdgeInsets.symmetric(vertical: 11),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+          ),
+        ),
+      ),
+      const SizedBox(height: 8),
+      // Like button
+      OutlinedButton.icon(
+        onPressed: () => n.toggleLike(profile.id),
+        icon: Icon(
+          isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+          size: 16,
+          color: isLiked ? Colors.red[400] : _slate,
+        ),
+        label: Text(
+          isLiked ? 'Liked' : 'Like',
+          style: TextStyle(color: isLiked ? Colors.red[400] : _slate),
+        ),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: isLiked ? Colors.red[400] : _slate,
+          backgroundColor: isLiked ? Colors.red[50] : Colors.transparent,
+          side: BorderSide(color: isLiked ? Colors.red[200]! : const Color(0xFFDDDDDD)),
+          padding: const EdgeInsets.symmetric(vertical: 11),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+        ),
+      ),
+    ]);
+  }
+}
+
+// ── Hero Card (mobile only) ───────────────────────────────────────────────────
 
 class _HeroCard extends StatelessWidget {
   final PublicUserProfile profile;
@@ -120,7 +356,6 @@ class _HeroCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
       decoration: BoxDecoration(color: _brand, borderRadius: BorderRadius.circular(20)),
       child: Column(children: [
-        // Avatar with gold ring
         Container(
           decoration: BoxDecoration(
             shape: BoxShape.circle,
@@ -135,13 +370,14 @@ class _HeroCard extends StatelessWidget {
             child: (profile.profilePictureUrl?.isNotEmpty ?? false)
                 ? null
                 : Text(
-              profile.firstName.isNotEmpty ? profile.firstName[0].toUpperCase() : '?',
-              style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: Color(0xFF9DC4B8)),
+              profile.firstName.isNotEmpty
+                  ? profile.firstName[0].toUpperCase() : '?',
+              style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800,
+                  color: Color(0xFF9DC4B8)),
             ),
           ),
         ),
         const SizedBox(height: 14),
-        // Name
         Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           Text('${profile.firstName} ${profile.lastName}',
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800,
@@ -161,7 +397,6 @@ class _HeroCard extends StatelessWidget {
               style: const TextStyle(fontSize: 13, color: _gold, fontWeight: FontWeight.w500)),
         ],
         const SizedBox(height: 8),
-        // Role pill
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
           decoration: BoxDecoration(
@@ -171,7 +406,8 @@ class _HeroCard extends StatelessWidget {
           ),
           child: Text(
             profile.displayRole.isNotEmpty ? profile.displayRole : profile.role,
-            style: const TextStyle(fontSize: 12, color: Color(0xFF9DC4B8), fontWeight: FontWeight.w500),
+            style: const TextStyle(fontSize: 12, color: Color(0xFF9DC4B8),
+                fontWeight: FontWeight.w500),
           ),
         ),
       ]),
@@ -179,7 +415,7 @@ class _HeroCard extends StatelessWidget {
   }
 }
 
-// ── Stats Card ────────────────────────────────────────────────────────────
+// ── Stats Card ────────────────────────────────────────────────────────────────
 
 class _StatsCard extends StatelessWidget {
   final UserStats? stats;
@@ -192,7 +428,8 @@ class _StatsCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 8),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
       child: loading
-          ? SizedBox(height: 70,
+          ? SizedBox(
+          height: 70,
           child: Shimmer.fromColors(
               baseColor: const Color(0xFFEAE6DE), highlightColor: Colors.white,
               child: Container(color: Colors.white)))
@@ -231,12 +468,13 @@ class _StatCell extends StatelessWidget {
       Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800,
           color: color, letterSpacing: -0.5)),
       const SizedBox(height: 2),
-      Text(label, style: const TextStyle(fontSize: 10, color: _slate, fontWeight: FontWeight.w500)),
+      Text(label, style: const TextStyle(fontSize: 10, color: _slate,
+          fontWeight: FontWeight.w500)),
     ]));
   }
 }
 
-// ── Social Actions Card ────────────────────────────────────────────────────
+// ── Social Actions Card (mobile only) ────────────────────────────────────────
 
 class _SocialCard extends ConsumerWidget {
   final PublicUserProfile profile;
@@ -271,7 +509,7 @@ class _SocialCard extends ConsumerWidget {
   }
 }
 
-// ── Details Card (mirrors _InfoCard) ─────────────────────────────────────
+// ── Details Card ─────────────────────────────────────────────────────────────
 
 class _DetailsCard extends StatelessWidget {
   final PublicUserProfile profile;
@@ -303,9 +541,13 @@ class _DetailsCard extends StatelessWidget {
   }
 }
 
-// ── Shared atoms (mirrors own-profile style exactly) ─────────────────────
+// ── Shared atoms ──────────────────────────────────────────────────────────────
 
-class _Row { final IconData icon; final String label, value; const _Row(this.icon, this.label, this.value); }
+class _Row {
+  final IconData icon;
+  final String label, value;
+  const _Row(this.icon, this.label, this.value);
+}
 
 class _InfoRow extends StatelessWidget {
   final _Row row;
@@ -318,7 +560,8 @@ class _InfoRow extends StatelessWidget {
       const SizedBox(width: 12),
       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(row.label, style: const TextStyle(fontSize: 11, color: _slate)),
-        Text(row.value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _brand)),
+        Text(row.value, style: const TextStyle(fontSize: 13,
+            fontWeight: FontWeight.w600, color: _brand)),
       ])),
     ]),
   );
@@ -362,7 +605,7 @@ class _ActionTile extends StatelessWidget {
   );
 }
 
-// ── Like Button (app bar) ─────────────────────────────────────────────────
+// ── Like Button (app bar) ─────────────────────────────────────────────────────
 
 class _LikeButton extends ConsumerWidget {
   final String profileId;
@@ -385,7 +628,7 @@ class _LikeButton extends ConsumerWidget {
   );
 }
 
-// ── Error View ────────────────────────────────────────────────────────────
+// ── Error View ────────────────────────────────────────────────────────────────
 
 class _ErrorView extends StatelessWidget {
   final String error;
@@ -403,8 +646,10 @@ class _ErrorView extends StatelessWidget {
         const SizedBox(height: 20),
         ElevatedButton(
           onPressed: onRetry,
-          style: ElevatedButton.styleFrom(backgroundColor: _brand, foregroundColor: Colors.white,
-              elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+          style: ElevatedButton.styleFrom(
+              backgroundColor: _brand, foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
           child: const Text('Retry', style: TextStyle(fontWeight: FontWeight.w600)),
         ),
       ]),
@@ -412,31 +657,70 @@ class _ErrorView extends StatelessWidget {
   );
 }
 
-// ── Shimmer (matches own-profile loading state) ───────────────────────────
+// ── Shimmer ───────────────────────────────────────────────────────────────────
 
 class _Shimmer extends StatelessWidget {
   const _Shimmer();
+
   @override
-  Widget build(BuildContext context) => Shimmer.fromColors(
-    baseColor: const Color(0xFFEAE6DE),
-    highlightColor: Colors.white,
-    child: Padding(
-      padding: const EdgeInsets.all(20),
-      child: Column(children: [
-        Container(height: 210, decoration: BoxDecoration(color: Colors.white,
-            borderRadius: BorderRadius.circular(20))),
-        const SizedBox(height: 16),
-        Container(height: 90, decoration: BoxDecoration(color: Colors.white,
-            borderRadius: BorderRadius.circular(16))),
-        const SizedBox(height: 16),
-        Container(height: 120, decoration: BoxDecoration(color: Colors.white,
-            borderRadius: BorderRadius.circular(16))),
-        const SizedBox(height: 16),
-        Container(height: 160, decoration: BoxDecoration(color: Colors.white,
-            borderRadius: BorderRadius.circular(16))),
-      ]),
-    ),
-  );
+  Widget build(BuildContext context) {
+    final wide = MediaQuery.of(context).size.width >= 768;
+    return Shimmer.fromColors(
+      baseColor: const Color(0xFFEAE6DE),
+      highlightColor: Colors.white,
+      child: Padding(
+        padding: EdgeInsets.all(wide ? 28 : 20),
+        child: wide
+            ? Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          // Left column skeleton
+          SizedBox(
+            width: 260,
+            child: Column(children: [
+              Container(height: 120, width: 120,
+                  decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle)),
+              const SizedBox(height: 16),
+              Container(height: 22, decoration: BoxDecoration(color: Colors.white,
+                  borderRadius: BorderRadius.circular(6))),
+              const SizedBox(height: 8),
+              Container(height: 14, width: 100, decoration: BoxDecoration(color: Colors.white,
+                  borderRadius: BorderRadius.circular(6))),
+              const SizedBox(height: 16),
+              Container(height: 42, decoration: BoxDecoration(color: Colors.white,
+                  borderRadius: BorderRadius.circular(10))),
+              const SizedBox(height: 8),
+              Container(height: 42, decoration: BoxDecoration(color: Colors.white,
+                  borderRadius: BorderRadius.circular(10))),
+              const SizedBox(height: 16),
+              Container(height: 130, decoration: BoxDecoration(color: Colors.white,
+                  borderRadius: BorderRadius.circular(16))),
+            ]),
+          ),
+          const SizedBox(width: 24),
+          // Right column skeleton
+          Expanded(child: Column(children: [
+            Container(height: 90, decoration: BoxDecoration(color: Colors.white,
+                borderRadius: BorderRadius.circular(16))),
+            const SizedBox(height: 16),
+            Container(height: 260, decoration: BoxDecoration(color: Colors.white,
+                borderRadius: BorderRadius.circular(16))),
+          ])),
+        ])
+            : Column(children: [
+          Container(height: 210, decoration: BoxDecoration(color: Colors.white,
+              borderRadius: BorderRadius.circular(20))),
+          const SizedBox(height: 16),
+          Container(height: 90, decoration: BoxDecoration(color: Colors.white,
+              borderRadius: BorderRadius.circular(16))),
+          const SizedBox(height: 16),
+          Container(height: 120, decoration: BoxDecoration(color: Colors.white,
+              borderRadius: BorderRadius.circular(16))),
+          const SizedBox(height: 16),
+          Container(height: 160, decoration: BoxDecoration(color: Colors.white,
+              borderRadius: BorderRadius.circular(16))),
+        ]),
+      ),
+    );
+  }
 }
 
 extension _Capitalize on String {
