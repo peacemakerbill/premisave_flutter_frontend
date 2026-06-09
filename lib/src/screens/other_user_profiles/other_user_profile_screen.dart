@@ -1,494 +1,444 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
 import '../../providers/auth/auth_provider.dart';
 import '../../providers/social/social_provider.dart';
 import 'profile_reviews_section.dart';
 
-const _kForestGreen = Color(0xFF2D6A4F);
-const _kGreenLight = Color(0xFF52B788);
-const _kGreenSurface = Color(0xFFD8F3DC);
-const _kAmber = Color(0xFFD4A017);
-const _kAmberSurface = Color(0xFFFFF8E1);
-const _kSoil = Color(0xFF6B4F3A);
-const _kSoilLight = Color(0xFFF5EFE6);
+const _brand = Color(0xFF1A3C34);
+const _gold  = Color(0xFFC9A84C);
+const _stone = Color(0xFFF5F0E8);
+const _slate = Color(0xFF6B7280);
 
 class OtherUserProfileScreen extends ConsumerStatefulWidget {
   final String userId;
-
   const OtherUserProfileScreen({super.key, required this.userId});
-
   @override
-  ConsumerState<OtherUserProfileScreen> createState() =>
-      _OtherUserProfileScreenState();
+  ConsumerState<OtherUserProfileScreen> createState() => _State();
 }
 
-class _OtherUserProfileScreenState
-    extends ConsumerState<OtherUserProfileScreen> {
+class _State extends ConsumerState<OtherUserProfileScreen> {
   PublicUserProfile? _profile;
   UserStats? _stats;
-  bool _isLoadingProfile = true;
-  bool _isLoadingStats = true;
+  bool _loadingProfile = true;
+  bool _loadingStats = true;
   String? _error;
 
   @override
-  void initState() {
-    super.initState();
-    _load();
-  }
+  void initState() { super.initState(); _load(); }
 
   Future<void> _load() async {
-    final notifier = ref.read(socialProvider.notifier);
-    notifier.recordProfileView(widget.userId);
-
-    final profile = await notifier.getUserProfile(widget.userId);
+    final n = ref.read(socialProvider.notifier);
+    n.recordProfileView(widget.userId);
+    final p = await n.getUserProfile(widget.userId);
     if (!mounted) return;
-    setState(() {
-      _profile = profile;
-      _isLoadingProfile = false;
-      if (profile == null) _error = 'Could not load profile';
-    });
-
-    final stats = await notifier.getUserStats(widget.userId);
+    setState(() { _profile = p; _loadingProfile = false; _error = p == null ? 'Profile not found' : null; });
+    final s = await n.getUserStats(widget.userId);
     if (!mounted) return;
-    setState(() {
-      _stats = stats;
-      _isLoadingStats = false;
-    });
+    setState(() { _stats = s; _loadingStats = false; });
   }
 
   @override
   Widget build(BuildContext context) {
-    final socialState = ref.watch(socialProvider);
-    final currentUser = ref.watch(authProvider).currentUser;
-    final isOwnProfile = _profile?.id == currentUser?.id;
+    final ss   = ref.watch(socialProvider);
+    final me   = ref.watch(authProvider).currentUser;
+    final isOwn = _profile?.id == me?.id;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F6F2),
-      body: _isLoadingProfile
-          ? const Center(child: CircularProgressIndicator(color: _kForestGreen))
-          : _error != null
-          ? _buildError()
-          : _buildBody(context, socialState, isOwnProfile),
-    );
-  }
-
-  Widget _buildError() {
-    return Scaffold(
+      backgroundColor: _stone,
       appBar: AppBar(
-        leading: const BackButton(),
         backgroundColor: Colors.white,
         elevation: 0,
+        surfaceTintColor: Colors.white,
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1, color: Color(0xFFEAE6DE)),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded, color: _brand),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          _loadingProfile ? 'Profile' : (_profile?.fullName ?? 'Profile'),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _brand, letterSpacing: -0.3),
+        ),
+        centerTitle: true,
+        actions: [
+          if (!_loadingProfile && _profile != null && !isOwn)
+            _LikeButton(
+              profileId: _profile!.id,
+              isLiked: ss.likedUserIds.contains(_profile!.id),
+            ),
+          const SizedBox(width: 4),
+        ],
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.person_off_rounded, size: 64, color: Colors.grey[300]),
+      body: _loadingProfile
+          ? const _Shimmer()
+          : _error != null
+          ? _ErrorView(error: _error!, onRetry: () { setState(() { _loadingProfile = true; _error = null; }); _load(); })
+          : RefreshIndicator(
+        color: _brand,
+        onRefresh: () async { setState(() { _loadingProfile = true; }); await _load(); },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: Column(children: [
+            _HeroCard(profile: _profile!),
             const SizedBox(height: 16),
-            Text(_error!, style: TextStyle(color: Colors.grey[500], fontSize: 16)),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _isLoadingProfile = true;
-                  _error = null;
-                });
-                _load();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _kForestGreen,
-                foregroundColor: Colors.white,
+            _StatsCard(stats: _stats, loading: _loadingStats),
+            const SizedBox(height: 16),
+            if (!isOwn) ...[
+              _SocialCard(
+                profile: _profile!,
+                isLiked: ss.likedUserIds.contains(_profile!.id),
+                isFollowing: ss.followingUserIds.contains(_profile!.id),
               ),
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBody(
-      BuildContext context,
-      SocialState socialState,
-      bool isOwnProfile,
-      ) {
-    final profile = _profile!;
-    final isLiked = socialState.likedUserIds.contains(profile.id);
-    final isFollowing = socialState.followingUserIds.contains(profile.id);
-
-    return CustomScrollView(
-      slivers: [
-        _buildSliverAppBar(context, profile, isLiked, isFollowing, isOwnProfile),
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildNameCard(profile),
-                const SizedBox(height: 16),
-                _buildStatsCard(),
-                const SizedBox(height: 16),
-                if (!isOwnProfile) ...[
-                  _buildActionButtons(profile, isLiked, isFollowing),
-                  const SizedBox(height: 16),
-                ],
-                _buildRoleCard(profile),
-                if (profile.country != null && profile.country!.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  _buildInfoCard(Icons.location_on_rounded, 'Country', profile.country!),
-                ],
-                const SizedBox(height: 16),
-                ReviewsSection(
-                  targetId: profile.id,
-                  isOwnProfile: isOwnProfile,
-                ),
-                const SizedBox(height: 80),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSliverAppBar(
-      BuildContext context,
-      PublicUserProfile profile,
-      bool isLiked,
-      bool isFollowing,
-      bool isOwnProfile,
-      ) {
-    return SliverAppBar(
-      expandedHeight: 220,
-      pinned: true,
-      backgroundColor: _kForestGreen,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
-        onPressed: () => Navigator.pop(context),
-      ),
-      actions: [
-        if (!isOwnProfile)
-          IconButton(
-            icon: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              child: Icon(
-                isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                key: ValueKey(isLiked),
-                color: isLiked ? Colors.red[300] : Colors.white,
-              ),
-            ),
-            onPressed: () => ref.read(socialProvider.notifier).toggleLike(profile.id),
-          ),
-        IconButton(
-          icon: const Icon(Icons.share_rounded, color: Colors.white),
-          onPressed: () {},
-        ),
-      ],
-      flexibleSpace: FlexibleSpaceBar(
-        background: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [_kForestGreen, _kGreenLight],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const SizedBox(height: 40),
-              Stack(
-                children: [
-                  CircleAvatar(
-                    radius: 46,
-                    backgroundColor: Colors.white.withOpacity(0.3),
-                    backgroundImage: profile.profilePictureUrl != null &&
-                        profile.profilePictureUrl!.isNotEmpty
-                        ? NetworkImage(profile.profilePictureUrl!)
-                        : null,
-                    child: profile.profilePictureUrl == null ||
-                        profile.profilePictureUrl!.isEmpty
-                        ? Text(
-                      profile.firstName.isNotEmpty
-                          ? profile.firstName[0].toUpperCase()
-                          : '?',
-                      style: const TextStyle(
-                        fontSize: 36,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    )
-                        : null,
-                  ),
-                  if (profile.verified)
-                    Positioned(
-                      bottom: 2,
-                      right: 2,
-                      child: Container(
-                        width: 22,
-                        height: 22,
-                        decoration: BoxDecoration(
-                          color: _kAmber,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
-                        ),
-                        child: const Icon(Icons.verified, size: 13, color: Colors.white),
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Text(
-                profile.fullName,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
-              ),
-              Text(
-                '@${profile.username}',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.white.withOpacity(0.8),
-                ),
-              ),
+              const SizedBox(height: 16),
             ],
-          ),
+            _DetailsCard(profile: _profile!),
+            const SizedBox(height: 16),
+            ReviewsSection(targetId: _profile!.id, isOwnProfile: isOwn),
+            const SizedBox(height: 32),
+          ]),
         ),
-      ),
-    );
-  }
-
-  Widget _buildNameCard(PublicUserProfile profile) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 10, offset: const Offset(0, 3))],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: _kGreenSurface, borderRadius: BorderRadius.circular(12)),
-            child: const Icon(Icons.person_rounded, color: _kForestGreen, size: 22),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(profile.fullName, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
-                const SizedBox(height: 3),
-                Text('@${profile.username}', style: TextStyle(fontSize: 13, color: Colors.grey[500])),
-              ],
-            ),
-          ),
-          if (profile.verified)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(color: _kAmberSurface, borderRadius: BorderRadius.circular(20)),
-              child: Row(
-                children: const [
-                  Icon(Icons.verified_rounded, size: 13, color: _kAmber),
-                  SizedBox(width: 4),
-                  Text('Verified', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _kAmber)),
-                ],
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoCard(IconData icon, String label, String value) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: _kSoilLight,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _kSoil.withOpacity(0.15)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: _kSoil.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-            child: Icon(icon, color: _kSoil, size: 22),
-          ),
-          const SizedBox(width: 14),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: TextStyle(fontSize: 11, color: _kSoil, fontWeight: FontWeight.w500)),
-              const SizedBox(height: 2),
-              Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _kSoil)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatsCard() {
-    if (_isLoadingStats) {
-      return Container(
-        height: 100,
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-        child: const Center(child: CircularProgressIndicator(strokeWidth: 2, color: _kGreenLight)),
-      );
-    }
-
-    final s = _stats ?? const UserStats();
-
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 10, offset: const Offset(0, 3))],
-      ),
-      child: Row(
-        children: [
-          _StatCell(value: '${s.followerCount}', label: 'Followers', color: _kForestGreen),
-          _divider(),
-          _StatCell(value: '${s.followingCount}', label: 'Following', color: _kGreenLight),
-          _divider(),
-          _StatCell(value: '${s.likeCount}', label: 'Likes', color: Colors.red[400]!),
-          _divider(),
-          _StatCell(value: '${s.totalProfileViews}', label: 'Views', color: _kSoil),
-          _divider(),
-          _StatCell(value: s.averageRating.toStringAsFixed(1), label: 'Rating', color: _kAmber, icon: Icons.star_rounded),
-        ],
-      ),
-    );
-  }
-
-  Widget _divider() => Container(width: 1, height: 40, color: Colors.grey[200]);
-
-  Widget _buildActionButtons(PublicUserProfile profile, bool isLiked, bool isFollowing) {
-    return Row(
-      children: [
-        Expanded(
-          flex: 3,
-          child: GestureDetector(
-            onTap: () => ref.read(socialProvider.notifier).toggleFollow(profile.id),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              decoration: BoxDecoration(
-                color: isFollowing ? _kGreenSurface : _kForestGreen,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: isFollowing ? _kForestGreen.withOpacity(0.4) : Colors.transparent),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(isFollowing ? Icons.how_to_reg_rounded : Icons.person_add_alt_1_rounded,
-                      size: 18, color: isFollowing ? _kForestGreen : Colors.white),
-                  const SizedBox(width: 8),
-                  Text(isFollowing ? 'Following' : 'Follow',
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: isFollowing ? _kForestGreen : Colors.white)),
-                ],
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          flex: 2,
-          child: GestureDetector(
-            onTap: () => ref.read(socialProvider.notifier).toggleLike(profile.id),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              decoration: BoxDecoration(
-                color: isLiked ? Colors.red[50] : Colors.white,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: isLiked ? Colors.red[300]! : Colors.grey[300]!),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                      size: 18, color: isLiked ? Colors.red[400] : Colors.grey[500]),
-                  const SizedBox(width: 8),
-                  Text(isLiked ? 'Liked' : 'Like',
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: isLiked ? Colors.red[400] : Colors.grey[600])),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRoleCard(PublicUserProfile profile) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: _kSoilLight,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _kSoil.withOpacity(0.15)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: _kSoil.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-            child: const Icon(Icons.badge_rounded, color: _kSoil, size: 22),
-          ),
-          const SizedBox(width: 14),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Account Type', style: TextStyle(fontSize: 11, color: _kSoil, fontWeight: FontWeight.w500)),
-              const SizedBox(height: 2),
-              Text(
-                profile.displayRole.isNotEmpty ? profile.displayRole.capitalize() : profile.role,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _kSoil),
-              ),
-            ],
-          ),
-        ],
       ),
     );
   }
 }
 
-class _StatCell extends StatelessWidget {
-  final String value;
-  final String label;
-  final Color color;
-  final IconData? icon;
+// ── Hero Card (mirrors _HeroCard from own profile) ────────────────────────
 
-  const _StatCell({required this.value, required this.label, required this.color, this.icon});
+class _HeroCard extends StatelessWidget {
+  final PublicUserProfile profile;
+  const _HeroCard({required this.profile});
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Column(
-        children: [
-          if (icon != null) ...[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, size: 14, color: color),
-                const SizedBox(width: 3),
-                Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: color)),
-              ],
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
+      decoration: BoxDecoration(color: _brand, borderRadius: BorderRadius.circular(20)),
+      child: Column(children: [
+        // Avatar with gold ring
+        Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: _gold, width: 2.5),
+          ),
+          child: CircleAvatar(
+            radius: 44,
+            backgroundColor: const Color(0xFF2A5446),
+            backgroundImage: (profile.profilePictureUrl?.isNotEmpty ?? false)
+                ? CachedNetworkImageProvider(profile.profilePictureUrl!) as ImageProvider
+                : null,
+            child: (profile.profilePictureUrl?.isNotEmpty ?? false)
+                ? null
+                : Text(
+              profile.firstName.isNotEmpty ? profile.firstName[0].toUpperCase() : '?',
+              style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: Color(0xFF9DC4B8)),
             ),
-          ] else ...[
-            Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: color)),
+          ),
+        ),
+        const SizedBox(height: 14),
+        // Name
+        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+          Text('${profile.firstName} ${profile.lastName}',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800,
+                  color: Colors.white, letterSpacing: -0.5)),
+          if (profile.verified) ...[
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.all(3),
+              decoration: const BoxDecoration(color: _gold, shape: BoxShape.circle),
+              child: const Icon(Icons.check, size: 11, color: Colors.white),
+            ),
           ],
-          const SizedBox(height: 3),
-          Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+        ]),
+        if (profile.username.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Text('@${profile.username}',
+              style: const TextStyle(fontSize: 13, color: _gold, fontWeight: FontWeight.w500)),
         ],
-      ),
+        const SizedBox(height: 8),
+        // Role pill
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white.withOpacity(0.2)),
+          ),
+          child: Text(
+            profile.displayRole.isNotEmpty ? profile.displayRole : profile.role,
+            style: const TextStyle(fontSize: 12, color: Color(0xFF9DC4B8), fontWeight: FontWeight.w500),
+          ),
+        ),
+      ]),
     );
   }
+}
+
+// ── Stats Card ────────────────────────────────────────────────────────────
+
+class _StatsCard extends StatelessWidget {
+  final UserStats? stats;
+  final bool loading;
+  const _StatsCard({required this.stats, required this.loading});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 8),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+      child: loading
+          ? SizedBox(height: 70,
+          child: Shimmer.fromColors(
+              baseColor: const Color(0xFFEAE6DE), highlightColor: Colors.white,
+              child: Container(color: Colors.white)))
+          : Row(children: [
+        _StatCell('${stats?.followerCount ?? 0}', 'Followers', Icons.people_rounded),
+        _vDiv(),
+        _StatCell('${stats?.followingCount ?? 0}', 'Following', Icons.person_add_rounded),
+        _vDiv(),
+        _StatCell('${stats?.likeCount ?? 0}', 'Likes', Icons.favorite_rounded, red: true),
+        _vDiv(),
+        _StatCell('${stats?.totalProfileViews ?? 0}', 'Views', Icons.visibility_rounded),
+        _vDiv(),
+        _StatCell(
+          (stats?.averageRating ?? 0.0).toStringAsFixed(1),
+          'Rating', Icons.star_rounded, gold: true,
+        ),
+      ]),
+    );
+  }
+
+  Widget _vDiv() => Container(width: 1, height: 40, color: const Color(0xFFEAE6DE));
+}
+
+class _StatCell extends StatelessWidget {
+  final String value, label;
+  final IconData icon;
+  final bool gold, red;
+  const _StatCell(this.value, this.label, this.icon, {this.gold = false, this.red = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = gold ? _gold : red ? Colors.red[400]! : _brand;
+    return Expanded(child: Column(children: [
+      Icon(icon, size: 15, color: color.withOpacity(0.6)),
+      const SizedBox(height: 4),
+      Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800,
+          color: color, letterSpacing: -0.5)),
+      const SizedBox(height: 2),
+      Text(label, style: const TextStyle(fontSize: 10, color: _slate, fontWeight: FontWeight.w500)),
+    ]));
+  }
+}
+
+// ── Social Actions Card ────────────────────────────────────────────────────
+
+class _SocialCard extends ConsumerWidget {
+  final PublicUserProfile profile;
+  final bool isLiked, isFollowing;
+  const _SocialCard({required this.profile, required this.isLiked, required this.isFollowing});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final n = ref.read(socialProvider.notifier);
+    return Container(
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+      child: Column(children: [
+        _ActionTile(
+          icon: isFollowing ? Icons.how_to_reg_rounded : Icons.person_add_alt_1_rounded,
+          label: isFollowing ? 'Following' : 'Follow',
+          sub: isFollowing ? 'You follow this person' : 'Add to your network',
+          iconColor: _brand,
+          active: isFollowing,
+          onTap: () => n.toggleFollow(profile.id),
+        ),
+        const Divider(height: 1, indent: 56, color: Color(0xFFEAE6DE)),
+        _ActionTile(
+          icon: isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+          label: isLiked ? 'Liked' : 'Like',
+          sub: isLiked ? 'You liked this profile' : 'Show appreciation',
+          iconColor: Colors.red[400]!,
+          active: isLiked,
+          onTap: () => n.toggleLike(profile.id),
+        ),
+      ]),
+    );
+  }
+}
+
+// ── Details Card (mirrors _InfoCard) ─────────────────────────────────────
+
+class _DetailsCard extends StatelessWidget {
+  final PublicUserProfile profile;
+  const _DetailsCard({required this.profile});
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = [
+      if (profile.username.isNotEmpty)
+        _Row(Icons.alternate_email_rounded, 'Username', '@${profile.username}'),
+      if (profile.country?.isNotEmpty ?? false)
+        _Row(Icons.location_on_outlined, 'Country', profile.country!),
+      _Row(Icons.badge_rounded, 'Role',
+          profile.displayRole.isNotEmpty ? profile.displayRole : profile.role),
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Text('Details',
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700,
+                color: _brand, letterSpacing: -0.2)),
+        const SizedBox(height: 4),
+        const Divider(color: Color(0xFFEAE6DE)),
+        ...rows.map((r) => _InfoRow(row: r)),
+      ]),
+    );
+  }
+}
+
+// ── Shared atoms (mirrors own-profile style exactly) ─────────────────────
+
+class _Row { final IconData icon; final String label, value; const _Row(this.icon, this.label, this.value); }
+
+class _InfoRow extends StatelessWidget {
+  final _Row row;
+  const _InfoRow({required this.row});
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 10),
+    child: Row(children: [
+      Icon(row.icon, size: 17, color: _gold),
+      const SizedBox(width: 12),
+      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(row.label, style: const TextStyle(fontSize: 11, color: _slate)),
+        Text(row.value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _brand)),
+      ])),
+    ]),
+  );
+}
+
+class _ActionTile extends StatelessWidget {
+  final IconData icon;
+  final String label, sub;
+  final Color iconColor;
+  final bool active;
+  final VoidCallback onTap;
+  const _ActionTile({required this.icon, required this.label, required this.sub,
+    required this.iconColor, required this.active, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => InkWell(
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(16),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(children: [
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.all(9),
+          decoration: BoxDecoration(
+            color: iconColor.withOpacity(active ? 0.14 : 0.08),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, size: 18, color: iconColor),
+        ),
+        const SizedBox(width: 14),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600,
+              color: active ? iconColor : _brand)),
+          Text(sub, style: const TextStyle(fontSize: 11, color: _slate)),
+        ])),
+        Icon(active ? Icons.check_rounded : Icons.chevron_right_rounded,
+            size: 18, color: active ? iconColor : _slate),
+      ]),
+    ),
+  );
+}
+
+// ── Like Button (app bar) ─────────────────────────────────────────────────
+
+class _LikeButton extends ConsumerWidget {
+  final String profileId;
+  final bool isLiked;
+  const _LikeButton({required this.profileId, required this.isLiked});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => IconButton(
+    icon: AnimatedSwitcher(
+      duration: const Duration(milliseconds: 200),
+      transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
+      child: Icon(
+        isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+        key: ValueKey(isLiked),
+        color: isLiked ? Colors.red[400] : _slate,
+        size: 22,
+      ),
+    ),
+    onPressed: () => ref.read(socialProvider.notifier).toggleLike(profileId),
+  );
+}
+
+// ── Error View ────────────────────────────────────────────────────────────
+
+class _ErrorView extends StatelessWidget {
+  final String error;
+  final VoidCallback onRetry;
+  const _ErrorView({required this.error, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) => Center(
+    child: Padding(
+      padding: const EdgeInsets.all(32),
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Icon(Icons.person_off_rounded, size: 56, color: Colors.grey[300]),
+        const SizedBox(height: 14),
+        Text(error, style: const TextStyle(fontSize: 15, color: _slate)),
+        const SizedBox(height: 20),
+        ElevatedButton(
+          onPressed: onRetry,
+          style: ElevatedButton.styleFrom(backgroundColor: _brand, foregroundColor: Colors.white,
+              elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+          child: const Text('Retry', style: TextStyle(fontWeight: FontWeight.w600)),
+        ),
+      ]),
+    ),
+  );
+}
+
+// ── Shimmer (matches own-profile loading state) ───────────────────────────
+
+class _Shimmer extends StatelessWidget {
+  const _Shimmer();
+  @override
+  Widget build(BuildContext context) => Shimmer.fromColors(
+    baseColor: const Color(0xFFEAE6DE),
+    highlightColor: Colors.white,
+    child: Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(children: [
+        Container(height: 210, decoration: BoxDecoration(color: Colors.white,
+            borderRadius: BorderRadius.circular(20))),
+        const SizedBox(height: 16),
+        Container(height: 90, decoration: BoxDecoration(color: Colors.white,
+            borderRadius: BorderRadius.circular(16))),
+        const SizedBox(height: 16),
+        Container(height: 120, decoration: BoxDecoration(color: Colors.white,
+            borderRadius: BorderRadius.circular(16))),
+        const SizedBox(height: 16),
+        Container(height: 160, decoration: BoxDecoration(color: Colors.white,
+            borderRadius: BorderRadius.circular(16))),
+      ]),
+    ),
+  );
+}
+
+extension _Capitalize on String {
+  String capitalize() => isEmpty ? this : '${this[0].toUpperCase()}${substring(1).toLowerCase()}';
 }
