@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 const _brand = Color(0xFF1A3C34);
-const _gold  = Color(0xFFC9A84C);
+const _gold = Color(0xFFC9A84C);
 
 class ChangePasswordDialog extends StatefulWidget {
   final String userId;
@@ -14,18 +14,24 @@ class ChangePasswordDialog extends StatefulWidget {
 
 class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
   final _formKey = GlobalKey<FormState>();
-  final _pwCtrl  = TextEditingController();
-  final _cfCtrl  = TextEditingController();
+  final _pwCtrl = TextEditingController();
+  final _cfCtrl = TextEditingController();
   bool _obscurePw = true;
   bool _obscureCf = true;
 
   @override
-  void dispose() { _pwCtrl.dispose(); _cfCtrl.dispose(); super.dispose(); }
+  void dispose() {
+    _pwCtrl.dispose();
+    _cfCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      backgroundColor: Colors.white,
+      elevation: 8,
       child: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -36,9 +42,12 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const _DialogHeader(icon: Icons.lock_reset_rounded, title: 'Change Password',
-                    subtitle: 'Set a new secure password'),
-                const SizedBox(height: 20),
+                const _DialogHeader(
+                  icon: Icons.lock_reset_rounded,
+                  title: 'Change Password',
+                  subtitle: 'Set a new secure password',
+                ),
+                const SizedBox(height: 24),
 
                 const _FieldLabel('New Password', required: true),
                 _PwField(
@@ -48,9 +57,9 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
                   onToggle: () => setState(() => _obscurePw = !_obscurePw),
                   validator: _validatePassword,
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 16),
 
-                _FieldLabel('Confirm Password', required: true),
+                const _FieldLabel('Confirm Password', required: true),
                 _PwField(
                   controller: _cfCtrl,
                   hint: 'Confirm new password',
@@ -58,70 +67,40 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
                   onToggle: () => setState(() => _obscureCf = !_obscureCf),
                   validator: (v) => (v != _pwCtrl.text) ? 'Passwords do not match' : null,
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 20),
 
-                // Requirements hint
+                // Requirements
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                     color: _brand.withOpacity(0.04),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: const Color(0xFFEAE6DE)),
                   ),
-                  child: Column(
+                  child: const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Requirements',
-                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700,
-                              color: _brand, letterSpacing: 0.2)),
-                      const SizedBox(height: 6),
-                      for (final req in const [
-                        'At least 8 characters',
-                        'Uppercase & lowercase letters',
-                        'At least one number',
-                        'Special character (e.g. @#\$%)',
-                      ])
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 3),
-                          child: Row(children: [
-                            const Icon(Icons.check_circle_outline_rounded,
-                                size: 13, color: Color(0xFF22C55E)),
-                            const SizedBox(width: 6),
-                            Text(req, style: const TextStyle(fontSize: 12, color: Color(0xFF374151))),
-                          ]),
-                        ),
+                      Text('Requirements',
+                          style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: _brand,
+                              letterSpacing: 0.2)),
+                      SizedBox(height: 8),
+                      _Requirement('At least 8 characters'),
+                      _Requirement('Uppercase & lowercase letters'),
+                      _Requirement('At least one number'),
+                      _Requirement('Special character (e.g. @#\$%)'),
                     ],
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 28),
 
-                Row(children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Color(0xFFEAE6DE)),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                      child: const Text('Cancel',
-                          style: TextStyle(color: _brand, fontWeight: FontWeight.w600)),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: _submit,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _brand,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                      child: const Text('Update',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-                    ),
-                  ),
-                ]),
+                _ActionButtons(
+                  onCancel: () => Navigator.pop(context),
+                  onSave: _submit,
+                  saveLabel: 'Update Password',
+                ),
               ],
             ),
           ),
@@ -146,7 +125,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
   }
 }
 
-// ── Small helpers ─────────────────────────────────────────────────────────────
+// ── Reusable Components ─────────────────────────────────────────────────────
 
 class _PwField extends StatelessWidget {
   final TextEditingController controller;
@@ -154,9 +133,13 @@ class _PwField extends StatelessWidget {
   final bool obscure;
   final VoidCallback onToggle;
   final FormFieldValidator<String>? validator;
+
   const _PwField({
-    required this.controller, required this.hint,
-    required this.obscure, required this.onToggle, this.validator,
+    required this.controller,
+    required this.hint,
+    required this.obscure,
+    required this.onToggle,
+    this.validator,
   });
 
   @override
@@ -167,17 +150,36 @@ class _PwField extends StatelessWidget {
     style: const TextStyle(fontSize: 14),
     decoration: InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(fontSize: 13),
-      prefixIcon: const Icon(Icons.lock_outline_rounded, size: 18),
+      hintStyle: const TextStyle(fontSize: 13, color: Color(0xFFD1CBC0)),
+      prefixIcon: const Icon(Icons.lock_outline_rounded, size: 18, color: Color(0xFF9CA3AF)),
       suffixIcon: IconButton(
         icon: Icon(obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 18),
         onPressed: onToggle,
       ),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: _brand),
+      ),
       contentPadding: const EdgeInsets.symmetric(vertical: 13, horizontal: 12),
       isDense: true,
       errorMaxLines: 2,
     ),
+  );
+}
+
+class _Requirement extends StatelessWidget {
+  final String text;
+  const _Requirement(this.text);
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 4),
+    child: Row(children: [
+      const Icon(Icons.check_circle_outline_rounded, size: 13, color: Color(0xFF22C55E)),
+      const SizedBox(width: 6),
+      Text(text, style: const TextStyle(fontSize: 12, color: Color(0xFF374151))),
+    ]),
   );
 }
 
@@ -190,11 +192,13 @@ class _FieldLabel extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.only(bottom: 5),
     child: Row(children: [
-      Text(text, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600,
-          color: Color(0xFF374151))),
+      Text(text,
+          style: const TextStyle(
+              fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF374151))),
       if (required)
-        const Text(' *', style: TextStyle(fontSize: 12, color: Color(0xFFDC2626),
-            fontWeight: FontWeight.bold)),
+        const Text(' *',
+            style: TextStyle(
+                fontSize: 12, color: Color(0xFFDC2626), fontWeight: FontWeight.bold)),
     ]),
   );
 }
@@ -208,16 +212,66 @@ class _DialogHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Row(children: [
     Container(
-      width: 36, height: 36,
-      decoration: BoxDecoration(color: _brand.withOpacity(0.08), borderRadius: BorderRadius.circular(9)),
+      width: 36,
+      height: 36,
+      decoration: BoxDecoration(
+        color: _brand.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(9),
+      ),
       child: Icon(icon, size: 18, color: _brand),
     ),
     const SizedBox(width: 11),
     Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text(title,
-          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: _brand, letterSpacing: -0.4)),
+          style: const TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w800,
+              color: _brand,
+              letterSpacing: -0.4)),
       if (subtitle != null)
-        Text(subtitle!, style: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF))),
+        Text(subtitle!,
+            style: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF))),
     ]),
+  ]);
+}
+
+class _ActionButtons extends StatelessWidget {
+  final VoidCallback onCancel;
+  final VoidCallback onSave;
+  final String saveLabel;
+
+  const _ActionButtons({
+    required this.onCancel,
+    required this.onSave,
+    required this.saveLabel,
+  });
+
+  @override
+  Widget build(BuildContext context) => Row(children: [
+    Expanded(
+      child: OutlinedButton(
+        onPressed: onCancel,
+        style: OutlinedButton.styleFrom(
+          side: const BorderSide(color: Color(0xFFEAE6DE)),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+        child: const Text('Cancel',
+            style: TextStyle(color: _brand, fontWeight: FontWeight.w600)),
+      ),
+    ),
+    const SizedBox(width: 12),
+    Expanded(
+      child: ElevatedButton(
+        onPressed: onSave,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: _brand,
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+        child: Text(saveLabel,
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+      ),
+    ),
   ]);
 }
