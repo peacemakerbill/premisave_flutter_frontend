@@ -3,691 +3,382 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../models/auth/user_model.dart';
 import '../../../../providers/auth/auth_provider.dart';
 
-class AdminDashboardContent extends ConsumerStatefulWidget {
+// ── Shared palette ────────────────────────────────────────────────────────────
+const _brand = Color(0xFF1A3C34);
+const _gold  = Color(0xFFC9A84C);
+
+class AdminDashboardContent extends ConsumerWidget {
   const AdminDashboardContent({super.key});
 
   @override
-  ConsumerState<AdminDashboardContent> createState() => _AdminDashboardContentState();
-}
-
-class _AdminDashboardContentState extends ConsumerState<AdminDashboardContent>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _slideAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeInOut,
-      ),
-    );
-
-    _slideAnimation = Tween<double>(begin: 50.0, end: 0.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeOutCubic,
-      ),
-    );
-
-    _animationController.forward();
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final authState = ref.watch(authProvider);
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: AnimatedBuilder(
-        animation: _animationController,
-        builder: (context, child) {
-          return Opacity(
-            opacity: _fadeAnimation.value,
-            child: Transform.translate(
-              offset: Offset(0, _slideAnimation.value),
-              child: Column(
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(authProvider).currentUser;
+    return LayoutBuilder(builder: (context, constraints) {
+      final isWide = constraints.maxWidth >= 768;
+      return SingleChildScrollView(
+        padding: EdgeInsets.symmetric(
+            horizontal: isWide ? 36 : 20, vertical: 28),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _Header(user: user),
+            const SizedBox(height: 28),
+            _KpiRow(isWide: isWide),
+            const SizedBox(height: 28),
+            if (isWide)
+              Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _WelcomeCard(user: authState.currentUser),
-                  const SizedBox(height: 24),
-                  _DashboardGrid(),
-                  const SizedBox(height: 24),
-                  _QuickActionsGrid(),
-                  const SizedBox(height: 24),
-                  _SystemHealthSection(),
-                  const SizedBox(height: 24),
-                  _RecentActivitySection(),
+                  Expanded(flex: 3, child: _RecentActivity()),
+                  const SizedBox(width: 20),
+                  Expanded(flex: 2, child: _SystemHealth()),
                 ],
-              ),
-            ),
-          );
-        },
-      ),
+              )
+            else ...[
+              _RecentActivity(),
+              const SizedBox(height: 20),
+              _SystemHealth(),
+            ],
+            const SizedBox(height: 20),
+            _QuickActions(),
+          ],
+        ),
+      );
+    });
+  }
+}
+
+// ── Header ────────────────────────────────────────────────────────────────────
+
+class _Header extends StatelessWidget {
+  final UserModel? user;
+  const _Header({required this.user});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Welcome, ${user?.firstName ?? 'Admin'}',
+                style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    color: _brand,
+                    letterSpacing: -0.8)),
+            const SizedBox(height: 3),
+            const Text('June 2026  ·  Q2',
+                style: TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFF9CA3AF),
+                    fontWeight: FontWeight.w500)),
+          ],
+        ),
+        _StatusChip(label: 'System Active', dot: true),
+      ],
     );
   }
 }
 
-class _WelcomeCard extends StatelessWidget {
-  final UserModel? user;
-  const _WelcomeCard({required this.user});
+class _StatusChip extends StatelessWidget {
+  final String label;
+  final bool dot;
+  const _StatusChip({required this.label, this.dot = false});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F7FA),
+        color: const Color(0xFFECFDF3),
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF1A2B4C).withOpacity(0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-        border: Border.all(
-          color: const Color(0xFFE8EBF0),
-          width: 1.5,
-        ),
-      ),
-      padding: const EdgeInsets.all(28),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Welcome back,',
-                      style: TextStyle(
-                        color: const Color(0xFF2C3E50).withOpacity(0.8),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      user?.firstName ?? 'Admin',
-                      style: const TextStyle(
-                        color: Color(0xFF1A2B4C),
-                        fontSize: 32,
-                        fontWeight: FontWeight.w700,
-                        height: 1.1,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFD4AF37),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFD4AF37).withOpacity(0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.admin_panel_settings_rounded,
-                  color: Colors.white,
-                  size: 28,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Container(
-            width: 60,
-            height: 3,
-            decoration: BoxDecoration(
-              color: const Color(0xFFD4AF37),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: [
-              _buildStatusChip(
-                'System Active',
-                Icons.check_circle_rounded,
-                const Color(0xFF10B981),
-              ),
-              _buildStatusChip(
-                'Users Online',
-                Icons.people_alt_rounded,
-                const Color(0xFF6366F1),
-              ),
-              _buildStatusChip(
-                'Services Running',
-                Icons.verified_rounded,
-                const Color(0xFF1A2B4C),
-              ),
-              _buildStatusChip(
-                'Last Backup',
-                Icons.backup_rounded,
-                const Color(0xFF8B5CF6),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatusChip(String text, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: color.withOpacity(0.15),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF1A2B4C).withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
+        border: Border.all(color: const Color(0xFFBBF7D0)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              shape: BoxShape.circle,
+          if (dot) ...[
+            Container(
+              width: 6, height: 6,
+              decoration: const BoxDecoration(
+                  color: Color(0xFF22C55E), shape: BoxShape.circle),
             ),
-            child: Icon(
-              icon,
-              size: 16,
-              color: color,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            text,
-            style: TextStyle(
-              color: const Color(0xFF2C3E50),
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+            const SizedBox(width: 6),
+          ],
+          Text(label,
+              style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF16A34A))),
         ],
       ),
     );
   }
 }
 
-class _DashboardGrid extends StatelessWidget {
+// ── KPI Row ───────────────────────────────────────────────────────────────────
+
+class _KpiRow extends StatelessWidget {
+  final bool isWide;
+  const _KpiRow({required this.isWide});
+
+  static const _kpis = [
+    _KpiData('Total Users',    '1,254',      '+12 this week',   Icons.people_outline_rounded,     true),
+    _KpiData('Properties',     '842',         '+5 this week',   Icons.home_work_outlined,          true),
+    _KpiData('Revenue Today',  'KES 45.8K',  '↑ 8% vs yesterday', Icons.trending_up_rounded,     true),
+    _KpiData('Open Tickets',   '12',          '3 urgent',       Icons.support_agent_outlined,      false),
+  ];
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const _SectionTitle('System Overview'),
-        const SizedBox(height: 16),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final isSmallScreen = constraints.maxWidth < 600;
-            final isMediumScreen = constraints.maxWidth < 900;
-            final crossAxisCount = isSmallScreen ? 2 : (isMediumScreen ? 3 : 4);
-            final childAspectRatio = isSmallScreen ? 1.3 : (isMediumScreen ? 1.5 : 1.2);
-            final mainAxisSpacing = isSmallScreen ? 12.0 : 16.0;
-
-            final stats = [
-              _StatInfo('Total Users', '1,254', Icons.people, const Color(0xFF6366F1)),
-              _StatInfo('Properties', '842', Icons.home, const Color(0xFF10B981)),
-              _StatInfo('Revenue Today', 'KES 45,820', Icons.attach_money, const Color(0xFFF59E0B)),
-              _StatInfo('Pending Transactions', '24', Icons.receipt, const Color(0xFFFF5A5F)),
-              if (crossAxisCount > 3) _StatInfo('Support Tickets', '12', Icons.support_agent, const Color(0xFF8B5CF6)),
-              if (crossAxisCount > 3) _StatInfo('Growth Rate', '+15%', Icons.trending_up, const Color(0xFF00A699)),
-            ];
-
-            return GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: crossAxisCount,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: mainAxisSpacing,
-              childAspectRatio: childAspectRatio,
-              children: stats.map((stat) => _StatCard(info: stat)).toList(),
-            );
-          },
-        ),
-      ],
+    if (isWide) {
+      return Row(
+        children: _kpis
+            .map((k) => Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(right: k == _kpis.last ? 0 : 14),
+            child: _KpiCard(data: k),
+          ),
+        ))
+            .toList(),
+      );
+    }
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 14,
+        mainAxisSpacing: 14,
+        mainAxisExtent: 148,
+      ),
+      itemCount: _kpis.length,
+      itemBuilder: (_, i) => _KpiCard(data: _kpis[i]),
     );
   }
 }
 
-class _StatInfo {
-  final String title;
-  final String value;
+class _KpiData {
+  final String label, value, sub;
   final IconData icon;
-  final Color color;
-
-  _StatInfo(this.title, this.value, this.icon, this.color);
+  final bool positive;
+  const _KpiData(this.label, this.value, this.sub, this.icon, this.positive);
 }
 
-class _StatCard extends StatelessWidget {
-  final _StatInfo info;
-
-  const _StatCard({required this.info});
+class _KpiCard extends StatelessWidget {
+  final _KpiData data;
+  const _KpiCard({required this.data});
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen = screenWidth < 600;
-    final padding = isSmallScreen ? 12.0 : 16.0;
-    final iconSize = isSmallScreen ? 16.0 : 18.0;
-    final titleSize = isSmallScreen ? 11.0 : 13.0;
-    final valueSize = isSmallScreen ? 12.0 : 14.0;
-
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: TweenAnimationBuilder(
-        duration: const Duration(milliseconds: 500),
-        tween: Tween<double>(begin: 0, end: 1),
-        builder: (context, double val, child) {
-          return Transform.scale(
-            scale: 1 + (val * 0.05),
-            child: child,
-          );
-        },
-        child: Card(
-          elevation: 8,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          shadowColor: info.color.withValues(alpha: 0.3),
-          child: Container(
-            constraints: BoxConstraints(
-              minHeight: isSmallScreen ? 80 : 100,
-            ),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              gradient: LinearGradient(
-                colors: [
-                  Colors.white,
-                  info.color.withValues(alpha: 0.05),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: const Border(left: BorderSide(color: _gold, width: 3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Icon(data.icon, size: 18, color: _brand),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                decoration: BoxDecoration(
+                  color: data.positive
+                      ? const Color(0xFFECFDF3)
+                      : const Color(0xFFFEF2F2),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(data.positive ? '↑' : '↓',
+                    style: TextStyle(
+                        fontSize: 11,
+                        color: data.positive
+                            ? const Color(0xFF16A34A)
+                            : const Color(0xFFDC2626))),
               ),
-            ),
-            child: Padding(
-              padding: EdgeInsets.all(padding),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              info.color.withValues(alpha: 0.2),
-                              info.color.withValues(alpha: 0.1),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: info.color.withValues(alpha: 0.2),
-                              blurRadius: 8,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: Icon(info.icon, color: info.color, size: iconSize),
-                      ),
-                      SizedBox(width: isSmallScreen ? 6 : 10),
-                      Expanded(
-                        child: Text(
-                          info.title,
-                          style: TextStyle(
-                            fontSize: titleSize,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: isSmallScreen ? 6 : 10),
-                  Flexible(
-                    child: Text(
-                      info.value,
-                      style: TextStyle(
-                        fontSize: valueSize,
-                        fontWeight: FontWeight.bold,
-                        color: info.color,
-                        shadows: [
-                          Shadow(
-                            blurRadius: 2,
-                            color: info.color.withValues(alpha: 0.2),
-                            offset: const Offset(1, 1),
-                          ),
-                        ],
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            ],
           ),
-        ),
+          const SizedBox(height: 10),
+          Text(data.value,
+              style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: _brand,
+                  letterSpacing: -0.8),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis),
+          const SizedBox(height: 2),
+          Text(data.label,
+              style: const TextStyle(
+                  fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF374151)),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis),
+          const SizedBox(height: 2),
+          Text(data.sub,
+              style: const TextStyle(fontSize: 10, color: Color(0xFF9CA3AF)),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis),
+        ],
       ),
     );
   }
 }
 
-class _QuickActionsGrid extends StatelessWidget {
+// ── Recent Activity ───────────────────────────────────────────────────────────
+
+class _RecentActivity extends StatelessWidget {
+  static const _events = [
+    _Event('New user registered',       'John Doe · homeowner@premisave.com', Icons.person_add_outlined,        0xFFEFF6FF, 0xFF3B82F6, '2h ago'),
+    _Event('Payment processed',         'KES 15,000 · Property #123',        Icons.payments_outlined,           0xFFECFDF3, 0xFF22C55E, '3h ago'),
+    _Event('Property listed',           'Runda Mansion · KES 120M',          Icons.home_work_outlined,          0xFFFFFBEB, 0xFFF59E0B, '4h ago'),
+    _Event('System backup completed',   'Daily backup · All services OK',    Icons.backup_outlined,             0xFFF5F0E8, 0xFF1A3C34, '5h ago'),
+    _Event('Support ticket opened',     'Ticket #88 · Billing issue',        Icons.support_agent_outlined,      0xFFFEF2F2, 0xFFDC2626, '6h ago'),
+  ];
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const _SectionTitle('Quick Actions'),
-        const SizedBox(height: 16),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final isSmallScreen = constraints.maxWidth < 600;
-            final isMediumScreen = constraints.maxWidth < 900;
-            final crossAxisCount = isSmallScreen ? 2 : (isMediumScreen ? 3 : 4);
-            final childAspectRatio = isSmallScreen ? 1.1 : (isMediumScreen ? 1.3 : 1.1);
-            final padding = isSmallScreen ? 16.0 : 20.0;
-
-            final actions = [
-              _ActionInfo('Manage Users', Icons.people, const Color(0xFF6366F1)),
-              _ActionInfo('View Reports', Icons.assessment, const Color(0xFF10B981)),
-              _ActionInfo('System Settings', Icons.settings, const Color(0xFF8B5CF6)),
-              _ActionInfo('View Analytics', Icons.analytics, const Color(0xFFF59E0B)),
-            ];
-
-            return Container(
-              constraints: BoxConstraints(
-                maxHeight: isSmallScreen ? 200 : (isMediumScreen ? 180 : 160),
-              ),
-              child: GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: crossAxisCount,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: childAspectRatio,
-                children: actions.map((action) => _ActionCard(action: action)).toList(),
-              ),
-            );
-          },
-        ),
-      ],
+    return _Section(
+      title: 'Recent Activity',
+      trailing: 'Today',
+      child: Column(
+        children: _events
+            .asMap()
+            .entries
+            .map((e) => _EventRow(event: e.value, last: e.key == _events.length - 1))
+            .toList(),
+      ),
     );
   }
 }
 
-class _ActionInfo {
-  final String title;
+class _Event {
+  final String title, sub, time;
   final IconData icon;
-  final Color color;
-
-  _ActionInfo(this.title, this.icon, this.color);
+  final int bg, fg;
+  const _Event(this.title, this.sub, this.icon, this.bg, this.fg, this.time);
 }
 
-class _ActionCard extends StatelessWidget {
-  final _ActionInfo action;
-
-  const _ActionCard({required this.action});
+class _EventRow extends StatelessWidget {
+  final _Event event;
+  final bool last;
+  const _EventRow({required this.event, required this.last});
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen = screenWidth < 600;
-    final padding = isSmallScreen ? 12.0 : 16.0;
-    final iconSize = isSmallScreen ? 20.0 : 24.0;
-    final textSize = isSmallScreen ? 11.0 : 13.0;
-
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: TweenAnimationBuilder(
-        duration: const Duration(milliseconds: 600),
-        tween: Tween<double>(begin: 0, end: 1),
-        builder: (context, double val, child) {
-          return Transform.translate(
-            offset: Offset(0, (1 - val) * 20),
-            child: Opacity(
-              opacity: val,
-              child: child,
-            ),
-          );
-        },
-        child: Card(
-          elevation: 6,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          shadowColor: action.color.withValues(alpha: 0.4),
-          child: InkWell(
-            onTap: () {},
-            borderRadius: BorderRadius.circular(16),
-            hoverColor: action.color.withValues(alpha: 0.1),
-            splashColor: action.color.withValues(alpha: 0.2),
-            child: Container(
-              constraints: BoxConstraints(
-                minHeight: isSmallScreen ? 80 : 100,
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Row(
+            children: [
+              Container(
+                width: 34, height: 34,
+                decoration: BoxDecoration(
+                  color: Color(event.bg),
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: Icon(event.icon, size: 16, color: Color(event.fg)),
               ),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                gradient: LinearGradient(
-                  colors: [
-                    action.color.withValues(alpha: 0.08),
-                    action.color.withValues(alpha: 0.02),
+              const SizedBox(width: 11),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(event.title,
+                        style: const TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.w600, color: _brand),
+                        maxLines: 1, overflow: TextOverflow.ellipsis),
+                    Text(event.sub,
+                        style: const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF)),
+                        maxLines: 1, overflow: TextOverflow.ellipsis),
                   ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
                 ),
               ),
-              padding: EdgeInsets.all(padding),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(isSmallScreen ? 8 : 12),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          action.color.withValues(alpha: 0.2),
-                          action.color.withValues(alpha: 0.1),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: action.color.withValues(alpha: 0.3),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Icon(action.icon, color: action.color, size: iconSize),
-                  ),
-                  SizedBox(height: isSmallScreen ? 6 : 12),
-                  Flexible(
-                    child: Text(
-                      action.title,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: textSize,
-                        fontWeight: FontWeight.w600,
-                        color: action.color,
-                        shadows: [
-                          Shadow(
-                            blurRadius: 2,
-                            color: action.color.withValues(alpha: 0.2),
-                            offset: const Offset(1, 1),
-                          ),
-                        ],
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+              const SizedBox(width: 8),
+              Text(event.time,
+                  style: const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF))),
+            ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _SystemHealthSection extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final services = [
-      _HealthInfo('Database', 95, const Color(0xFF10B981)),
-      _HealthInfo('API Services', 88, const Color(0xFF6366F1)),
-      _HealthInfo('Payment Gateway', 92, const Color(0xFF00A699)),
-      _HealthInfo('Email Service', 75, const Color(0xFFF59E0B)),
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const _SectionTitle('System Health'),
-        const SizedBox(height: 16),
-        Card(
-          elevation: 6,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          shadowColor: Colors.blue.withValues(alpha: 0.2),
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              gradient: LinearGradient(
-                colors: [
-                  Colors.white,
-                  Colors.blue.withValues(alpha: 0.02),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                children: services.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final service = entry.value;
-                  return TweenAnimationBuilder(
-                    duration: Duration(milliseconds: 600 + (index * 200)),
-                    tween: Tween<double>(begin: 0, end: 1),
-                    builder: (context, double val, child) {
-                      return Opacity(
-                        opacity: val,
-                        child: Transform.translate(
-                          offset: Offset((1 - val) * 20, 0),
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: _HealthIndicator(info: service),
-                  );
-                }).toList(),
-              ),
-            ),
-          ),
-        ),
+        if (!last)
+          const Divider(height: 1, color: Color(0xFFF3EFE6), thickness: 1),
       ],
     );
   }
 }
 
-class _HealthInfo {
-  final String name;
-  final int percentage;
-  final Color color;
+// ── System Health ─────────────────────────────────────────────────────────────
 
-  _HealthInfo(this.name, this.percentage, this.color);
+class _SystemHealth extends StatelessWidget {
+  static const _services = [
+    _Service('Database',         95, 0xFF22C55E),
+    _Service('API Services',     88, 0xFF3B82F6),
+    _Service('Payment Gateway',  92, 0xFF1A3C34),
+    _Service('Email Service',    75, 0xFFF59E0B),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return _Section(
+      title: 'System Health',
+      trailing: 'Live',
+      child: Column(
+        children: _services
+            .map((s) => _HealthBar(service: s))
+            .toList(),
+      ),
+    );
+  }
 }
 
-class _HealthIndicator extends StatelessWidget {
-  final _HealthInfo info;
+class _Service {
+  final String name;
+  final int pct;
+  final int color;
+  const _Service(this.name, this.pct, this.color);
+}
 
-  const _HealthIndicator({required this.info});
+class _HealthBar extends StatelessWidget {
+  final _Service service;
+  const _HealthBar({required this.service});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                info.name,
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-              ),
-              Text(
-                '${info.percentage}%',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: info.color,
-                ),
-              ),
+              Text(service.name,
+                  style: const TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.w600, color: _brand)),
+              Text('${service.pct}%',
+                  style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: Color(service.color))),
             ],
           ),
-          const SizedBox(height: 8),
-          LinearProgressIndicator(
-            value: info.percentage / 100,
-            backgroundColor: Colors.grey.shade200,
-            color: info.color,
-            minHeight: 8,
+          const SizedBox(height: 6),
+          ClipRRect(
             borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: service.pct / 100,
+              backgroundColor: const Color(0xFFF3EFE6),
+              color: Color(service.color),
+              minHeight: 6,
+            ),
           ),
         ],
       ),
@@ -695,148 +386,132 @@ class _HealthIndicator extends StatelessWidget {
   }
 }
 
-class _RecentActivitySection extends StatelessWidget {
+// ── Quick Actions ─────────────────────────────────────────────────────────────
+
+class _QuickActions extends StatelessWidget {
+  static const _actions = [
+    _Action('Manage Users',    Icons.manage_accounts_rounded, 0xFF1A3C34),
+    _Action('View Reports',    Icons.bar_chart_rounded,       0xFF3B82F6),
+    _Action('System Settings', Icons.settings_rounded,        0xFF6B7280),
+    _Action('Analytics',       Icons.analytics_outlined,      0xFFC9A84C),
+  ];
+
   @override
   Widget build(BuildContext context) {
-    final activities = [
-      _ActivityInfo('New User Registered', 'John Doe registered a new account', '2h ago', Icons.person_add, const Color(0xFF6366F1)),
-      _ActivityInfo('Payment Processed', 'KES 15,000 payment for property #123', '3h ago', Icons.payment, const Color(0xFF10B981)),
-      _ActivityInfo('System Backup Completed', 'Daily backup executed successfully', '5h ago', Icons.backup, const Color(0xFF8B5CF6)),
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const _SectionTitle('Recent Activity'),
-        const SizedBox(height: 16),
-        Card(
-          elevation: 6,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          shadowColor: Colors.blue.withValues(alpha: 0.2),
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              gradient: LinearGradient(
-                colors: [
-                  Colors.white,
-                  Colors.blue.withValues(alpha: 0.02),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+    return _Section(
+      title: 'Quick Actions',
+      child: LayoutBuilder(builder: (_, c) {
+        final isWide = c.maxWidth >= 500;
+        if (isWide) {
+          return Row(
+            children: _actions
+                .map((a) => Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(right: a == _actions.last ? 0 : 12),
+                child: _ActionCard(action: a),
               ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: activities.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final activity = entry.value;
-                  return TweenAnimationBuilder(
-                    duration: Duration(milliseconds: 600 + (index * 200)),
-                    tween: Tween<double>(begin: 0, end: 1),
-                    builder: (context, double val, child) {
-                      return Opacity(
-                        opacity: val,
-                        child: Transform.translate(
-                          offset: Offset((1 - val) * 20, 0),
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: _ActivityItem(info: activity),
-                  );
-                }).toList(),
-              ),
-            ),
+            ))
+                .toList(),
+          );
+        }
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            mainAxisExtent: 100,
           ),
-        ),
-      ],
+          itemCount: _actions.length,
+          itemBuilder: (_, i) => _ActionCard(action: _actions[i]),
+        );
+      }),
     );
   }
 }
 
-class _ActivityInfo {
-  final String title;
-  final String description;
-  final String time;
+class _Action {
+  final String label;
   final IconData icon;
-  final Color color;
-
-  _ActivityInfo(this.title, this.description, this.time, this.icon, this.color);
+  final int color;
+  const _Action(this.label, this.icon, this.color);
 }
 
-class _ActivityItem extends StatelessWidget {
-  final _ActivityInfo info;
-
-  const _ActivityItem({required this.info});
+class _ActionCard extends StatelessWidget {
+  final _Action action;
+  const _ActionCard({required this.action});
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-        leading: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                info.color.withValues(alpha: 0.2),
-                info.color.withValues(alpha: 0.1),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: info.color.withValues(alpha: 0.2),
-                blurRadius: 6,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          child: Icon(info.icon, color: info.color, size: 20),
+    return InkWell(
+      onTap: () {},
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Color(action.color).withOpacity(0.06),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Color(action.color).withOpacity(0.15)),
         ),
-        title: Text(
-          info.title,
-          style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        subtitle: Text(
-          info.description,
-          style: const TextStyle(fontSize: 13),
-        ),
-        trailing: Text(
-          info.time,
-          style: const TextStyle(
-            fontSize: 11,
-            color: Colors.grey,
-            fontWeight: FontWeight.w500,
-          ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(action.icon, size: 22, color: Color(action.color)),
+            const SizedBox(height: 8),
+            Text(action.label,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Color(action.color)),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis),
+          ],
         ),
       ),
     );
   }
 }
 
-class _SectionTitle extends StatelessWidget {
+// ── Shared Section Wrapper ────────────────────────────────────────────────────
+
+class _Section extends StatelessWidget {
   final String title;
-  const _SectionTitle(this.title);
+  final String? trailing;
+  final Widget child;
+  const _Section({required this.title, this.trailing, required this.child});
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      title,
-      style: const TextStyle(
-        fontSize: 24,
-        fontWeight: FontWeight.w700,
-        color: Colors.black,
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(title,
+                  style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: _brand,
+                      letterSpacing: -0.2)),
+              if (trailing != null)
+                Text(trailing!,
+                    style: const TextStyle(
+                        fontSize: 12, color: _gold, fontWeight: FontWeight.w600)),
+            ],
+          ),
+          const SizedBox(height: 4),
+          const Divider(color: Color(0xFFF3EFE6)),
+          child,
+        ],
       ),
     );
   }
