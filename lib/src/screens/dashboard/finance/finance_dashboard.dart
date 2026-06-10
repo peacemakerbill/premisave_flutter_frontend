@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../../models/auth/user_model.dart';
 import '../../../providers/auth/auth_provider.dart';
 import '../../other_user_profiles/users_content.dart';
+import '../../shared/about_content.dart';
+import '../../shared/contact_content.dart';
 import 'contents/FinanceDashboardContent.dart';
 
 class FinanceDashboard extends ConsumerStatefulWidget {
@@ -27,17 +29,17 @@ class _FinanceDashboardState extends ConsumerState<FinanceDashboard> {
   ];
 
   void _navigate(String route) {
-    if (route == '/about' || route == '/contact') {
-      context.go(route);
-    } else {
-      setState(() => _currentRoute = route);
-    }
+    setState(() => _currentRoute = route);
   }
 
   Widget _buildContent() {
     switch (_currentRoute) {
       case '/finance/people':
         return const UsersContent();
+      case '/about':
+        return const AboutContent();
+      case '/contact':
+        return const ContactContent();
       default:
         return const FinanceDashboardContent();
     }
