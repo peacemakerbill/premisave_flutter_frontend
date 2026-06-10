@@ -12,125 +12,107 @@ class UserDetailsDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       backgroundColor: Colors.white,
-      elevation: 8,
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const _DialogHeader(
-                icon: Icons.person_outline_rounded,
-                title: 'User Details',
-              ),
-              const SizedBox(height: 24),
-
-              // Avatar + Name Block
-              Row(children: [
-                CircleAvatar(
-                  radius: 32,
-                  backgroundColor: _brand,
-                  child: Text(
-                    '${user.firstName[0]}${user.lastName[0]}',
-                    style: const TextStyle(
-                      color: _gold,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const _DialogHeader(
+                  icon: Icons.person_outline_rounded,
+                  title: 'User Details',
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${user.firstName} ${user.lastName}',
-                        style: const TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w700,
-                          color: _brand,
-                          letterSpacing: -0.3,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        user.email,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF6B7280),
-                        ),
-                      ),
-                      Text(
-                        '@${user.username}',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF9CA3AF),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ]),
-              const SizedBox(height: 20),
+                const SizedBox(height: 24),
 
-              // Status Badges
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _Chip(
-                    user.role.name.replaceAll('_', ' ').toUpperCase(),
-                    _roleColor(user.role.name),
-                  ),
-                  _Chip(
-                    user.active ? 'ACTIVE' : 'INACTIVE',
-                    user.active ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
-                  ),
-                  _Chip(
-                    user.verified ? 'VERIFIED' : 'UNVERIFIED',
-                    user.verified ? const Color(0xFF3B82F6) : const Color(0xFFF59E0B),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              _SectionTitle('Personal Details'),
-              const SizedBox(height: 12),
-              _DetailRow(Icons.phone_outlined, 'Phone', user.phoneNumber),
-              _DetailRow(Icons.language_outlined, 'Language', user.language),
-              _DetailRow(Icons.location_on_outlined, 'Country', user.country),
-              const SizedBox(height: 8),
-
-              _SectionTitle('Address'),
-              const SizedBox(height: 12),
-              _DetailRow(Icons.home_outlined, 'Address Line 1', user.address1),
-              _DetailRow(Icons.home_outlined, 'Address Line 2', user.address2),
-              const SizedBox(height: 32),
-
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
+                // Avatar + Name
+                Row(children: [
+                  CircleAvatar(
+                    radius: 30,
                     backgroundColor: _brand,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    child: Text(
+                      '${user.firstName[0]}${user.lastName[0]}',
+                      style: const TextStyle(
+                        color: _gold,
+                        fontSize: 19,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
                   ),
-                  child: const Text(
-                    'Close',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${user.firstName} ${user.lastName}',
+                          style: const TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700,
+                            color: _brand,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(user.email,
+                            style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
+                        Text('@${user.username}',
+                            style: const TextStyle(fontSize: 13, color: Color(0xFF9CA3AF))),
+                      ],
+                    ),
+                  ),
+                ]),
+                const SizedBox(height: 20),
+
+                // Status Badges
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _Chip(user.role.name.replaceAll('_', ' ').toUpperCase(), _roleColor(user.role.name)),
+                    _Chip(user.active ? 'ACTIVE' : 'INACTIVE', user.active ? const Color(0xFF16A34A) : const Color(0xFFDC2626)),
+                    _Chip(user.verified ? 'VERIFIED' : 'UNVERIFIED', user.verified ? const Color(0xFF3B82F6) : const Color(0xFFF59E0B)),
+                  ],
+                ),
+                const SizedBox(height: 24),
+
+                _SectionTitle('Personal Details'),
+                const SizedBox(height: 12),
+                _DetailRow(Icons.phone_outlined, 'Phone', user.phoneNumber),
+                _DetailRow(Icons.language_outlined, 'Language', user.language),
+                _DetailRow(Icons.location_on_outlined, 'Country', user.country),
+                const SizedBox(height: 8),
+
+                _SectionTitle('Address'),
+                const SizedBox(height: 12),
+                _DetailRow(Icons.home_outlined, 'Address Line 1', user.address1),
+                _DetailRow(Icons.home_outlined, 'Address Line 2', user.address2),
+                const SizedBox(height: 32),
+
+                // Compact Close Button
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: _brand,
+                      side: const BorderSide(color: Color(0xFFEAE6DE)),
+                      padding: const EdgeInsets.symmetric(vertical: 13),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text(
+                      'Close',
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -139,20 +121,13 @@ class UserDetailsDialog extends StatelessWidget {
 
   Color _roleColor(String role) {
     switch (role.toLowerCase()) {
-      case 'admin':
-        return const Color(0xFFDC2626);
-      case 'client':
-        return const Color(0xFF16A34A);
-      case 'home_owner':
-        return const Color(0xFF3B82F6);
-      case 'operations':
-        return const Color(0xFFF59E0B);
-      case 'finance':
-        return const Color(0xFF8B5CF6);
-      case 'support':
-        return const Color(0xFF0D9488);
-      default:
-        return const Color(0xFF6B7280);
+      case 'admin':      return const Color(0xFFDC2626);
+      case 'client':     return const Color(0xFF16A34A);
+      case 'home_owner': return const Color(0xFF3B82F6);
+      case 'operations': return const Color(0xFFF59E0B);
+      case 'finance':    return const Color(0xFF8B5CF6);
+      case 'support':    return const Color(0xFF0D9488);
+      default:           return const Color(0xFF6B7280);
     }
   }
 }
@@ -162,12 +137,11 @@ class UserDetailsDialog extends StatelessWidget {
 class _Chip extends StatelessWidget {
   final String label;
   final Color color;
-
   const _Chip(this.label, this.color);
 
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+    padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
     decoration: BoxDecoration(
       color: color.withOpacity(0.08),
       borderRadius: BorderRadius.circular(20),
@@ -193,33 +167,27 @@ class _DetailRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 12),
+    padding: const EdgeInsets.only(bottom: 11),
     child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 18, color: const Color(0xFF9CA3AF)),
+        Icon(icon, size: 17, color: const Color(0xFF9CA3AF)),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 11.5,
-                  color: Color(0xFF9CA3AF),
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+              Text(label,
+                  style: const TextStyle(
+                      fontSize: 11.5,
+                      color: Color(0xFF9CA3AF),
+                      fontWeight: FontWeight.w500)),
               const SizedBox(height: 2),
-              Text(
-                value.isNotEmpty ? value : '—',
-                style: const TextStyle(
-                  fontSize: 13.5,
-                  color: _brand,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+              Text(value.isNotEmpty ? value : '—',
+                  style: const TextStyle(
+                      fontSize: 13.5,
+                      color: _brand,
+                      fontWeight: FontWeight.w500)),
             ],
           ),
         ),
@@ -233,40 +201,26 @@ class _DialogHeader extends StatelessWidget {
   final String title;
   final String? subtitle;
 
-  const _DialogHeader({
-    required this.icon,
-    required this.title,
-    this.subtitle,
-  });
+  const _DialogHeader({required this.icon, required this.title, this.subtitle});
 
   @override
   Widget build(BuildContext context) => Row(children: [
     Container(
-      width: 36,
-      height: 36,
+      padding: const EdgeInsets.all(9),
       decoration: BoxDecoration(
         color: _brand.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(9),
+        borderRadius: BorderRadius.circular(10),
       ),
-      child: Icon(icon, size: 18, color: _brand),
+      child: Icon(icon, size: 22, color: _brand),
     ),
-    const SizedBox(width: 12),
+    const SizedBox(width: 14),
     Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title,
-              style: const TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w800,
-                  color: _brand,
-                  letterSpacing: -0.4)),
-          if (subtitle != null)
-            Text(subtitle!,
-                style: const TextStyle(
-                    fontSize: 12, color: Color(0xFF9CA3AF))),
-        ],
-      ),
+      child: Text(title,
+          style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: _brand,
+              letterSpacing: -0.4)),
     ),
   ]);
 }
