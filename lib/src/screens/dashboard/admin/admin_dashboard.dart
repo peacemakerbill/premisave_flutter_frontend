@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../models/auth/user_model.dart';
 import '../../../providers/auth/auth_provider.dart';
+import '../../shared/about_content.dart';
+import '../../shared/contact_content.dart';
 import 'contents/admin_dashboard_content.dart';
 import 'contents/admin_user_management_content.dart';
 
@@ -27,17 +29,17 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
   ];
 
   void _navigate(String route) {
-    if (route == '/about' || route == '/contact') {
-      context.go(route);
-    } else {
-      setState(() => _currentRoute = route);
-    }
+    setState(() => _currentRoute = route);
   }
 
   Widget _buildContent() {
     switch (_currentRoute) {
       case '/admin/users':
         return const AdminUserManagementContent();
+      case '/about':
+        return const AboutContent();
+      case '/contact':
+        return const ContactContent();
       default:
         return const AdminDashboardContent();
     }
