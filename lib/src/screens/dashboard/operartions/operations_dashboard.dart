@@ -22,9 +22,17 @@ class _OperationsDashboardState extends ConsumerState<OperationsDashboard> {
   final List<Map<String, dynamic>> _menuItems = [
     {'icon': Icons.grid_view_rounded, 'label': 'Overview', 'route': '/dashboard/operations'},
     {'icon': Icons.people_outline_rounded, 'label': 'People', 'route': '/operations/people'},
+    {'icon': Icons.info_outline_rounded, 'label': 'About', 'route': '/about'},
+    {'icon': Icons.contact_support_rounded, 'label': 'Contact', 'route': '/contact'},
   ];
 
-  void _navigate(String route) => setState(() => _currentRoute = route);
+  void _navigate(String route) {
+    if (route == '/about' || route == '/contact') {
+      context.go(route);
+    } else {
+      setState(() => _currentRoute = route);
+    }
+  }
 
   Widget _buildContent() {
     switch (_currentRoute) {
@@ -77,7 +85,7 @@ class _OperationsDashboardState extends ConsumerState<OperationsDashboard> {
                 child: const Center(
                   child: Text('P',
                       style: TextStyle(
-                          color: Color(0xFFC9A84C),
+                          color: _gold,
                           fontSize: 17,
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.5)),
@@ -86,7 +94,7 @@ class _OperationsDashboardState extends ConsumerState<OperationsDashboard> {
               const SizedBox(width: 9),
               const Text('premisave',
                   style: TextStyle(
-                      color: Color(0xFF1A3C34),
+                      color: _brand,
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
                       letterSpacing: -0.3)),
@@ -115,7 +123,7 @@ class _OperationsDashboardState extends ConsumerState<OperationsDashboard> {
             margin: const EdgeInsets.symmetric(horizontal: 4),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
             decoration: BoxDecoration(
-              color: isActive ? const Color(0xFF1A3C34) : Colors.transparent,
+              color: isActive ? _brand : Colors.transparent,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -159,7 +167,7 @@ class _OperationsDashboardState extends ConsumerState<OperationsDashboard> {
                   style: const TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 14,
-                      color: Color(0xFF1A3C34))),
+                      color: _brand)),
               Text(user?.email ?? '',
                   style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
             ],
@@ -170,20 +178,20 @@ class _OperationsDashboardState extends ConsumerState<OperationsDashboard> {
           value: 'profile',
           child: Row(
             children: [
-              Icon(Icons.person_outline_rounded, size: 16, color: Color(0xFF1A3C34)),
+              Icon(Icons.person_outline_rounded, size: 16, color: _brand),
               SizedBox(width: 10),
               Text('View profile',
-                  style: TextStyle(fontSize: 13, color: Color(0xFF1A3C34), fontWeight: FontWeight.w500)),
+                  style: TextStyle(fontSize: 13, color: _brand, fontWeight: FontWeight.w500)),
             ],
           ),
         ),
         PopupMenuItem(
           value: 'logout',
-          child: Row(
+          child: const Row(
             children: [
-              const Icon(Icons.logout_rounded, size: 16, color: Colors.red),
-              const SizedBox(width: 10),
-              const Text('Log out', style: TextStyle(fontSize: 13, color: Colors.red)),
+              Icon(Icons.logout_rounded, size: 16, color: Colors.red),
+              SizedBox(width: 10),
+              Text('Log out', style: TextStyle(fontSize: 13, color: Colors.red)),
             ],
           ),
           onTap: () => notifier.confirmLogout(context),
@@ -218,11 +226,11 @@ class _OperationsDashboardState extends ConsumerState<OperationsDashboard> {
     }
     return CircleAvatar(
       radius: radius,
-      backgroundColor: const Color(0xFF1A3C34),
+      backgroundColor: _brand,
       child: Text(
         user?.firstName?.substring(0, 1).toUpperCase() ?? 'U',
         style: TextStyle(
-            color: const Color(0xFFC9A84C),
+            color: _gold,
             fontSize: radius * 0.85,
             fontWeight: FontWeight.w700),
       ),
@@ -237,7 +245,7 @@ class _OperationsDashboardState extends ConsumerState<OperationsDashboard> {
       currentIndex: idx,
       onTap: (i) => _navigate(_menuItems[i]['route'] as String),
       backgroundColor: Colors.white,
-      selectedItemColor: const Color(0xFF1A3C34),
+      selectedItemColor: _brand,
       unselectedItemColor: const Color(0xFF9CA3AF),
       selectedLabelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
       unselectedLabelStyle: const TextStyle(fontSize: 11),
