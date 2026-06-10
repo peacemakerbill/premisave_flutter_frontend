@@ -14,12 +14,6 @@ class ClientExploreContent extends StatefulWidget {
 }
 
 class _ClientExploreContentState extends State<ClientExploreContent> {
-  final List<String> _categories = ['All', 'Apartments', 'Homes', 'Studios', 'Villas', 'Cabins', 'Beachfront', 'City view', 'Luxury'];
-  final List<String> _counties = ['Nairobi', 'Mombasa', 'Kisumu', 'Nakuru', 'Eldoret', 'Naivasha', 'Thika', 'Kitale', 'Malindi', 'Nyeri', 'Meru', 'Kisii', 'Machakos'];
-
-  int _selectedCategoryIndex = 0;
-  int _selectedCountyIndex = 0;
-  String _rentalType = 'daily';
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
 
@@ -38,16 +32,12 @@ class _ClientExploreContentState extends State<ClientExploreContent> {
   }
 
   List<Map<String, dynamic>> get filteredProperties {
-    return _sampleProperties.where((property) {
-      final matchesSearch = _searchQuery.isEmpty ||
-          property['title'].toLowerCase().contains(_searchQuery) ||
-          property['location'].toLowerCase().contains(_searchQuery);
-      final matchesCategory = _selectedCategoryIndex == 0 ||
-          property['type'].toLowerCase().contains(_categories[_selectedCategoryIndex].toLowerCase());
-      final matchesCounty = _selectedCountyIndex == 0 ||
-          property['location'].contains(_counties[_selectedCountyIndex]);
+    if (_searchQuery.isEmpty) return _sampleProperties;
 
-      return matchesSearch && matchesCategory && matchesCounty;
+    return _sampleProperties.where((property) {
+      return property['title'].toLowerCase().contains(_searchQuery) ||
+          property['location'].toLowerCase().contains(_searchQuery) ||
+          property['type'].toLowerCase().contains(_searchQuery);
     }).toList();
   }
 
@@ -64,72 +54,36 @@ class _ClientExploreContentState extends State<ClientExploreContent> {
           floating: true,
           snap: true,
           pinned: true,
-          expandedHeight: isSmallScreen ? 115 : 140,
+          expandedHeight: isSmallScreen ? 100 : 110,
           backgroundColor: Colors.white,
           flexibleSpace: FlexibleSpaceBar(
             background: Container(
               color: Colors.white,
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 20 : 36, vertical: 16),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xFFEAE6DE)),
-                        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
-                      ),
-                      child: TextField(
-                        controller: _searchController,
-                        decoration: InputDecoration(
-                          hintText: 'Search properties, locations, or amenities...',
-                          hintStyle: TextStyle(color: _slate),
-                          prefixIcon: const Icon(Icons.search_rounded, color: _brand),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+              padding: EdgeInsets.symmetric(
+                horizontal: isSmallScreen ? 20 : 36,
+                vertical: 16,
               ),
-            ),
-          ),
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(148),
-            child: Container(
-              color: Colors.white,
-              padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 20 : 36),
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: Wrap(
-                      spacing: 10,
-                      children: [
-                        _buildRentalTypeButton('Daily', 'daily'),
-                        _buildRentalTypeButton('Monthly', 'monthly'),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFEAE6DE)),
+                      boxShadow: const [
+                        BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))
                       ],
                     ),
-                  ),
-                  SizedBox(
-                    height: 48,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _counties.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 8),
-                      itemBuilder: (context, index) => _buildCountyChip(index),
-                    ),
-                  ),
-                  SizedBox(
-                    height: 48,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _categories.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 8),
-                      itemBuilder: (context, index) => _buildCategoryChip(index),
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        hintText: 'Search properties, locations, or amenities...',
+                        hintStyle: TextStyle(color: _slate),
+                        prefixIcon: const Icon(Icons.search_rounded, color: _brand),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                      ),
                     ),
                   ),
                 ],
@@ -148,7 +102,7 @@ class _ClientExploreContentState extends State<ClientExploreContent> {
                   Icon(Icons.search_off_rounded, size: 72, color: Colors.grey),
                   SizedBox(height: 16),
                   Text('No properties found', style: TextStyle(fontSize: 18, color: Colors.grey)),
-                  Text('Try adjusting your filters', style: TextStyle(color: Colors.grey)),
+                  Text('Try different keywords', style: TextStyle(color: Colors.grey)),
                 ],
               ),
             ),
@@ -163,7 +117,7 @@ class _ClientExploreContentState extends State<ClientExploreContent> {
             delegate: SliverChildBuilderDelegate(
                   (context, index) => PropertyCard(
                 property: filteredProperties[index],
-                rentalType: _rentalType,
+                rentalType: 'daily',
                 onTap: () => _showPropertyDetails(context, filteredProperties[index]),
               ),
               childCount: filteredProperties.length,
@@ -177,52 +131,12 @@ class _ClientExploreContentState extends State<ClientExploreContent> {
   void _showPropertyDetails(BuildContext context, Map<String, dynamic> property) {
     showDialog(
       context: context,
-      builder: (context) => PropertyDetailsDialog(property: property, rentalType: _rentalType),
-    );
-  }
-
-  // Rental Type, County & Category chips (same as before but refined)
-  Widget _buildRentalTypeButton(String label, String value) {
-    final isSelected = _rentalType == value;
-    return ElevatedButton(
-      onPressed: () => setState(() => _rentalType = value),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: isSelected ? _brand : Colors.white,
-        foregroundColor: isSelected ? Colors.white : _slate,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(color: isSelected ? _brand : const Color(0xFFEAE6DE))),
-        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
-      ),
-      child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
-    );
-  }
-
-  Widget _buildCountyChip(int index) {
-    final isSelected = _selectedCountyIndex == index;
-    return ChoiceChip(
-      label: Text(_counties[index]),
-      selected: isSelected,
-      onSelected: (_) => setState(() => _selectedCountyIndex = index),
-      backgroundColor: Colors.white,
-      selectedColor: _brand,
-      labelStyle: TextStyle(color: isSelected ? Colors.white : _slate, fontWeight: FontWeight.w500),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(color: isSelected ? _brand : const Color(0xFFEAE6DE))),
-    );
-  }
-
-  Widget _buildCategoryChip(int index) {
-    final isSelected = _selectedCategoryIndex == index;
-    return ActionChip(
-      label: Text(_categories[index]),
-      onPressed: () => setState(() => _selectedCategoryIndex = index),
-      backgroundColor: isSelected ? _brand : _stone,
-      labelStyle: TextStyle(color: isSelected ? Colors.white : _slate, fontWeight: FontWeight.w500),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(color: isSelected ? _brand : const Color(0xFFEAE6DE))),
+      builder: (context) => PropertyDetailsDialog(property: property, rentalType: 'daily'),
     );
   }
 }
 
-// ── Enhanced Property Card ─────────────────────────────────────────────────────
-
+// Enhanced Property Card
 class PropertyCard extends StatefulWidget {
   final Map<String, dynamic> property;
   final String rentalType;
@@ -244,9 +158,7 @@ class _PropertyCardState extends State<PropertyCard> {
 
   @override
   Widget build(BuildContext context) {
-    final price = widget.rentalType == 'daily'
-        ? '${widget.property['dailyPrice']}/night'
-        : '${widget.property['monthlyPrice']}/month';
+    final price = '${widget.property['dailyPrice']}/night';
 
     return GestureDetector(
       onTap: widget.onTap,
@@ -340,11 +252,11 @@ class _PropertyCardState extends State<PropertyCard> {
                   Text(widget.property['type'], style: TextStyle(color: _slate, fontSize: 13)),
                   const SizedBox(height: 8),
 
-                  // Amenities
                   Wrap(
                     spacing: 6,
                     runSpacing: 6,
                     children: (widget.property['amenities'] as List<String>? ?? ['WiFi', 'Kitchen'])
+                        .take(3)
                         .map((a) => Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
@@ -371,14 +283,13 @@ class _PropertyCardState extends State<PropertyCard> {
   }
 }
 
-// Enhanced Sample Data
+// Enhanced Sample Properties
 final List<Map<String, dynamic>> _sampleProperties = [
   {
     'image': 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800&auto=format&fit=crop',
     'title': 'Modern Apartment in Nairobi CBD',
     'location': 'Nairobi, Kenya',
     'dailyPrice': 'KSh 8,500',
-    'monthlyPrice': 'KSh 150,000',
     'rating': 4.92,
     'type': 'Apartment',
     'badge': 'Guest favorite',
@@ -389,7 +300,6 @@ final List<Map<String, dynamic>> _sampleProperties = [
     'title': 'Luxury Villa with Ocean View',
     'location': 'Mombasa, Kenya',
     'dailyPrice': 'KSh 25,000',
-    'monthlyPrice': 'KSh 450,000',
     'rating': 4.88,
     'type': 'Villa',
     'badge': 'Trending',
@@ -400,7 +310,6 @@ final List<Map<String, dynamic>> _sampleProperties = [
     'title': 'Cozy Cabin in the Mountains',
     'location': 'Mount Kenya',
     'dailyPrice': 'KSh 12,000',
-    'monthlyPrice': 'KSh 220,000',
     'rating': 4.95,
     'type': 'Cabin',
     'badge': 'Popular',
@@ -411,10 +320,8 @@ final List<Map<String, dynamic>> _sampleProperties = [
     'title': 'City Center Studio Apartment',
     'location': 'Nairobi West',
     'dailyPrice': 'KSh 6,500',
-    'monthlyPrice': 'KSh 120,000',
     'rating': 4.75,
     'type': 'Studio',
-    'badge': null,
     'amenities': ['WiFi', 'Kitchenette'],
   },
   {
@@ -422,7 +329,6 @@ final List<Map<String, dynamic>> _sampleProperties = [
     'title': 'Penthouse Loft with City View',
     'location': 'Kilimani, Nairobi',
     'dailyPrice': 'KSh 15,000',
-    'monthlyPrice': 'KSh 280,000',
     'rating': 4.89,
     'type': 'Loft',
     'badge': 'Luxury',
