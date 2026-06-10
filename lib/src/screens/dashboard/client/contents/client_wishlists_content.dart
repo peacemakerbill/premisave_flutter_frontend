@@ -1,33 +1,38 @@
 import 'package:flutter/material.dart';
 import 'widgets/client_explore/property_details_dialog.dart';
 
+const _brand = Color(0xFF1A3C34);
+const _gold = Color(0xFFC9A84C);
+const _stone = Color(0xFFF5F0E8);
+const _slate = Color(0xFF6B7280);
+
 class ClientWishlistsContent extends StatelessWidget {
   const ClientWishlistsContent({super.key});
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen = screenWidth < 768;
+    final isSmall = screenWidth < 768;
 
     return SingleChildScrollView(
-      padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
-      child: const Column(
+      padding: EdgeInsets.symmetric(horizontal: isSmall ? 20 : 36, vertical: 28),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _HeaderSection(),
-          SizedBox(height: 24),
-          _WishlistStats(),
-          SizedBox(height: 24),
+          const _HeaderSection(),
+          const SizedBox(height: 28),
+          const _WishlistStats(),
+          const SizedBox(height: 28),
           _WishlistSection(
             title: 'Beachfront Properties',
             properties: _beachfrontWishlist,
           ),
-          SizedBox(height: 24),
+          const SizedBox(height: 28),
           _WishlistSection(
             title: 'Mountain Getaways',
             properties: _mountainWishlist,
           ),
-          SizedBox(height: 24),
+          const SizedBox(height: 28),
           _WishlistSection(
             title: 'City Apartments',
             properties: _cityWishlist,
@@ -45,14 +50,11 @@ class _HeaderSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.green[50]!, Colors.blue[50]!],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFEAE6DE)),
       ),
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(28),
       child: Row(
         children: [
           Expanded(
@@ -61,42 +63,20 @@ class _HeaderSection extends StatelessWidget {
               children: [
                 const Text(
                   'My Wishlists',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.black,
-                  ),
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: _brand, letterSpacing: -0.8),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Text(
                   'Save and organize your favorite properties',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey[700],
-                  ),
+                  style: TextStyle(fontSize: 14, color: _slate),
                 ),
               ],
             ),
           ),
           Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.pink.withOpacity(0.2),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: const Icon(
-              Icons.favorite,
-              color: Colors.pink,
-              size: 30,
-            ),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: _stone, shape: BoxShape.circle),
+            child: const Icon(Icons.favorite_rounded, color: Colors.pink, size: 28),
           ),
         ],
       ),
@@ -109,32 +89,27 @@ class _WishlistStats extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen = screenWidth < 600;
-    final crossAxisCount = isSmallScreen ? 2 : 3;
+    final isSmall = MediaQuery.of(context).size.width < 600;
 
     final stats = [
-      {'title': 'Total Saved', 'value': '12', 'color': Colors.pink, 'icon': Icons.favorite},
-      {'title': 'Lists Created', 'value': '3', 'color': Colors.green, 'icon': Icons.list},
-      {'title': 'Recently Viewed', 'value': '5', 'color': Colors.blue, 'icon': Icons.visibility},
+      {'title': 'Total Saved', 'value': '12', 'color': Colors.pink, 'icon': Icons.favorite_rounded},
+      {'title': 'Lists Created', 'value': '3', 'color': _brand, 'icon': Icons.list_rounded},
+      {'title': 'Recently Viewed', 'value': '5', 'color': Colors.blue, 'icon': Icons.visibility_rounded},
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Wishlist Overview',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-        ),
+        const Text('Wishlist Overview', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: _brand)),
         const SizedBox(height: 16),
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            childAspectRatio: 1.2,
+            crossAxisCount: isSmall ? 2 : 3,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: 1.75,
           ),
           itemCount: stats.length,
           itemBuilder: (context, index) => _StatCard(stat: stats[index]),
@@ -146,55 +121,26 @@ class _WishlistStats extends StatelessWidget {
 
 class _StatCard extends StatelessWidget {
   final Map<String, dynamic> stat;
-
   const _StatCard({required this.stat});
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: LinearGradient(
-            colors: [stat['color'].withOpacity(0.1), Colors.white],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: stat['color'].withOpacity(0.2),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(stat['icon'], color: stat['color'], size: 20),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              stat['value'],
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w800,
-                color: stat['color'],
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              stat['title'],
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
+    final color = stat['color'] as Color;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: const Border(left: BorderSide(color: _gold, width: 3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(stat['icon'] as IconData, color: color, size: 20),
+          const SizedBox(height: 10),
+          Text(stat['value'] as String, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: _brand)),
+          Text(stat['title'] as String, style: const TextStyle(fontSize: 11.5, color: _slate)),
+        ],
       ),
     );
   }
@@ -204,23 +150,14 @@ class _WishlistSection extends StatelessWidget {
   final String title;
   final List<Map<String, dynamic>> properties;
 
-  const _WishlistSection({
-    required this.title,
-    required this.properties,
-  });
+  const _WishlistSection({required this.title, required this.properties});
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen = screenWidth < 600;
-    final isLargeScreen = screenWidth > 1200;
+    final isSmall = screenWidth < 600;
 
-    // Dynamic grid columns based on screen size
-    final crossAxisCount = isSmallScreen
-        ? 1  // Single column on small screens
-        : isLargeScreen
-        ? 4  // 4 columns on very large screens
-        : 2; // 2 columns on medium screens
+    final crossAxisCount = isSmall ? 1 : (screenWidth > 1200 ? 4 : 2);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -228,27 +165,21 @@ class _WishlistSection extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-            ),
+            Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: _brand)),
             TextButton(
               onPressed: () {},
               child: const Row(
                 children: [
                   Text('View All'),
                   SizedBox(width: 4),
-                  Icon(Icons.arrow_forward, size: 16),
+                  Icon(Icons.arrow_forward_rounded, size: 16),
                 ],
               ),
             ),
           ],
         ),
-        const SizedBox(height: 8),
-        Text(
-          '${properties.length} properties',
-          style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-        ),
+        const SizedBox(height: 6),
+        Text('${properties.length} properties', style: TextStyle(fontSize: 13, color: _slate)),
         const SizedBox(height: 16),
         GridView.builder(
           shrinkWrap: true,
@@ -257,7 +188,7 @@ class _WishlistSection extends StatelessWidget {
             crossAxisCount: crossAxisCount,
             crossAxisSpacing: 16,
             mainAxisSpacing: 16,
-            childAspectRatio: _calculateAspectRatio(screenWidth),
+            childAspectRatio: isSmall ? 0.75 : 0.85,
           ),
           itemCount: properties.length,
           itemBuilder: (context, index) => _WishlistPropertyCard(
@@ -269,19 +200,7 @@ class _WishlistSection extends StatelessWidget {
     );
   }
 
-  // Calculate dynamic aspect ratio for responsive cards
-  double _calculateAspectRatio(double screenWidth) {
-    if (screenWidth < 600) {
-      return 0.75; // Taller cards on small screens
-    } else if (screenWidth > 1200) {
-      return 0.9; // Wider cards on large screens
-    } else {
-      return 0.85; // Balanced on medium screens
-    }
-  }
-
   void _showPropertyDetails(BuildContext context, Map<String, dynamic> property) {
-    // Enhanced property data for the dialog
     final enhancedProperty = Map<String, dynamic>.from(property)
       ..addAll({
         'dailyPrice': property['price'].replaceAll('/night', '').trim(),
@@ -290,24 +209,17 @@ class _WishlistSection extends StatelessWidget {
 
     showDialog(
       context: context,
-      builder: (context) => PropertyDetailsDialog(
-        property: enhancedProperty,
-        rentalType: 'daily', // Default to daily rental
-      ),
+      builder: (context) => PropertyDetailsDialog(property: enhancedProperty, rentalType: 'daily'),
     );
   }
 
   String _calculateMonthlyPrice(String dailyPrice) {
-    // Extract numeric value from price string
     final priceMatch = RegExp(r'KSh\s*([\d,]+)').firstMatch(dailyPrice);
     if (priceMatch != null) {
       final priceStr = priceMatch.group(1)!.replaceAll(',', '');
       final price = double.tryParse(priceStr) ?? 0;
-      final monthlyPrice = (price * 30).toInt();
-      return 'KSh ${monthlyPrice.toStringAsFixed(0).replaceAllMapped(
-        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-            (Match m) => '${m[1]},',
-      )}';
+      final monthly = (price * 30).toInt();
+      return 'KSh ${monthly.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}';
     }
     return 'KSh 0';
   }
@@ -317,177 +229,85 @@ class _WishlistPropertyCard extends StatelessWidget {
   final Map<String, dynamic> property;
   final VoidCallback onTap;
 
-  const _WishlistPropertyCard({
-    required this.property,
-    required this.onTap,
-  });
+  const _WishlistPropertyCard({required this.property, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Card(
-        elevation: 4,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        clipBehavior: Clip.antiAlias,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFEAE6DE)),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image section
-            AspectRatio(
-              aspectRatio: 16 / 9, // Consistent aspect ratio for all cards
-              child: Stack(
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: NetworkImage(property['image']),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 12,
-                    right: 12,
-                    child: CircleAvatar(
-                      radius: 18,
-                      backgroundColor: Colors.white,
-                      child: Icon(
-                        Icons.favorite,
-                        size: 18,
-                        color: Colors.pink,
-                      ),
-                    ),
-                  ),
-                  if (property['badge'] != null)
-                    Positioned(
-                      top: 12,
-                      left: 12,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 4,
-                            ),
-                          ],
-                        ),
-                        child: Text(
-                          property['badge'],
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              child: Image.network(
+                property['image'],
+                height: 160,
+                width: double.infinity,
+                fit: BoxFit.cover,
               ),
             ),
-
-            // Content section
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                property['title'],
-                                style: const TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            Row(
-                              children: [
-                                Icon(Icons.star, size: 14, color: Colors.amber[600]),
-                                const SizedBox(width: 4),
-                                Text(
-                                  property['rating'].toString(),
-                                  style: const TextStyle(fontWeight: FontWeight.w600),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          property['location'],
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.grey[600],
-                          ),
+            Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          property['title'],
+                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: _brand),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                      ],
-                    ),
-
-                    // Bottom row with type and price
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[100],
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            property['type'],
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.grey[700],
-                            ),
-                          ),
-                        ),
-                        const Spacer(),
-                        Flexible(
-                          child: Text(
-                            property['price'],
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.green,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    // Action buttons (now only one primary button for cleaner UI)
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton(
-                        onPressed: onTap,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.green,
-                          side: const BorderSide(color: Colors.green),
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: const Text('View Details', style: TextStyle(fontSize: 13)),
                       ),
+                      Row(
+                        children: [
+                          const Icon(Icons.star, size: 14, color: Colors.amber),
+                          const SizedBox(width: 4),
+                          Text(property['rating'].toString(), style: const TextStyle(fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(property['location'], style: TextStyle(fontSize: 12.5, color: _slate)),
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(color: _stone, borderRadius: BorderRadius.circular(6)),
+                        child: Text(property['type'], style: TextStyle(fontSize: 11.5, color: _slate)),
+                      ),
+                      Text(
+                        property['price'],
+                        style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w700, color: _brand),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: onTap,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: _brand,
+                        side: const BorderSide(color: _brand),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                      ),
+                      child: const Text('View Details'),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -497,84 +317,20 @@ class _WishlistPropertyCard extends StatelessWidget {
   }
 }
 
-// Sample wishlist data
+// Sample Data
 const List<Map<String, dynamic>> _beachfrontWishlist = [
-  {
-    'image': 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=400&auto=format&fit=crop',
-    'title': 'Ocean View Villa',
-    'location': 'Diani Beach',
-    'price': 'KSh 25,000 / night',
-    'rating': 4.88,
-    'type': 'Villa',
-    'badge': 'Beachfront',
-  },
-  {
-    'image': 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=400&auto=format&fit=crop',
-    'title': 'Beach House',
-    'location': 'Mombasa',
-    'price': 'KSh 18,000 / night',
-    'rating': 4.75,
-    'type': 'House',
-    'badge': 'Luxury',
-  },
+  {'image': 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=400&auto=format&fit=crop', 'title': 'Ocean View Villa', 'location': 'Diani Beach', 'price': 'KSh 25,000 / night', 'rating': 4.88, 'type': 'Villa', 'badge': 'Beachfront'},
+  {'image': 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=400&auto=format&fit=crop', 'title': 'Beach House', 'location': 'Mombasa', 'price': 'KSh 18,000 / night', 'rating': 4.75, 'type': 'House', 'badge': 'Luxury'},
 ];
 
 const List<Map<String, dynamic>> _mountainWishlist = [
-  {
-    'image': 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&auto=format&fit=crop',
-    'title': 'Mountain Cabin',
-    'location': 'Mount Kenya',
-    'price': 'KSh 12,000 / night',
-    'rating': 4.95,
-    'type': 'Cabin',
-    'badge': 'Popular',
-  },
-  {
-    'image': 'https://images.unsplash.com/photo-1513584684374-8bab748fbf90?w=400&auto=format&fit=crop',
-    'title': 'Forest Retreat',
-    'location': 'Aberdare',
-    'price': 'KSh 9,500 / night',
-    'rating': 4.82,
-    'type': 'Retreat',
-    'badge': 'Eco',
-  },
-  {
-    'image': 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&auto=format&fit=crop',
-    'title': 'Hiking Lodge',
-    'location': 'Samburu',
-    'price': 'KSh 14,000 / night',
-    'rating': 4.90,
-    'type': 'Lodge',
-    'badge': 'Adventure',
-  },
+  {'image': 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&auto=format&fit=crop', 'title': 'Mountain Cabin', 'location': 'Mount Kenya', 'price': 'KSh 12,000 / night', 'rating': 4.95, 'type': 'Cabin', 'badge': 'Popular'},
+  {'image': 'https://images.unsplash.com/photo-1513584684374-8bab748fbf90?w=400&auto=format&fit=crop', 'title': 'Forest Retreat', 'location': 'Aberdare', 'price': 'KSh 9,500 / night', 'rating': 4.82, 'type': 'Retreat', 'badge': 'Eco'},
+  {'image': 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&auto=format&fit=crop', 'title': 'Hiking Lodge', 'location': 'Samburu', 'price': 'KSh 14,000 / night', 'rating': 4.90, 'type': 'Lodge', 'badge': 'Adventure'},
 ];
 
 const List<Map<String, dynamic>> _cityWishlist = [
-  {
-    'image': 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=400&auto=format&fit=crop',
-    'title': 'Modern Apartment',
-    'location': 'Nairobi CBD',
-    'price': 'KSh 8,500 / night',
-    'rating': 4.92,
-    'type': 'Apartment',
-    'badge': 'Guest Favorite',
-  },
-  {
-    'image': 'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=400&auto=format&fit=crop',
-    'title': 'City Studio',
-    'location': 'Westlands',
-    'price': 'KSh 6,500 / night',
-    'rating': 4.75,
-    'type': 'Studio',
-    'badge': 'Modern',
-  },
-  {
-    'image': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&auto=format&fit=crop',
-    'title': 'Penthouse Loft',
-    'location': 'Kilimani',
-    'price': 'KSh 15,000 / night',
-    'rating': 4.89,
-    'type': 'Loft',
-    'badge': 'Luxury',
-  },
+  {'image': 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=400&auto=format&fit=crop', 'title': 'Modern Apartment', 'location': 'Nairobi CBD', 'price': 'KSh 8,500 / night', 'rating': 4.92, 'type': 'Apartment', 'badge': 'Guest Favorite'},
+  {'image': 'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=400&auto=format&fit=crop', 'title': 'City Studio', 'location': 'Westlands', 'price': 'KSh 6,500 / night', 'rating': 4.75, 'type': 'Studio', 'badge': 'Modern'},
+  {'image': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&auto=format&fit=crop', 'title': 'Penthouse Loft', 'location': 'Kilimani', 'price': 'KSh 15,000 / night', 'rating': 4.89, 'type': 'Loft', 'badge': 'Luxury'},
 ];

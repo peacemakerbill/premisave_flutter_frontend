@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'widgets/client_explore/property_details_dialog.dart';
 
+const _brand = Color(0xFF1A3C34);
+const _gold = Color(0xFFC9A84C);
+const _stone = Color(0xFFF5F0E8);
+const _slate = Color(0xFF6B7280);
+
 class ClientExploreContent extends StatefulWidget {
   const ClientExploreContent({super.key});
 
@@ -48,9 +53,9 @@ class _ClientExploreContentState extends State<ClientExploreContent> {
 
   @override
   Widget build(BuildContext context) {
-    final isSmallScreen = MediaQuery.of(context).size.width < 768;
-    final crossAxisCount = MediaQuery.of(context).size.width < 600 ? 2 :
-    MediaQuery.of(context).size.width < 1200 ? 3 : 4;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 768;
+    final crossAxisCount = screenWidth < 600 ? 2 : screenWidth < 1200 ? 3 : 4;
 
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
@@ -59,13 +64,13 @@ class _ClientExploreContentState extends State<ClientExploreContent> {
           floating: true,
           snap: true,
           pinned: true,
-          expandedHeight: isSmallScreen ? 120 : 160,
+          expandedHeight: isSmallScreen ? 115 : 140,
           backgroundColor: Colors.white,
           flexibleSpace: FlexibleSpaceBar(
             background: Container(
               color: Colors.white,
               child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 16 : 24, vertical: 16),
+                padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 20 : 36, vertical: 16),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -73,17 +78,17 @@ class _ClientExploreContentState extends State<ClientExploreContent> {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey[200]!),
-                        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8, offset: const Offset(0, 4))],
+                        border: Border.all(color: const Color(0xFFEAE6DE)),
+                        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
                       ),
                       child: TextField(
                         controller: _searchController,
                         decoration: InputDecoration(
-                          hintText: 'Search properties, locations...',
-                          hintStyle: TextStyle(color: Colors.grey[500]),
-                          prefixIcon: const Icon(Icons.search, color: Colors.green),
+                          hintText: 'Search properties, locations, or amenities...',
+                          hintStyle: TextStyle(color: _slate),
+                          prefixIcon: const Icon(Icons.search_rounded, color: _brand),
                           border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                         ),
                       ),
                     ),
@@ -93,15 +98,16 @@ class _ClientExploreContentState extends State<ClientExploreContent> {
             ),
           ),
           bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(160),
+            preferredSize: const Size.fromHeight(148),
             child: Container(
               color: Colors.white,
+              padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 20 : 36),
               child: Column(
                 children: [
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 16 : 24, vertical: 8),
+                    padding: const EdgeInsets.only(bottom: 10),
                     child: Wrap(
-                      spacing: 8,
+                      spacing: 10,
                       children: [
                         _buildRentalTypeButton('Daily', 'daily'),
                         _buildRentalTypeButton('Monthly', 'monthly'),
@@ -112,7 +118,6 @@ class _ClientExploreContentState extends State<ClientExploreContent> {
                     height: 48,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
-                      padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 16 : 24),
                       itemCount: _counties.length,
                       separatorBuilder: (_, __) => const SizedBox(width: 8),
                       itemBuilder: (context, index) => _buildCountyChip(index),
@@ -122,7 +127,6 @@ class _ClientExploreContentState extends State<ClientExploreContent> {
                     height: 48,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
-                      padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 16 : 24),
                       itemCount: _categories.length,
                       separatorBuilder: (_, __) => const SizedBox(width: 8),
                       itemBuilder: (context, index) => _buildCategoryChip(index),
@@ -134,16 +138,17 @@ class _ClientExploreContentState extends State<ClientExploreContent> {
           ),
         ),
         SliverPadding(
-          padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
+          padding: EdgeInsets.all(isSmallScreen ? 20 : 36),
           sliver: filteredProperties.isEmpty
-              ? SliverFillRemaining(
+              ? const SliverFillRemaining(
             child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
-                  const SizedBox(height: 16),
-                  Text('No properties found', style: TextStyle(color: Colors.grey[600], fontSize: 18)),
+                  Icon(Icons.search_off_rounded, size: 72, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text('No properties found', style: TextStyle(fontSize: 18, color: Colors.grey)),
+                  Text('Try adjusting your filters', style: TextStyle(color: Colors.grey)),
                 ],
               ),
             ),
@@ -152,8 +157,8 @@ class _ClientExploreContentState extends State<ClientExploreContent> {
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: crossAxisCount,
               crossAxisSpacing: isSmallScreen ? 12 : 16,
-              mainAxisSpacing: isSmallScreen ? 16 : 24,
-              childAspectRatio: 0.75,
+              mainAxisSpacing: isSmallScreen ? 16 : 20,
+              childAspectRatio: 0.72,
             ),
             delegate: SliverChildBuilderDelegate(
                   (context, index) => PropertyCard(
@@ -176,21 +181,16 @@ class _ClientExploreContentState extends State<ClientExploreContent> {
     );
   }
 
+  // Rental Type, County & Category chips (same as before but refined)
   Widget _buildRentalTypeButton(String label, String value) {
     final isSelected = _rentalType == value;
     return ElevatedButton(
       onPressed: () => setState(() => _rentalType = value),
       style: ElevatedButton.styleFrom(
-        backgroundColor: isSelected ? Colors.green[50] : Colors.white,
-        foregroundColor: isSelected ? Colors.green[700] : Colors.grey[700],
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(
-            color: isSelected ? Colors.green! : Colors.grey[300]!,
-            width: 2,
-          ),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+        backgroundColor: isSelected ? _brand : Colors.white,
+        foregroundColor: isSelected ? Colors.white : _slate,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(color: isSelected ? _brand : const Color(0xFFEAE6DE))),
+        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
       ),
       child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
     );
@@ -203,18 +203,9 @@ class _ClientExploreContentState extends State<ClientExploreContent> {
       selected: isSelected,
       onSelected: (_) => setState(() => _selectedCountyIndex = index),
       backgroundColor: Colors.white,
-      selectedColor: Colors.green[50],
-      labelStyle: TextStyle(
-        color: isSelected ? Colors.green[800] : Colors.grey[700],
-        fontWeight: FontWeight.w500,
-      ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(
-          color: isSelected ? Colors.green! : Colors.grey[300]!,
-          width: 2,
-        ),
-      ),
+      selectedColor: _brand,
+      labelStyle: TextStyle(color: isSelected ? Colors.white : _slate, fontWeight: FontWeight.w500),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(color: isSelected ? _brand : const Color(0xFFEAE6DE))),
     );
   }
 
@@ -223,23 +214,16 @@ class _ClientExploreContentState extends State<ClientExploreContent> {
     return ActionChip(
       label: Text(_categories[index]),
       onPressed: () => setState(() => _selectedCategoryIndex = index),
-      backgroundColor: isSelected ? Colors.green[50] : Colors.grey[50],
-      labelStyle: TextStyle(
-        color: isSelected ? Colors.green[800] : Colors.grey[700],
-        fontWeight: FontWeight.w500,
-      ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(
-          color: isSelected ? Colors.green! : Colors.grey[300]!,
-          width: isSelected ? 2 : 1,
-        ),
-      ),
+      backgroundColor: isSelected ? _brand : _stone,
+      labelStyle: TextStyle(color: isSelected ? Colors.white : _slate, fontWeight: FontWeight.w500),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(color: isSelected ? _brand : const Color(0xFFEAE6DE))),
     );
   }
 }
 
-class PropertyCard extends StatelessWidget {
+// ── Enhanced Property Card ─────────────────────────────────────────────────────
+
+class PropertyCard extends StatefulWidget {
   final Map<String, dynamic> property;
   final String rentalType;
   final VoidCallback onTap;
@@ -252,71 +236,77 @@ class PropertyCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final price = rentalType == 'daily'
-        ? '${property['dailyPrice']}/night'
-        : '${property['monthlyPrice']}/month';
+  State<PropertyCard> createState() => _PropertyCardState();
+}
 
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      clipBehavior: Clip.antiAlias,
-      elevation: 2,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+class _PropertyCardState extends State<PropertyCard> {
+  bool _isFavorite = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final price = widget.rentalType == 'daily'
+        ? '${widget.property['dailyPrice']}/night'
+        : '${widget.property['monthlyPrice']}/month';
+
+    return GestureDetector(
+      onTap: widget.onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFEAE6DE)),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: NetworkImage(property['image']),
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  child: Image.network(
+                    widget.property['image'],
+                    height: 172,
+                    width: double.infinity,
                     fit: BoxFit.cover,
                   ),
                 ),
-                child: Stack(
-                  children: [
-                    if (property['badge'] != null)
-                      Positioned(
-                        top: 12,
-                        left: 12,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
-                            boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
-                          ),
-                          child: Text(
-                            property['badge'],
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.green[800],
-                            ),
-                          ),
-                        ),
-                      ),
-                    Positioned(
-                      top: 12,
-                      right: 12,
-                      child: CircleAvatar(
-                        radius: 18,
-                        backgroundColor: Colors.white.withOpacity(0.9),
-                        child: Icon(
-                          Icons.favorite_border,
-                          size: 18,
-                          color: Colors.grey[700],
-                        ),
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: GestureDetector(
+                    onTap: () => setState(() => _isFavorite = !_isFavorite),
+                    child: CircleAvatar(
+                      radius: 18,
+                      backgroundColor: Colors.white,
+                      child: Icon(
+                        _isFavorite ? Icons.favorite : Icons.favorite_border,
+                        size: 18,
+                        color: _isFavorite ? Colors.pink : Colors.grey[700],
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
+                if (widget.property['badge'] != null)
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
+                      ),
+                      child: Text(
+                        widget.property['badge'],
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: _brand),
+                      ),
+                    ),
+                  ),
+              ],
             ),
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(14),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -325,33 +315,51 @@ class PropertyCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          property['location'],
-                          style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                          widget.property['location'],
+                          style: TextStyle(color: _slate, fontSize: 12.5),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       Row(
                         children: [
-                          Icon(Icons.star, size: 14, color: Colors.amber[600]),
-                          const SizedBox(width: 4),
-                          Text(property['rating'].toString(), style: const TextStyle(fontWeight: FontWeight.w600)),
+                          const Icon(Icons.star_rounded, size: 15, color: Colors.amber),
+                          const SizedBox(width: 3),
+                          Text(widget.property['rating'].toString(), style: const TextStyle(fontWeight: FontWeight.w600)),
                         ],
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Text(
-                    property['title'],
-                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                    widget.property['title'],
+                    style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w600, color: _brand),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
-                  Text(property['type'], style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                  Text(widget.property['type'], style: TextStyle(color: _slate, fontSize: 13)),
                   const SizedBox(height: 8),
+
+                  // Amenities
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: (widget.property['amenities'] as List<String>? ?? ['WiFi', 'Kitchen'])
+                        .map((a) => Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: _stone,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(a, style: const TextStyle(fontSize: 10.5, color: _slate)),
+                    ))
+                        .toList(),
+                  ),
+
+                  const SizedBox(height: 12),
                   Text(
                     price,
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.green[800]),
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _brand),
                   ),
                 ],
               ),
@@ -363,6 +371,7 @@ class PropertyCard extends StatelessWidget {
   }
 }
 
+// Enhanced Sample Data
 final List<Map<String, dynamic>> _sampleProperties = [
   {
     'image': 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800&auto=format&fit=crop',
@@ -373,6 +382,7 @@ final List<Map<String, dynamic>> _sampleProperties = [
     'rating': 4.92,
     'type': 'Apartment',
     'badge': 'Guest favorite',
+    'amenities': ['WiFi', 'Pool', 'Gym', 'Parking'],
   },
   {
     'image': 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=800&auto=format&fit=crop',
@@ -383,9 +393,10 @@ final List<Map<String, dynamic>> _sampleProperties = [
     'rating': 4.88,
     'type': 'Villa',
     'badge': 'Trending',
+    'amenities': ['Beach Access', 'Pool', 'Kitchen', 'Balcony'],
   },
   {
-    'image': 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w-800&auto=format&fit=crop',
+    'image': 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&auto=format&fit=crop',
     'title': 'Cozy Cabin in the Mountains',
     'location': 'Mount Kenya',
     'dailyPrice': 'KSh 12,000',
@@ -393,6 +404,7 @@ final List<Map<String, dynamic>> _sampleProperties = [
     'rating': 4.95,
     'type': 'Cabin',
     'badge': 'Popular',
+    'amenities': ['Fireplace', 'Hiking', 'WiFi'],
   },
   {
     'image': 'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=800&auto=format&fit=crop',
@@ -403,5 +415,17 @@ final List<Map<String, dynamic>> _sampleProperties = [
     'rating': 4.75,
     'type': 'Studio',
     'badge': null,
+    'amenities': ['WiFi', 'Kitchenette'],
+  },
+  {
+    'image': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&auto=format&fit=crop',
+    'title': 'Penthouse Loft with City View',
+    'location': 'Kilimani, Nairobi',
+    'dailyPrice': 'KSh 15,000',
+    'monthlyPrice': 'KSh 280,000',
+    'rating': 4.89,
+    'type': 'Loft',
+    'badge': 'Luxury',
+    'amenities': ['Terrace', 'Gym', 'Parking'],
   },
 ];

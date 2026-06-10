@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 
+const _brand = Color(0xFF1A3C34);
+const _gold = Color(0xFFC9A84C);
+const _stone = Color(0xFFF5F0E8);
+const _slate = Color(0xFF6B7280);
+
 class ClientMessagesContent extends StatefulWidget {
   const ClientMessagesContent({super.key});
 
@@ -57,15 +62,11 @@ class _ClientMessagesContentState extends State<ClientMessagesContent> {
   };
 
   void _openChat(Map<String, dynamic> chat) {
-    setState(() {
-      _selectedChat = chat;
-    });
+    setState(() => _selectedChat = chat);
   }
 
   void _closeChat() {
-    setState(() {
-      _selectedChat = null;
-    });
+    setState(() => _selectedChat = null);
   }
 
   @override
@@ -81,13 +82,13 @@ class _ClientMessagesContentState extends State<ClientMessagesContent> {
 
   Widget _buildConversationsList(bool isSmall) {
     return SingleChildScrollView(
-      padding: EdgeInsets.all(isSmall ? 16 : 24),
+      padding: EdgeInsets.symmetric(horizontal: isSmall ? 20 : 36, vertical: 28),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _HeaderSection(),
-          const SizedBox(height: 24),
-          _MessageSearch(),
+          const _HeaderSection(),
+          const SizedBox(height: 28),
+          const _MessageSearch(),
           const SizedBox(height: 24),
           _RecentConversations(
             conversations: _conversations,
@@ -103,108 +104,89 @@ class _ClientMessagesContentState extends State<ClientMessagesContent> {
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back_rounded, color: _brand),
           onPressed: _closeChat,
         ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(chat['name'], style: const TextStyle(fontSize: 16)),
-            Text(chat['role'], style: const TextStyle(fontSize: 12)),
+            Text(chat['name'], style: const TextStyle(fontSize: 16, color: _brand, fontWeight: FontWeight.w600)),
+            Text(chat['role'], style: TextStyle(fontSize: 12, color: _slate)),
           ],
         ),
         actions: [
-          IconButton(icon: const Icon(Icons.call), onPressed: () {}),
-          IconButton(icon: const Icon(Icons.more_vert), onPressed: () {}),
+          IconButton(icon: const Icon(Icons.call_outlined, color: _brand), onPressed: () {}),
+          IconButton(icon: const Icon(Icons.more_vert, color: _brand), onPressed: () {}),
         ],
       ),
       body: Column(
         children: [
           Expanded(
             child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              reverse: false,
+              padding: const EdgeInsets.all(20),
+              reverse: true,
               itemCount: messages.length,
               itemBuilder: (context, index) {
                 final message = messages[index];
                 final isMe = message['sender'] == 'me';
 
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  child: Row(
-                    mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-                    children: [
-                      if (!isMe) ...[
-                        CircleAvatar(
-                          radius: 16,
-                          backgroundImage: NetworkImage(chat['avatar']),
+                return Align(
+                  alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: isMe ? _brand : _stone,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          message['message'],
+                          style: TextStyle(color: isMe ? Colors.white : _brand),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(height: 4),
+                        Text(
+                          message['time'],
+                          style: TextStyle(fontSize: 10, color: isMe ? Colors.white70 : _slate),
+                        ),
                       ],
-                      Flexible(
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: isMe ? Colors.green : Colors.grey[200],
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                message['message'],
-                                style: TextStyle(
-                                  color: isMe ? Colors.white : Colors.black,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                message['time'],
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: isMe ? Colors.white70 : Colors.grey[600],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      if (isMe) const SizedBox(width: 8),
-                    ],
+                    ),
                   ),
                 );
               },
             ),
           ),
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Colors.white,
-              border: Border(top: BorderSide(color: Colors.grey[300]!)),
+              border: Border(top: BorderSide(color: const Color(0xFFEAE6DE))),
             ),
             child: Row(
               children: [
-                IconButton(
-                  icon: const Icon(Icons.add, color: Colors.green),
-                  onPressed: () {},
-                ),
+                IconButton(icon: const Icon(Icons.add_circle_outline, color: _brand), onPressed: () {}),
                 Expanded(
                   child: TextField(
                     decoration: InputDecoration(
                       hintText: 'Type a message...',
+                      hintStyle: TextStyle(color: _slate),
+                      filled: true,
+                      fillColor: _stone,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(25),
                         borderSide: BorderSide.none,
                       ),
-                      filled: true,
-                      fillColor: Colors.grey[100],
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                     ),
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.send, color: Colors.green),
+                  icon: const Icon(Icons.send_rounded, color: _brand),
                   onPressed: () {},
                 ),
               ],
@@ -217,18 +199,17 @@ class _ClientMessagesContentState extends State<ClientMessagesContent> {
 }
 
 class _HeaderSection extends StatelessWidget {
+  const _HeaderSection();
+
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.green[50]!, Colors.blue[50]!],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFEAE6DE)),
       ),
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(28),
       child: Row(
         children: [
           Expanded(
@@ -237,31 +218,17 @@ class _HeaderSection extends StatelessWidget {
               children: [
                 const Text(
                   'Messages',
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: _brand, letterSpacing: -0.8),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Chat with hosts and support',
-                  style: TextStyle(fontSize: 16, color: Colors.grey[700]),
-                ),
+                const SizedBox(height: 6),
+                Text('Chat with hosts and support', style: TextStyle(fontSize: 14, color: _slate)),
               ],
             ),
           ),
           Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.blue.withOpacity(0.2),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: const Icon(Icons.message, color: Colors.blue, size: 30),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: _stone, shape: BoxShape.circle),
+            child: const Icon(Icons.message_rounded, color: _brand, size: 28),
           ),
         ],
       ),
@@ -270,25 +237,21 @@ class _HeaderSection extends StatelessWidget {
 }
 
 class _MessageSearch extends StatelessWidget {
+  const _MessageSearch();
+
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        border: Border.all(color: const Color(0xFFEAE6DE)),
       ),
       child: TextField(
         decoration: InputDecoration(
           hintText: 'Search conversations...',
-          hintStyle: TextStyle(color: Colors.grey[500]),
-          prefixIcon: const Icon(Icons.search, color: Colors.green),
+          hintStyle: TextStyle(color: _slate),
+          prefixIcon: const Icon(Icons.search, color: _brand),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         ),
@@ -311,86 +274,80 @@ class _RecentConversations extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Recent Conversations',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-        ),
+        const Text('Recent Conversations', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: _brand)),
         const SizedBox(height: 16),
-        ...conversations.map((chat) => Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          child: InkWell(
-            onTap: () => onChatTap(chat),
-            borderRadius: BorderRadius.circular(16),
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                gradient: LinearGradient(
-                  colors: [Colors.grey[50]!, Colors.white],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+        ...conversations.map((chat) => _ConversationTile(chat: chat, onTap: () => onChatTap(chat))).toList(),
+      ],
+    );
+  }
+}
+
+class _ConversationTile extends StatelessWidget {
+  final Map<String, dynamic> chat;
+  final VoidCallback onTap;
+
+  const _ConversationTile({required this.chat, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFEAE6DE)),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 24,
+                backgroundImage: NetworkImage(chat['avatar']),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(chat['name'], style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: _brand)),
+                    Text(chat['role'], style: TextStyle(fontSize: 12, color: _slate)),
+                    const SizedBox(height: 4),
+                    Text(
+                      chat['lastMessage'],
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 13, color: Color(0xFF374151)),
+                    ),
+                  ],
                 ),
               ),
-              child: Row(
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  CircleAvatar(
-                    radius: 25,
-                    backgroundImage: NetworkImage(chat['avatar']),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          chat['name'],
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          chat['role'],
-                          style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          chat['lastMessage'],
-                          style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        chat['time'],
-                        style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                  Text(chat['time'], style: TextStyle(fontSize: 11.5, color: _slate)),
+                  if (chat['unread'] > 0)
+                    Container(
+                      margin: const EdgeInsets.only(top: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: _brand,
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      if (chat['unread'] > 0) ...[
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: Colors.green,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            chat['unread'].toString(),
-                            style: const TextStyle(fontSize: 11, color: Colors.white),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
+                      child: Text(
+                        chat['unread'].toString(),
+                        style: const TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.w600),
+                      ),
+                    ),
                 ],
               ),
-            ),
+            ],
           ),
-        )).toList(),
-      ],
+        ),
+      ),
     );
   }
 }
