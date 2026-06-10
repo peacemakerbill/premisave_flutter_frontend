@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 
+const _brand = Color(0xFF1A3C34);
+const _gold  = Color(0xFFC9A84C);
+
 class ChangePasswordDialog extends StatefulWidget {
   final String userId;
   final Function(String) onSave;
-
-  const ChangePasswordDialog({
-    super.key,
-    required this.userId,
-    required this.onSave,
-  });
+  const ChangePasswordDialog({super.key, required this.userId, required this.onSave});
 
   @override
   State<ChangePasswordDialog> createState() => _ChangePasswordDialogState();
@@ -16,24 +14,18 @@ class ChangePasswordDialog extends StatefulWidget {
 
 class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
-  bool _obscurePassword = true;
-  bool _obscureConfirmPassword = true;
+  final _pwCtrl  = TextEditingController();
+  final _cfCtrl  = TextEditingController();
+  bool _obscurePw = true;
+  bool _obscureCf = true;
 
   @override
-  void dispose() {
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
-    super.dispose();
-  }
+  void dispose() { _pwCtrl.dispose(); _cfCtrl.dispose(); super.dispose(); }
 
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -44,72 +36,92 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header
-                const Row(
-                  children: [
-                    Icon(
-                      Icons.lock_reset,
-                      color: Color(0xFF0D47A1),
-                      size: 28,
-                    ),
-                    SizedBox(width: 12),
-                    Text(
-                      'Change Password',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF0D47A1),
-                      ),
-                    ),
-                  ],
+                const _DialogHeader(icon: Icons.lock_reset_rounded, title: 'Change Password',
+                    subtitle: 'Set a new secure password'),
+                const SizedBox(height: 20),
+
+                const _FieldLabel('New Password', required: true),
+                _PwField(
+                  controller: _pwCtrl,
+                  hint: 'Enter new password',
+                  obscure: _obscurePw,
+                  onToggle: () => setState(() => _obscurePw = !_obscurePw),
+                  validator: _validatePassword,
                 ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Set a new secure password for the user',
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 14,
+                const SizedBox(height: 14),
+
+                _FieldLabel('Confirm Password', required: true),
+                _PwField(
+                  controller: _cfCtrl,
+                  hint: 'Confirm new password',
+                  obscure: _obscureCf,
+                  onToggle: () => setState(() => _obscureCf = !_obscureCf),
+                  validator: (v) => (v != _pwCtrl.text) ? 'Passwords do not match' : null,
+                ),
+                const SizedBox(height: 14),
+
+                // Requirements hint
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: _brand.withOpacity(0.04),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFFEAE6DE)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Requirements',
+                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700,
+                              color: _brand, letterSpacing: 0.2)),
+                      const SizedBox(height: 6),
+                      for (final req in const [
+                        'At least 8 characters',
+                        'Uppercase & lowercase letters',
+                        'At least one number',
+                        'Special character (e.g. @#\$%)',
+                      ])
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 3),
+                          child: Row(children: [
+                            const Icon(Icons.check_circle_outline_rounded,
+                                size: 13, color: Color(0xFF22C55E)),
+                            const SizedBox(width: 6),
+                            Text(req, style: const TextStyle(fontSize: 12, color: Color(0xFF374151))),
+                          ]),
+                        ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
 
-                // Password Field
-                _buildPasswordField(),
-                const SizedBox(height: 16),
-
-                // Confirm Password Field
-                _buildConfirmPasswordField(),
-                const SizedBox(height: 12),
-
-                // Password Requirements
-                _buildPasswordRequirements(),
-                const SizedBox(height: 24),
-
-                // Buttons
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
+                Row(children: [
+                  Expanded(
+                    child: OutlinedButton(
                       onPressed: () => Navigator.pop(context),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Color(0xFFEAE6DE)),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
-                      child: const Text('Cancel'),
+                      child: const Text('Cancel',
+                          style: TextStyle(color: _brand, fontWeight: FontWeight.w600)),
                     ),
-                    const SizedBox(width: 12),
-                    ElevatedButton(
-                      onPressed: _changePassword,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _submit,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0D47A1),
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                        backgroundColor: _brand,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
-                      child: const Text('Change Password', style: TextStyle(color: Colors.white)),
+                      child: const Text('Update',
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
                     ),
-                  ],
-                ),
+                  ),
+                ]),
               ],
             ),
           ),
@@ -118,196 +130,94 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
     );
   }
 
-  Widget _buildPasswordField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Row(
-          children: [
-            Text(
-              'New Password',
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: 13,
-                color: Colors.grey,
-              ),
-            ),
-            Text(
-              ' *',
-              style: TextStyle(
-                color: Colors.red,
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        TextFormField(
-          controller: _passwordController,
-          obscureText: _obscurePassword,
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Password is required';
-            }
-            if (value.length < 8) {
-              return 'Password must be at least 8 characters';
-            }
-            if (!RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_])').hasMatch(value)) {
-              return 'Password must include uppercase, lowercase, number and special character';
-            }
-            return null;
-          },
-          decoration: InputDecoration(
-            hintText: 'Enter new password',
-            hintStyle: const TextStyle(fontSize: 14),
-            prefixIcon: const Icon(Icons.lock_outline, size: 20),
-            suffixIcon: IconButton(
-              icon: Icon(
-                _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                size: 20,
-              ),
-              onPressed: () {
-                setState(() {
-                  _obscurePassword = !_obscurePassword;
-                });
-              },
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-            isDense: true,
-            errorMaxLines: 2,
-          ),
-          style: const TextStyle(fontSize: 14),
-        ),
-      ],
-    );
+  String? _validatePassword(String? v) {
+    if (v == null || v.isEmpty) return 'Password is required';
+    if (v.length < 8) return 'Must be at least 8 characters';
+    if (!RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_])').hasMatch(v))
+      return 'Must include uppercase, lowercase, number & special character';
+    return null;
   }
 
-  Widget _buildConfirmPasswordField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Row(
-          children: [
-            Text(
-              'Confirm Password',
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: 13,
-                color: Colors.grey,
-              ),
-            ),
-            Text(
-              ' *',
-              style: TextStyle(
-                color: Colors.red,
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        TextFormField(
-          controller: _confirmPasswordController,
-          obscureText: _obscureConfirmPassword,
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Please confirm password';
-            }
-            if (value != _passwordController.text) {
-              return 'Passwords do not match';
-            }
-            return null;
-          },
-          decoration: InputDecoration(
-            hintText: 'Confirm new password',
-            hintStyle: const TextStyle(fontSize: 14),
-            prefixIcon: const Icon(Icons.lock_outline, size: 20),
-            suffixIcon: IconButton(
-              icon: Icon(
-                _obscureConfirmPassword ? Icons.visibility : Icons.visibility_off,
-                size: 20,
-              ),
-              onPressed: () {
-                setState(() {
-                  _obscureConfirmPassword = !_obscureConfirmPassword;
-                });
-              },
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-            isDense: true,
-            errorMaxLines: 2,
-          ),
-          style: const TextStyle(fontSize: 14),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPasswordRequirements() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFf8f9fa),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Password Requirements:',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 13,
-              color: Color(0xFF0A2463),
-            ),
-          ),
-          const SizedBox(height: 6),
-          _buildRequirementItem('At least 8 characters'),
-          _buildRequirementItem('Mix of uppercase and lowercase letters'),
-          _buildRequirementItem('Include numbers (0-9)'),
-          _buildRequirementItem('Include special characters (e.g., @#\$%^&*)'),
-          _buildRequirementItem('Must match in both fields'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRequirementItem(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(
-            Icons.check_circle_outline,
-            color: Colors.green,
-            size: 14,
-          ),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(fontSize: 12),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _changePassword() {
+  void _submit() {
     if (_formKey.currentState!.validate()) {
       Navigator.pop(context);
-      widget.onSave(_passwordController.text);
+      widget.onSave(_pwCtrl.text);
     }
   }
+}
+
+// ── Small helpers ─────────────────────────────────────────────────────────────
+
+class _PwField extends StatelessWidget {
+  final TextEditingController controller;
+  final String hint;
+  final bool obscure;
+  final VoidCallback onToggle;
+  final FormFieldValidator<String>? validator;
+  const _PwField({
+    required this.controller, required this.hint,
+    required this.obscure, required this.onToggle, this.validator,
+  });
+
+  @override
+  Widget build(BuildContext context) => TextFormField(
+    controller: controller,
+    obscureText: obscure,
+    validator: validator,
+    style: const TextStyle(fontSize: 14),
+    decoration: InputDecoration(
+      hintText: hint,
+      hintStyle: const TextStyle(fontSize: 13),
+      prefixIcon: const Icon(Icons.lock_outline_rounded, size: 18),
+      suffixIcon: IconButton(
+        icon: Icon(obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 18),
+        onPressed: onToggle,
+      ),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+      contentPadding: const EdgeInsets.symmetric(vertical: 13, horizontal: 12),
+      isDense: true,
+      errorMaxLines: 2,
+    ),
+  );
+}
+
+class _FieldLabel extends StatelessWidget {
+  final String text;
+  final bool required;
+  const _FieldLabel(this.text, {this.required = false});
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 5),
+    child: Row(children: [
+      Text(text, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600,
+          color: Color(0xFF374151))),
+      if (required)
+        const Text(' *', style: TextStyle(fontSize: 12, color: Color(0xFFDC2626),
+            fontWeight: FontWeight.bold)),
+    ]),
+  );
+}
+
+class _DialogHeader extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  const _DialogHeader({required this.icon, required this.title, this.subtitle});
+
+  @override
+  Widget build(BuildContext context) => Row(children: [
+    Container(
+      width: 36, height: 36,
+      decoration: BoxDecoration(color: _brand.withOpacity(0.08), borderRadius: BorderRadius.circular(9)),
+      child: Icon(icon, size: 18, color: _brand),
+    ),
+    const SizedBox(width: 11),
+    Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(title,
+          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: _brand, letterSpacing: -0.4)),
+      if (subtitle != null)
+        Text(subtitle!, style: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF))),
+    ]),
+  ]);
 }

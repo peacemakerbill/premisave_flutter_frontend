@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../../../../../models/auth/user_model.dart';
 
+const _brand   = Color(0xFF1A3C34);
+const _gold    = Color(0xFFC9A84C);
+const _divider = Color(0xFFF3EFE6);
+
 class UserDetailsDialog extends StatelessWidget {
   final UserModel user;
-
-  const UserDetailsDialog({
-    super.key,
-    required this.user,
-  });
+  const UserDetailsDialog({super.key, required this.user});
 
   @override
   Widget build(BuildContext context) {
@@ -20,166 +20,165 @@ class UserDetailsDialog extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeader(),
-              const SizedBox(height: 24),
-              _buildUserProfile(),
-              const SizedBox(height: 24),
-              _buildStatusBadges(),
-              const SizedBox(height: 24),
-              _buildPersonalDetails(),
+              _DialogHeader(icon: Icons.person_outline_rounded, title: 'User Details'),
+              const SizedBox(height: 20),
+
+              // Avatar + name block
+              Row(children: [
+                CircleAvatar(
+                  radius: 28,
+                  backgroundColor: _brand,
+                  child: Text(
+                    '${user.firstName[0]}${user.lastName[0]}',
+                    style: const TextStyle(color: _gold, fontSize: 18, fontWeight: FontWeight.w800),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text('${user.firstName} ${user.lastName}',
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _brand)),
+                    const SizedBox(height: 2),
+                    Text(user.email,
+                        style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+                    Text('@${user.username}',
+                        style: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF))),
+                  ]),
+                ),
+              ]),
               const SizedBox(height: 16),
-              _buildAddressDetails(),
-              const SizedBox(height: 24),
-              _buildCloseButton(context),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
-  Widget _buildHeader() {
-    return Row(
-      children: [
-        const Icon(Icons.person_outline, color: Color(0xFF0D47A1), size: 28),
-        const SizedBox(width: 12),
-        const Text('User Details', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF0D47A1))),
-      ],
-    );
-  }
+              // Status badges
+              Wrap(spacing: 8, runSpacing: 6, children: [
+                _Chip(user.role.name.replaceAll('_', ' ').toUpperCase(), _roleColor(user.role.name)),
+                _Chip(user.active ? 'ACTIVE' : 'INACTIVE', user.active ? const Color(0xFF16A34A) : const Color(0xFFDC2626)),
+                _Chip(user.verified ? 'VERIFIED' : 'UNVERIFIED', user.verified ? const Color(0xFF3B82F6) : const Color(0xFFF59E0B)),
+              ]),
+              const SizedBox(height: 20),
 
-  Widget _buildUserProfile() {
-    return Row(
-      children: [
-        Container(
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF0D47A1), Color(0xFF1976D2)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(30),
-          ),
-          child: Center(
-            child: Text(
-              user.firstName.isNotEmpty && user.lastName.isNotEmpty
-                  ? '${user.firstName[0]}${user.lastName[0]}'
-                  : '?',
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
-            ),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('${user.firstName} ${user.lastName}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              _SectionTitle('Personal Details'),
+              const SizedBox(height: 12),
+              _DetailRow(Icons.phone_outlined,       'Phone',     user.phoneNumber),
+              _DetailRow(Icons.language_outlined,    'Language',  user.language),
+              _DetailRow(Icons.location_on_outlined, 'Country',   user.country),
               const SizedBox(height: 4),
-              Text(user.email, style: TextStyle(fontSize: 14, color: Colors.grey[600])),
-              const SizedBox(height: 2),
-              Text('@${user.username}', style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+
+              _SectionTitle('Address'),
+              const SizedBox(height: 12),
+              _DetailRow(Icons.home_outlined, 'Address Line 1', user.address1),
+              _DetailRow(Icons.home_outlined, 'Address Line 2', user.address2),
+              const SizedBox(height: 20),
+
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _brand,
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  child: const Text('Close', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                ),
+              ),
             ],
           ),
         ),
-      ],
-    );
-  }
-
-  Widget _buildStatusBadges() {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        _buildBadge(user.role.name.replaceAll('_', ' ').toUpperCase(), _getRoleColor(user.role.name)),
-        _buildBadge(user.active ? 'ACTIVE' : 'INACTIVE', user.active ? Colors.green : Colors.red),
-        _buildBadge(user.verified ? 'VERIFIED' : 'UNVERIFIED', user.verified ? Colors.blue : Colors.orange),
-      ],
-    );
-  }
-
-  Widget _buildBadge(String text, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(20)),
-      child: Text(text, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-    );
-  }
-
-  Widget _buildPersonalDetails() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('Personal Details', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0D47A1))),
-        const SizedBox(height: 16),
-        _buildDetailRow('Phone Number', user.phoneNumber, Icons.phone_outlined),
-        _buildDetailRow('Language', user.language, Icons.language_outlined),
-        _buildDetailRow('Country', user.country, Icons.location_on_outlined),
-      ],
-    );
-  }
-
-  Widget _buildAddressDetails() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('Address Details', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0D47A1))),
-        const SizedBox(height: 16),
-        _buildDetailRow('Address Line 1', user.address1, Icons.home_outlined),
-        _buildDetailRow('Address Line 2', user.address2, Icons.home_outlined),
-      ],
-    );
-  }
-
-  Widget _buildDetailRow(String label, String value, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 20, color: Colors.grey[600]),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600], fontWeight: FontWeight.w500)),
-                const SizedBox(height: 4),
-                Text(value.isNotEmpty ? value : 'Not set', style: const TextStyle(fontSize: 14)),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
 
-  Widget _buildCloseButton(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: () => Navigator.pop(context),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF0D47A1),
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-        child: const Text('Close', style: TextStyle(fontSize: 16, color: Colors.white)),
-      ),
-    );
-  }
-
-  Color _getRoleColor(String role) {
+  Color _roleColor(String role) {
     switch (role.toLowerCase()) {
-      case 'admin': return Colors.red;
-      case 'client': return Colors.green;
-      case 'home_owner': return Colors.blue;
-      case 'operations': return Colors.orange;
-      case 'finance': return Colors.purple;
-      case 'support': return Colors.teal;
-      default: return Colors.grey;
+      case 'admin':      return const Color(0xFFDC2626);
+      case 'client':     return const Color(0xFF16A34A);
+      case 'home_owner': return const Color(0xFF3B82F6);
+      case 'operations': return const Color(0xFFF59E0B);
+      case 'finance':    return const Color(0xFF8B5CF6);
+      case 'support':    return const Color(0xFF0D9488);
+      default:           return const Color(0xFF6B7280);
     }
   }
+}
+
+class _Chip extends StatelessWidget {
+  final String label;
+  final Color color;
+  const _Chip(this.label, this.color);
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+    decoration: BoxDecoration(
+      color: color.withOpacity(0.12),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: color.withOpacity(0.3)),
+    ),
+    child: Text(label,
+        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color)),
+  );
+}
+
+class _DetailRow extends StatelessWidget {
+  final IconData icon;
+  final String label, value;
+  const _DetailRow(this.icon, this.label, this.value);
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 10),
+    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Icon(icon, size: 16, color: const Color(0xFF9CA3AF)),
+      const SizedBox(width: 10),
+      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(label, style: const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF), fontWeight: FontWeight.w500)),
+        const SizedBox(height: 2),
+        Text(value.isNotEmpty ? value : '—',
+            style: const TextStyle(fontSize: 13, color: _brand, fontWeight: FontWeight.w500)),
+      ])),
+    ]),
+  );
+}
+
+// ── Shared within this file ───────────────────────────────────────────────────
+
+class _DialogHeader extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  const _DialogHeader({required this.icon, required this.title, this.subtitle});
+
+  @override
+  Widget build(BuildContext context) => Row(children: [
+    Container(
+      width: 36, height: 36,
+      decoration: BoxDecoration(color: _brand.withOpacity(0.08), borderRadius: BorderRadius.circular(9)),
+      child: Icon(icon, size: 18, color: _brand),
+    ),
+    const SizedBox(width: 11),
+    Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(title,
+          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: _brand, letterSpacing: -0.4)),
+      if (subtitle != null)
+        Text(subtitle!,
+            style: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF))),
+    ]),
+  ]);
+}
+
+class _SectionTitle extends StatelessWidget {
+  final String text;
+  const _SectionTitle(this.text);
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(text,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700,
+              color: _brand, letterSpacing: 0.3)),
+      const SizedBox(height: 6),
+      const Divider(height: 1, color: _divider),
+    ],
+  );
 }

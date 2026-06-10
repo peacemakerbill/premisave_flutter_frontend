@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../../../../../models/auth/user_model.dart';
 
+const _brand = Color(0xFF1A3C34);
+const _gold  = Color(0xFFC9A84C);
+
 class CreateUserDialog extends StatefulWidget {
   final Function(Map<String, dynamic>) onCreate;
-
-  const CreateUserDialog({
-    super.key,
-    required this.onCreate,
-  });
+  const CreateUserDialog({super.key, required this.onCreate});
 
   @override
   State<CreateUserDialog> createState() => _CreateUserDialogState();
@@ -15,32 +14,27 @@ class CreateUserDialog extends StatefulWidget {
 
 class _CreateUserDialogState extends State<CreateUserDialog> {
   final _formKey = GlobalKey<FormState>();
-  final Map<String, TextEditingController> _controllers = {
-    'username': TextEditingController(),
-    'email': TextEditingController(),
-    'firstName': TextEditingController(),
-    'lastName': TextEditingController(),
+  final Map<String, TextEditingController> _c = {
+    'username':    TextEditingController(),
+    'email':       TextEditingController(),
+    'firstName':   TextEditingController(),
+    'lastName':    TextEditingController(),
     'phoneNumber': TextEditingController(),
-    'password': TextEditingController(),
-    'address1': TextEditingController(),
-    'address2': TextEditingController(),
-    'country': TextEditingController(),
+    'password':    TextEditingController(),
+    'address1':    TextEditingController(),
+    'address2':    TextEditingController(),
+    'country':     TextEditingController(),
   };
-  Role _selectedRole = Role.client;
-  bool _obscurePassword = true;
+  Role _role = Role.client;
+  bool _obscurePw = true;
 
   @override
-  void dispose() {
-    _controllers.values.forEach((controller) => controller.dispose());
-    super.dispose();
-  }
+  void dispose() { _c.values.forEach((c) => c.dispose()); super.dispose(); }
 
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -51,230 +45,109 @@ class _CreateUserDialogState extends State<CreateUserDialog> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header
-                const Row(
-                  children: [
-                    Icon(
-                      Icons.person_add,
-                      color: Color(0xFF0D47A1),
-                      size: 28,
-                    ),
-                    SizedBox(width: 12),
-                    Text(
-                      'Create New User',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF0D47A1),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Fill in the details to create a new user account',
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 24),
+                _DialogHeader(icon: Icons.person_add_rounded, title: 'Create User',
+                    subtitle: 'Fill in details to create a new account'),
+                const SizedBox(height: 20),
 
-                // Personal Information Section
-                const Text(
-                  'Personal Information',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF0D47A1),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Username and Email Row
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildTextField(
-                        'Username',
-                        'username',
-                        Icons.person_outline,
-                        required: true,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildTextField(
-                        'Email',
-                        'email',
-                        Icons.email_outlined,
-                        keyboardType: TextInputType.emailAddress,
-                        required: true,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                // Name Row
-                const Text(
-                  'Full Name',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildTextField(
-                        'First Name',
-                        'firstName',
-                        Icons.person_outline,
-                        required: true,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildTextField(
-                        'Last Name',
-                        'lastName',
-                        Icons.person_outline,
-                        required: true,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                // Contact Information Section
-                const Text(
-                  'Contact Information',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF0D47A1),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Phone and Country Row
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildTextField(
-                        'Phone Number',
-                        'phoneNumber',
-                        Icons.phone_outlined,
-                        keyboardType: TextInputType.phone,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildTextField(
-                        'Country',
-                        'country',
-                        Icons.location_on_outlined,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                // Address Fields
-                _buildTextField(
-                  'Address Line 1',
-                  'address1',
-                  Icons.home_outlined,
-                ),
+                _SectionTitle('Personal Information'),
                 const SizedBox(height: 12),
-                _buildTextField(
-                  'Address Line 2',
-                  'address2',
-                  Icons.home_outlined,
-                ),
+                _Row2([
+                  _FormField('Username', _c['username']!, Icons.person_outline_rounded, required: true),
+                  _FormField('Email',    _c['email']!,    Icons.email_outlined, required: true,
+                      type: TextInputType.emailAddress, validationKey: 'email'),
+                ]),
+                const SizedBox(height: 10),
+                _Row2([
+                  _FormField('First Name', _c['firstName']!, Icons.person_outline_rounded, required: true),
+                  _FormField('Last Name',  _c['lastName']!,  Icons.person_outline_rounded, required: true),
+                ]),
                 const SizedBox(height: 16),
 
-                // Account Security Section
-                const Text(
-                  'Account Security',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF0D47A1),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Password Field with Requirements
-                _buildPasswordField(),
+                _SectionTitle('Contact'),
                 const SizedBox(height: 12),
-                _buildPasswordRequirements(),
+                _Row2([
+                  _FormField('Phone',   _c['phoneNumber']!, Icons.phone_outlined, type: TextInputType.phone),
+                  _FormField('Country', _c['country']!,     Icons.location_on_outlined),
+                ]),
+                const SizedBox(height: 10),
+                _FormField('Address Line 1', _c['address1']!, Icons.home_outlined),
+                const SizedBox(height: 10),
+                _FormField('Address Line 2', _c['address2']!, Icons.home_outlined),
                 const SizedBox(height: 16),
 
-                // Role Selection
-                const Text(
-                  'Select Role',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF0D47A1),
-                  ),
-                ),
+                _SectionTitle('Security'),
                 const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: Role.values.map((role) {
-                    final roleName = role.name.replaceAll('_', ' ').toUpperCase();
-                    return ChoiceChip(
-                      label: Text(roleName),
-                      selected: _selectedRole == role,
-                      onSelected: (selected) {
-                        setState(() {
-                          _selectedRole = role;
-                        });
-                      },
-                      selectedColor: const Color(0xFF0D47A1),
-                      labelStyle: TextStyle(
-                        color: _selectedRole == role ? Colors.white : Colors.black,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 24),
-
-                // Buttons
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      ),
-                      child: const Text('Cancel'),
+                _FieldLabel('Password', required: true),
+                TextFormField(
+                  controller: _c['password'],
+                  obscureText: _obscurePw,
+                  style: const TextStyle(fontSize: 13),
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return 'Password is required';
+                    if (v.length < 8) return 'Must be at least 8 characters';
+                    if (!RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_])').hasMatch(v))
+                      return 'Must include uppercase, lowercase, number & special character';
+                    return null;
+                  },
+                  decoration: InputDecoration(
+                    hintText: 'Enter secure password',
+                    hintStyle: const TextStyle(fontSize: 12, color: Color(0xFFD1CBC0)),
+                    prefixIcon: const Icon(Icons.lock_outline_rounded, size: 17, color: Color(0xFF9CA3AF)),
+                    suffixIcon: IconButton(
+                      icon: Icon(_obscurePw ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 17),
+                      onPressed: () => setState(() => _obscurePw = !_obscurePw),
                     ),
-                    const SizedBox(width: 12),
-                    ElevatedButton(
-                      onPressed: _createUser,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0D47A1),
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: _brand),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                    isDense: true,
+                    errorMaxLines: 2,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.all(11),
+                  decoration: BoxDecoration(
+                    color: _brand.withOpacity(0.04),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFFEAE6DE)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Requirements',
+                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700,
+                              color: _brand, letterSpacing: 0.2)),
+                      const SizedBox(height: 6),
+                      for (final r in const [
+                        'At least 8 characters',
+                        'Uppercase & lowercase letters',
+                        'At least one number',
+                        'Special character (e.g. @#\$%)',
+                      ])
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 3),
+                          child: Row(children: [
+                            const Icon(Icons.check_circle_outline_rounded,
+                                size: 13, color: Color(0xFF22C55E)),
+                            const SizedBox(width: 6),
+                            Text(r, style: const TextStyle(fontSize: 12, color: Color(0xFF374151))),
+                          ]),
                         ),
-                      ),
-                      child: const Text('Create User', style: TextStyle(color: Colors.white)),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
+                const SizedBox(height: 16),
+
+                _SectionTitle('Role'),
+                const SizedBox(height: 10),
+                _RoleChips(selected: _role, onChanged: (r) => setState(() => _role = r)),
+                const SizedBox(height: 20),
+
+                _ActionButtons(onCancel: () => Navigator.pop(context), onSave: _create, saveLabel: 'Create User'),
               ],
             ),
           ),
@@ -283,206 +156,191 @@ class _CreateUserDialogState extends State<CreateUserDialog> {
     );
   }
 
-  Widget _buildTextField(
-      String label,
-      String key,
-      IconData icon, {
-        bool required = false,
-        TextInputType keyboardType = TextInputType.text,
-      }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Text(
-              label,
-              style: const TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: 13,
-                color: Colors.grey,
-              ),
-            ),
-            if (required)
-              const Text(
-                ' *',
-                style: TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                ),
-              ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        TextFormField(
-          controller: _controllers[key],
-          keyboardType: keyboardType,
-          validator: required
-              ? (value) {
-            if (value == null || value.isEmpty) {
-              return '$label is required';
-            }
-            if (key == 'email' && !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-              return 'Enter a valid email';
-            }
-            return null;
-          }
-              : null,
-          decoration: InputDecoration(
-            hintText: 'Enter $label',
-            hintStyle: const TextStyle(fontSize: 14),
-            prefixIcon: Icon(icon, size: 20),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-            isDense: true,
-            errorMaxLines: 2,
-          ),
-          style: const TextStyle(fontSize: 14),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPasswordField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Row(
-          children: [
-            Text(
-              'Password',
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: 13,
-                color: Colors.grey,
-              ),
-            ),
-            Text(
-              ' *',
-              style: TextStyle(
-                color: Colors.red,
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        TextFormField(
-          controller: _controllers['password'],
-          obscureText: _obscurePassword,
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Password is required';
-            }
-            if (value.length < 8) {
-              return 'Password must be at least 8 characters';
-            }
-            if (!RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_])').hasMatch(value)) {
-              return 'Password must include uppercase, lowercase, number and special character';
-            }
-            return null;
-          },
-          decoration: InputDecoration(
-            hintText: 'Enter secure password',
-            hintStyle: const TextStyle(fontSize: 14),
-            prefixIcon: const Icon(Icons.lock_outline, size: 20),
-            suffixIcon: IconButton(
-              icon: Icon(
-                _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                size: 20,
-              ),
-              onPressed: () {
-                setState(() {
-                  _obscurePassword = !_obscurePassword;
-                });
-              },
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-            isDense: true,
-            errorMaxLines: 2,
-          ),
-          style: const TextStyle(fontSize: 14),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPasswordRequirements() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFf8f9fa),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Password Requirements:',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 13,
-              color: Color(0xFF0A2463),
-            ),
-          ),
-          const SizedBox(height: 6),
-          _buildRequirementItem('At least 8 characters'),
-          _buildRequirementItem('Mix of uppercase and lowercase letters'),
-          _buildRequirementItem('Include numbers (0-9)'),
-          _buildRequirementItem('Include special characters (e.g., @#\$%^&*)'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRequirementItem(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(
-            Icons.check_circle_outline,
-            color: Colors.green,
-            size: 14,
-          ),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(fontSize: 12),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _createUser() {
+  void _create() {
     if (_formKey.currentState!.validate()) {
-      final userData = {
-        'username': _controllers['username']!.text,
-        'email': _controllers['email']!.text,
-        'firstName': _controllers['firstName']!.text,
-        'lastName': _controllers['lastName']!.text,
-        'phoneNumber': _controllers['phoneNumber']!.text,
-        'address1': _controllers['address1']!.text,
-        'address2': _controllers['address2']!.text,
-        'country': _controllers['country']!.text,
-        'password': _controllers['password']!.text,
-        'role': _selectedRole.name.toUpperCase(),
-      };
-
       Navigator.pop(context);
-      widget.onCreate(userData);
+      widget.onCreate({
+        'username':    _c['username']!.text,
+        'email':       _c['email']!.text,
+        'firstName':   _c['firstName']!.text,
+        'lastName':    _c['lastName']!.text,
+        'phoneNumber': _c['phoneNumber']!.text,
+        'address1':    _c['address1']!.text,
+        'address2':    _c['address2']!.text,
+        'country':     _c['country']!.text,
+        'password':    _c['password']!.text,
+        'role':        _role.name.toUpperCase(),
+      });
     }
   }
+}
+
+// ── Shared helpers (duplicated from edit_user_dialog — extract to shared file if preferred) ──
+
+class _FormField extends StatelessWidget {
+  final String label;
+  final TextEditingController controller;
+  final IconData icon;
+  final bool required;
+  final TextInputType type;
+  final String? validationKey;
+  const _FormField(this.label, this.controller, this.icon, {
+    this.required = false, this.type = TextInputType.text, this.validationKey,
+  });
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      _FieldLabel(label, required: required),
+      TextFormField(
+        controller: controller,
+        keyboardType: type,
+        style: const TextStyle(fontSize: 13),
+        validator: required ? (v) {
+          if (v == null || v.isEmpty) return '$label is required';
+          if (validationKey == 'email' && !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v))
+            return 'Enter a valid email';
+          return null;
+        } : null,
+        decoration: InputDecoration(
+          hintText: 'Enter $label',
+          hintStyle: const TextStyle(fontSize: 12, color: Color(0xFFD1CBC0)),
+          prefixIcon: Icon(icon, size: 17, color: const Color(0xFF9CA3AF)),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: _brand),
+          ),
+          contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+          isDense: true,
+          errorMaxLines: 2,
+        ),
+      ),
+    ],
+  );
+}
+
+class _Row2 extends StatelessWidget {
+  final List<Widget> children;
+  const _Row2(this.children);
+  @override
+  Widget build(BuildContext context) => Row(
+    children: children
+        .asMap()
+        .entries
+        .expand((e) => [Expanded(child: e.value), if (e.key < children.length - 1) const SizedBox(width: 10)])
+        .toList(),
+  );
+}
+
+class _RoleChips extends StatelessWidget {
+  final Role selected;
+  final ValueChanged<Role> onChanged;
+  const _RoleChips({required this.selected, required this.onChanged});
+  String _label(Role r) =>
+      r == Role.homeOwner ? 'Home Owner' : r.name[0].toUpperCase() + r.name.substring(1);
+  @override
+  Widget build(BuildContext context) => Wrap(
+    spacing: 7, runSpacing: 7,
+    children: Role.values.map((r) {
+      final active = r == selected;
+      return GestureDetector(
+        onTap: () => onChanged(r),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 130),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: active ? _brand : Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: active ? _brand : const Color(0xFFEAE6DE)),
+          ),
+          child: Text(_label(r),
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600,
+                  color: active ? Colors.white : const Color(0xFF6B7280))),
+        ),
+      );
+    }).toList(),
+  );
+}
+
+class _ActionButtons extends StatelessWidget {
+  final VoidCallback onCancel, onSave;
+  final String saveLabel;
+  const _ActionButtons({required this.onCancel, required this.onSave, required this.saveLabel});
+  @override
+  Widget build(BuildContext context) => Row(children: [
+    Expanded(
+      child: OutlinedButton(
+        onPressed: onCancel,
+        style: OutlinedButton.styleFrom(
+          side: const BorderSide(color: Color(0xFFEAE6DE)),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+        child: const Text('Cancel', style: TextStyle(color: _brand, fontWeight: FontWeight.w600)),
+      ),
+    ),
+    const SizedBox(width: 12),
+    Expanded(
+      child: ElevatedButton(
+        onPressed: onSave,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: _brand,
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+        child: Text(saveLabel, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+      ),
+    ),
+  ]);
+}
+
+class _FieldLabel extends StatelessWidget {
+  final String text;
+  final bool required;
+  const _FieldLabel(this.text, {this.required = false});
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 5),
+    child: Row(children: [
+      Text(text, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF374151))),
+      if (required) const Text(' *', style: TextStyle(fontSize: 12, color: Color(0xFFDC2626), fontWeight: FontWeight.bold)),
+    ]),
+  );
+}
+
+class _SectionTitle extends StatelessWidget {
+  final String text;
+  const _SectionTitle(this.text);
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(text, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: _brand, letterSpacing: 0.3)),
+      const SizedBox(height: 6),
+      const Divider(height: 1, color: Color(0xFFF3EFE6)),
+    ],
+  );
+}
+
+class _DialogHeader extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  const _DialogHeader({required this.icon, required this.title, this.subtitle});
+  @override
+  Widget build(BuildContext context) => Row(children: [
+    Container(
+      width: 36, height: 36,
+      decoration: BoxDecoration(color: _brand.withOpacity(0.08), borderRadius: BorderRadius.circular(9)),
+      child: Icon(icon, size: 18, color: _brand),
+    ),
+    const SizedBox(width: 11),
+    Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: _brand, letterSpacing: -0.4)),
+      if (subtitle != null)
+        Text(subtitle!, style: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF))),
+    ]),
+  ]);
 }
