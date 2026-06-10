@@ -12,6 +12,7 @@ import 'widgets/user-management/user_details_dialog.dart';
 
 const _brand = Color(0xFF1A3C34);
 const _gold = Color(0xFFC9A84C);
+const _slate = Color(0xFF6B7280);
 
 class AdminUserManagementContent extends ConsumerStatefulWidget {
   const AdminUserManagementContent({super.key});
@@ -95,8 +96,7 @@ class _AdminUserManagementContentState extends ConsumerState<AdminUserManagement
               },
               notifier: notifier,
             ),
-            if (state.isLoading)
-              const LinearProgressIndicator(color: _brand, backgroundColor: Color(0xFFF5F0E8)),
+            if (state.isLoading) const LinearProgressIndicator(color: _brand, backgroundColor: Color(0xFFF5F0E8)),
             if (state.error != null) _ErrorBanner(state: state, ref: ref),
             if (_searchController.text.isNotEmpty && !state.isLoading)
               _SearchBanner(query: _searchController.text, count: state.filteredUsers.length),
@@ -135,10 +135,7 @@ class _AdminUserManagementContentState extends ConsumerState<AdminUserManagement
   }
 
   void _showCreate(BuildContext ctx, UserManagementNotifier notifier) {
-    showDialog(
-      context: ctx,
-      builder: (_) => CreateUserDialog(onCreate: (data) async => notifier.createUser(data)),
-    );
+    showDialog(context: ctx, builder: (_) => CreateUserDialog(onCreate: (data) async => notifier.createUser(data)));
   }
 
   void _handleAction(String action, UserManagementNotifier notifier, UserModel user) {
@@ -156,8 +153,6 @@ class _AdminUserManagementContentState extends ConsumerState<AdminUserManagement
     }
   }
 }
-
-// ── Filters Bar (unchanged) ─────────────────────────────────────────────────
 
 class _FiltersBar extends StatelessWidget {
   final TextEditingController controller;
@@ -295,16 +290,11 @@ class _FilterPill extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: selected ? _brand : const Color(0xFFEAE6DE)),
         ),
-        child: Text(
-          label,
-          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: selected ? Colors.white : const Color(0xFF6B7280)),
-        ),
+        child: Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: selected ? Colors.white : const Color(0xFF6B7280))),
       ),
     );
   }
 }
-
-// ── User Card with visible menu ─────────────────────────────────────────────
 
 class _UserCard extends StatelessWidget {
   final UserModel user;
@@ -374,12 +364,21 @@ class _UserCard extends StatelessWidget {
                     elevation: 8,
                     icon: const Icon(Icons.more_vert_rounded, size: 18, color: Color(0xFF6B7280)),
                     itemBuilder: (_) => [
-                      PopupMenuItem(value: user.active ? 'deactivate' : 'activate', child: const Text('Activate / Deactivate')),
-                      PopupMenuItem(value: user.verified ? 'unverify' : 'verify', child: const Text('Verify / Unverify')),
-                      const PopupMenuItem(value: 'change_role', child: Text('Change Role')),
                       PopupMenuItem(
+                        value: user.active ? 'deactivate' : 'activate',
+                        child: Text(user.active ? 'Deactivate' : 'Activate', style: const TextStyle(color: Colors.black87)),
+                      ),
+                      PopupMenuItem(
+                        value: user.verified ? 'unverify' : 'verify',
+                        child: Text(user.verified ? 'Unverify' : 'Verify', style: const TextStyle(color: Colors.black87)),
+                      ),
+                      const PopupMenuItem(
+                        value: 'change_role',
+                        child: Text('Change Role', style: TextStyle(color: Colors.black87)),
+                      ),
+                      const PopupMenuItem(
                         value: 'delete',
-                        child: const Text('Delete', style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600)),
+                        child: Text('Delete', style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600)),
                       ),
                     ],
                   ),
