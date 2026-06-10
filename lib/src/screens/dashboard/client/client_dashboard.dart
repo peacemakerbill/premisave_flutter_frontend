@@ -3,6 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../models/auth/user_model.dart';
 import '../../../providers/auth/auth_provider.dart';
+
+import '../../other_user_profiles/users_content.dart';
+import '../../shared/about_content.dart';
+import '../../shared/contact_content.dart';
 import 'contents/client_dashboard_content.dart';
 import 'contents/client_explore_content.dart';
 import 'contents/client_bookings_content.dart';
@@ -10,6 +14,7 @@ import 'contents/client_wishlists_content.dart';
 import 'contents/client_payments_content.dart';
 import 'contents/client_messages_content.dart';
 import 'contents/client_transactions_content.dart';
+
 
 class ClientDashboard extends ConsumerStatefulWidget {
   const ClientDashboard({super.key});
@@ -29,9 +34,12 @@ class _ClientDashboardState extends ConsumerState<ClientDashboard> {
     {'icon': Icons.home_rounded, 'label': 'Dashboard', 'route': '/dashboard/client'},
     {'icon': Icons.calendar_month_rounded, 'label': 'Bookings', 'route': '/client/bookings'},
     {'icon': Icons.favorite_rounded, 'label': 'Wishlists', 'route': '/client/wishlists'},
+    {'icon': Icons.people_outline_rounded, 'label': 'Community', 'route': '/client/users'},
     {'icon': Icons.payments_rounded, 'label': 'Payments', 'route': '/client/payments'},
     {'icon': Icons.receipt_long_rounded, 'label': 'Transactions', 'route': '/client/transactions'},
     {'icon': Icons.message_rounded, 'label': 'Messages', 'route': '/client/messages'},
+    {'icon': Icons.info_outline_rounded, 'label': 'About', 'route': '/client/about'},
+    {'icon': Icons.contact_support_rounded, 'label': 'Contact', 'route': '/client/contact'},
   ];
 
   void _navigate(String route) => setState(() => _currentRoute = route);
@@ -48,6 +56,12 @@ class _ClientDashboardState extends ConsumerState<ClientDashboard> {
         return const ClientTransactionsContent();
       case '/client/messages':
         return const ClientMessagesContent();
+      case '/client/users':
+        return const UsersContent();
+      case '/client/about':
+        return const AboutContent();
+      case '/client/contact':
+        return const ContactContent();
       case '/dashboard/client':
         return const ClientDashboardContent();
       case '/client/explore':
@@ -124,38 +138,41 @@ class _ClientDashboardState extends ConsumerState<ClientDashboard> {
   }
 
   Widget _buildDesktopNav() {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: _menuItems.map((item) {
-        final isActive = _currentRoute == item['route'];
-        return GestureDetector(
-          onTap: () => _navigate(item['route'] as String),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 160),
-            margin: const EdgeInsets.symmetric(horizontal: 4),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-            decoration: BoxDecoration(
-              color: isActive ? _brand : Colors.transparent,
-              borderRadius: BorderRadius.circular(8),
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: _menuItems.map((item) {
+          final isActive = _currentRoute == item['route'];
+          return GestureDetector(
+            onTap: () => _navigate(item['route'] as String),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 160),
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+              decoration: BoxDecoration(
+                color: isActive ? _brand : Colors.transparent,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(item['icon'] as IconData,
+                      size: 15,
+                      color: isActive ? Colors.white : const Color(0xFF6B7280)),
+                  const SizedBox(width: 6),
+                  Text(item['label'] as String,
+                      style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                          color: isActive ? Colors.white : const Color(0xFF6B7280),
+                          letterSpacing: -0.1)),
+                ],
+              ),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(item['icon'] as IconData,
-                    size: 15,
-                    color: isActive ? Colors.white : const Color(0xFF6B7280)),
-                const SizedBox(width: 6),
-                Text(item['label'] as String,
-                    style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-                        color: isActive ? Colors.white : const Color(0xFF6B7280),
-                        letterSpacing: -0.1)),
-              ],
-            ),
-          ),
-        );
-      }).toList(),
+          );
+        }).toList(),
+      ),
     );
   }
 
