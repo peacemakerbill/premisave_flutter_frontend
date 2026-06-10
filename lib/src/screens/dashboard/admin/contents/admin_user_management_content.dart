@@ -10,20 +10,17 @@ import 'widgets/user-management/delete_confirmation_dialog.dart';
 import 'widgets/user-management/edit_user_dialog.dart';
 import 'widgets/user-management/user_details_dialog.dart';
 
-// ── Shared palette ────────────────────────────────────────────────────────────
 const _brand = Color(0xFF1A3C34);
-const _gold  = Color(0xFFC9A84C);
+const _gold = Color(0xFFC9A84C);
 
 class AdminUserManagementContent extends ConsumerStatefulWidget {
   const AdminUserManagementContent({super.key});
 
   @override
-  ConsumerState<AdminUserManagementContent> createState() =>
-      _AdminUserManagementContentState();
+  ConsumerState<AdminUserManagementContent> createState() => _AdminUserManagementContentState();
 }
 
-class _AdminUserManagementContentState
-    extends ConsumerState<AdminUserManagementContent> {
+class _AdminUserManagementContentState extends ConsumerState<AdminUserManagementContent> {
   final _searchController = TextEditingController();
   Timer? _debounce;
   Role? _roleFilter;
@@ -66,7 +63,7 @@ class _AdminUserManagementContentState
 
   @override
   Widget build(BuildContext context) {
-    final state    = ref.watch(userManagementProvider);
+    final state = ref.watch(userManagementProvider);
     final notifier = ref.read(userManagementProvider.notifier);
 
     return Stack(
@@ -99,8 +96,7 @@ class _AdminUserManagementContentState
               notifier: notifier,
             ),
             if (state.isLoading)
-              const LinearProgressIndicator(
-                  color: _brand, backgroundColor: Color(0xFFF5F0E8)),
+              const LinearProgressIndicator(color: _brand, backgroundColor: Color(0xFFF5F0E8)),
             if (state.error != null) _ErrorBanner(state: state, ref: ref),
             if (_searchController.text.isNotEmpty && !state.isLoading)
               _SearchBanner(query: _searchController.text, count: state.filteredUsers.length),
@@ -124,8 +120,6 @@ class _AdminUserManagementContentState
             ),
           ],
         ),
-
-        // FAB
         Positioned(
           right: 20,
           bottom: 20,
@@ -133,8 +127,7 @@ class _AdminUserManagementContentState
             onPressed: () => _showCreate(context, notifier),
             backgroundColor: _brand,
             icon: const Icon(Icons.person_add_rounded, color: _gold),
-            label: const Text('Add User',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+            label: const Text('Add User', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
           ),
         ),
       ],
@@ -144,37 +137,27 @@ class _AdminUserManagementContentState
   void _showCreate(BuildContext ctx, UserManagementNotifier notifier) {
     showDialog(
       context: ctx,
-      builder: (_) => CreateUserDialog(
-        onCreate: (data) async => notifier.createUser(data),
-      ),
+      builder: (_) => CreateUserDialog(onCreate: (data) async => notifier.createUser(data)),
     );
   }
 
   void _handleAction(String action, UserManagementNotifier notifier, UserModel user) {
     switch (action) {
-      case 'activate':   notifier.toggleUserStatus(user.id, true);   break;
-      case 'deactivate': notifier.toggleUserStatus(user.id, false);  break;
-      case 'verify':     notifier.toggleVerification(user.id, true); break;
-      case 'unverify':   notifier.toggleVerification(user.id, false);break;
-      case 'archive':    notifier.toggleArchive(user.id, true);      break;
-      case 'unarchive':  notifier.toggleArchive(user.id, false);     break;
+      case 'activate': notifier.toggleUserStatus(user.id, true); break;
+      case 'deactivate': notifier.toggleUserStatus(user.id, false); break;
+      case 'verify': notifier.toggleVerification(user.id, true); break;
+      case 'unverify': notifier.toggleVerification(user.id, false); break;
       case 'change_role':
-        showDialog(context: context, builder: (_) => ChangeRoleDialog(
-          user: user,
-          onChange: (role) async => notifier.changeUserRole(user.id, role),
-        ));
+        showDialog(context: context, builder: (_) => ChangeRoleDialog(user: user, onChange: (role) async => notifier.changeUserRole(user.id, role)));
         break;
       case 'delete':
-        showDialog(context: context, builder: (_) => DeleteConfirmationDialog(
-          user: user,
-          onConfirm: () async => notifier.deleteUser(user.id),
-        ));
+        showDialog(context: context, builder: (_) => DeleteConfirmationDialog(user: user, onConfirm: () async => notifier.deleteUser(user.id)));
         break;
     }
   }
 }
 
-// ── Filters Bar ───────────────────────────────────────────────────────────────
+// ── Filters Bar (unchanged) ─────────────────────────────────────────────────
 
 class _FiltersBar extends StatelessWidget {
   final TextEditingController controller;
@@ -212,16 +195,12 @@ class _FiltersBar extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Search row
           Row(
             children: [
               Expanded(
                 child: Container(
                   height: 40,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF5F0E8),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                  decoration: BoxDecoration(color: const Color(0xFFF5F0E8), borderRadius: BorderRadius.circular(10)),
                   child: TextField(
                     controller: controller,
                     onChanged: onSearch,
@@ -229,20 +208,13 @@ class _FiltersBar extends StatelessWidget {
                     style: const TextStyle(fontSize: 13, color: _brand),
                     decoration: InputDecoration(
                       hintText: 'Search users…',
-                      hintStyle: const TextStyle(
-                          fontSize: 13, color: Color(0xFF9CA3AF)),
-                      prefixIcon: const Icon(Icons.search_rounded,
-                          size: 18, color: Color(0xFF9CA3AF)),
+                      hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
+                      prefixIcon: const Icon(Icons.search_rounded, size: 18, color: Color(0xFF9CA3AF)),
                       suffixIcon: controller.text.isNotEmpty
-                          ? IconButton(
-                        icon: const Icon(Icons.close_rounded,
-                            size: 16, color: Color(0xFF9CA3AF)),
-                        onPressed: onClearAll,
-                      )
+                          ? IconButton(icon: const Icon(Icons.close_rounded, size: 16, color: Color(0xFF9CA3AF)), onPressed: onClearAll)
                           : null,
                       border: InputBorder.none,
-                      contentPadding:
-                      const EdgeInsets.symmetric(vertical: 11),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 11),
                     ),
                   ),
                 ),
@@ -253,30 +225,18 @@ class _FiltersBar extends StatelessWidget {
                 child: Container(
                   height: 40,
                   width: 40,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF5F0E8),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(Icons.refresh_rounded,
-                      size: 18, color: _brand),
+                  decoration: BoxDecoration(color: const Color(0xFFF5F0E8), borderRadius: BorderRadius.circular(10)),
+                  child: const Icon(Icons.refresh_rounded, size: 18, color: _brand),
                 ),
               ),
             ],
           ),
-
           const SizedBox(height: 10),
-
-          // Filter chips
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                // Role chips
-                _FilterPill(
-                  label: 'All',
-                  selected: roleFilter == null,
-                  onTap: () => onRoleChanged(null),
-                ),
+                _FilterPill(label: 'All', selected: roleFilter == null, onTap: () => onRoleChanged(null)),
                 ...Role.values.map((r) => Padding(
                   padding: const EdgeInsets.only(left: 6),
                   child: _FilterPill(
@@ -285,56 +245,26 @@ class _FiltersBar extends StatelessWidget {
                     onTap: () => onRoleChanged(roleFilter == r ? null : r),
                   ),
                 )),
-
                 const SizedBox(width: 12),
-
-                // Status chips
-                _FilterPill(
-                  label: 'Active',
-                  selected: activeFilter == true,
-                  onTap: () => onActiveChanged(activeFilter == true ? null : true),
-                ),
+                _FilterPill(label: 'Active', selected: activeFilter == true, onTap: () => onActiveChanged(activeFilter == true ? null : true)),
                 Padding(
                   padding: const EdgeInsets.only(left: 6),
-                  child: _FilterPill(
-                    label: 'Inactive',
-                    selected: activeFilter == false,
-                    onTap: () => onActiveChanged(activeFilter == false ? null : false),
-                  ),
+                  child: _FilterPill(label: 'Inactive', selected: activeFilter == false, onTap: () => onActiveChanged(activeFilter == false ? null : false)),
                 ),
-
                 const SizedBox(width: 12),
-
-                _FilterPill(
-                  label: 'Verified',
-                  selected: verifiedFilter == true,
-                  onTap: () => onVerifiedChanged(verifiedFilter == true ? null : true),
-                ),
+                _FilterPill(label: 'Verified', selected: verifiedFilter == true, onTap: () => onVerifiedChanged(verifiedFilter == true ? null : true)),
                 Padding(
                   padding: const EdgeInsets.only(left: 6),
-                  child: _FilterPill(
-                    label: 'Unverified',
-                    selected: verifiedFilter == false,
-                    onTap: () => onVerifiedChanged(verifiedFilter == false ? null : false),
-                  ),
+                  child: _FilterPill(label: 'Unverified', selected: verifiedFilter == false, onTap: () => onVerifiedChanged(verifiedFilter == false ? null : false)),
                 ),
-
                 if (hasFilter) ...[
                   const SizedBox(width: 10),
                   GestureDetector(
                     onTap: onClearAll,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: const Color(0xFFEAE6DE)),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Text('Clear',
-                          style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF6B7280))),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(border: Border.all(color: const Color(0xFFEAE6DE)), borderRadius: BorderRadius.circular(20)),
+                      child: const Text('Clear', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF6B7280))),
                     ),
                   ),
                 ],
@@ -351,8 +281,7 @@ class _FilterPill extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
-  const _FilterPill(
-      {required this.label, required this.selected, required this.onTap});
+  const _FilterPill({required this.label, required this.selected, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -364,81 +293,18 @@ class _FilterPill extends StatelessWidget {
         decoration: BoxDecoration(
           color: selected ? _brand : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-              color: selected ? _brand : const Color(0xFFEAE6DE)),
+          border: Border.all(color: selected ? _brand : const Color(0xFFEAE6DE)),
         ),
         child: Text(
           label,
-          style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: selected ? Colors.white : const Color(0xFF6B7280)),
+          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: selected ? Colors.white : const Color(0xFF6B7280)),
         ),
       ),
     );
   }
 }
 
-// ── Banners ───────────────────────────────────────────────────────────────────
-
-class _ErrorBanner extends StatelessWidget {
-  final UserManagementState state;
-  final WidgetRef ref;
-  const _ErrorBanner({required this.state, required this.ref});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      color: const Color(0xFFFEF2F2),
-      child: Row(
-        children: [
-          const Icon(Icons.error_outline_rounded,
-              size: 16, color: Color(0xFFDC2626)),
-          const SizedBox(width: 10),
-          Expanded(
-              child: Text(state.error!,
-                  style: const TextStyle(
-                      fontSize: 12, color: Color(0xFFDC2626)))),
-          IconButton(
-            iconSize: 16,
-            icon: const Icon(Icons.close_rounded, color: Color(0xFFDC2626)),
-            onPressed: () => ref
-                .read(userManagementProvider.notifier)
-                .state = state.copyWith(error: null),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SearchBanner extends StatelessWidget {
-  final String query;
-  final int count;
-  const _SearchBanner({required this.query, required this.count});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      color: const Color(0xFFF5F0E8),
-      child: Row(
-        children: [
-          const Icon(Icons.search_rounded, size: 14, color: _brand),
-          const SizedBox(width: 8),
-          Text('"$query"  ·  $count result${count == 1 ? '' : 's'}',
-              style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  color: _brand)),
-        ],
-      ),
-    );
-  }
-}
-
-// ── User Card ─────────────────────────────────────────────────────────────────
+// ── User Card with visible menu ─────────────────────────────────────────────
 
 class _UserCard extends StatelessWidget {
   final UserModel user;
@@ -465,134 +331,98 @@ class _UserCard extends StatelessWidget {
       child: Column(
         children: [
           InkWell(
-            onTap: () => notifier.toggleUserExpansion(user.id),
+            onTap: () => _showDetails(context),
             borderRadius: BorderRadius.circular(14),
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
               child: Row(
                 children: [
-                  // Avatar
                   CircleAvatar(
                     radius: 20,
                     backgroundColor: _brand,
-                    backgroundImage: user.profilePictureUrl?.isNotEmpty == true
-                        ? NetworkImage(user.profilePictureUrl!)
-                        : null,
+                    backgroundImage: user.profilePictureUrl?.isNotEmpty == true ? NetworkImage(user.profilePictureUrl!) : null,
                     child: user.profilePictureUrl?.isNotEmpty != true
-                        ? Text(
-                        '${user.firstName.isNotEmpty ? user.firstName[0] : ''}${user.lastName.isNotEmpty ? user.lastName[0] : ''}',
-                        style: const TextStyle(
-                            color: _gold,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700))
+                        ? Text('${user.firstName.isNotEmpty ? user.firstName[0] : ''}${user.lastName.isNotEmpty ? user.lastName[0] : ''}',
+                        style: const TextStyle(color: _gold, fontSize: 13, fontWeight: FontWeight.w700))
                         : null,
                   ),
                   const SizedBox(width: 12),
-
-                  // Name + email
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('${user.firstName} ${user.lastName}',
-                            style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: _brand),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis),
-                        const SizedBox(height: 2),
-                        Text(user.email,
-                            style: const TextStyle(
-                                fontSize: 11, color: Color(0xFF9CA3AF)),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis),
+                        Text('${user.firstName} ${user.lastName}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: _brand)),
+                        Text(user.email, style: const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF))),
                         const SizedBox(height: 5),
                         Row(
                           children: [
-                            _Badge(
-                                label: user.role.name.replaceAll('_', ' '),
-                                color: _roleColor(user.role.name)),
+                            _Badge(label: user.role.name.replaceAll('_', ' '), color: _roleColor(user.role.name)),
                             const SizedBox(width: 5),
-                            _Badge(
-                                label: user.active ? 'Active' : 'Inactive',
-                                color: user.active
-                                    ? const Color(0xFF22C55E)
-                                    : const Color(0xFFDC2626)),
+                            _Badge(label: user.active ? 'Active' : 'Inactive', color: user.active ? const Color(0xFF22C55E) : const Color(0xFFDC2626)),
                             const SizedBox(width: 5),
-                            _Badge(
-                                label: user.verified ? 'Verified' : 'Unverified',
-                                color: user.verified
-                                    ? const Color(0xFF3B82F6)
-                                    : const Color(0xFFF59E0B)),
+                            _Badge(label: user.verified ? 'Verified' : 'Unverified', color: user.verified ? const Color(0xFF3B82F6) : const Color(0xFFF59E0B)),
                           ],
                         ),
                       ],
                     ),
                   ),
-
-                  // Expand + menu
-                  Icon(
-                    isExpanded
-                        ? Icons.expand_less_rounded
-                        : Icons.expand_more_rounded,
-                    size: 18,
-                    color: const Color(0xFF9CA3AF),
-                  ),
+                  Icon(isExpanded ? Icons.expand_less_rounded : Icons.expand_more_rounded, size: 18, color: const Color(0xFF9CA3AF)),
                   PopupMenuButton<String>(
                     onSelected: onMenuAction,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     color: Colors.white,
                     elevation: 8,
-                    icon: const Icon(Icons.more_vert_rounded,
-                        size: 18, color: Color(0xFF6B7280)),
+                    icon: const Icon(Icons.more_vert_rounded, size: 18, color: Color(0xFF6B7280)),
                     itemBuilder: (_) => [
+                      PopupMenuItem(value: user.active ? 'deactivate' : 'activate', child: const Text('Activate / Deactivate')),
+                      PopupMenuItem(value: user.verified ? 'unverify' : 'verify', child: const Text('Verify / Unverify')),
+                      const PopupMenuItem(value: 'change_role', child: Text('Change Role')),
                       PopupMenuItem(
-                          value: user.active ? 'deactivate' : 'activate',
-                          child: Text(user.active
-                              ? 'Deactivate'
-                              : 'Activate')),
-                      PopupMenuItem(
-                          value: user.verified ? 'unverify' : 'verify',
-                          child: Text(
-                              user.verified ? 'Unverify' : 'Verify')),
-                      const PopupMenuItem(
-                          value: 'change_role',
-                          child: Text('Change role')),
-                      const PopupMenuItem(
-                          value: 'archive',
-                          child: Text('Archive')),
-                      const PopupMenuItem(
-                          value: 'unarchive',
-                          child: Text('Unarchive')),
-                      const PopupMenuItem(
-                          value: 'delete',
-                          child: Text('Delete',
-                              style: TextStyle(color: Colors.red))),
+                        value: 'delete',
+                        child: const Text('Delete', style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600)),
+                      ),
                     ],
                   ),
                 ],
               ),
             ),
           ),
-
-          // Expanded details
           if (isExpanded) _ExpandedDetails(user: user, notifier: notifier),
         ],
       ),
     );
   }
 
+  void _showDetails(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (_) => UserDetailsDialog(
+        user: user,
+        onEdit: () {
+          Navigator.pop(context);
+          showDialog(context: context, builder: (_) => EditUserDialog(user: user, onSave: (d) async => notifier.updateUser(user.id, d)));
+        },
+        onChangePassword: () {
+          Navigator.pop(context);
+          showDialog(context: context, builder: (_) => ChangePasswordDialog(userId: user.id, onSave: (p) async => notifier.updatePassword(user.id, p)));
+        },
+        onDelete: () {
+          Navigator.pop(context);
+          showDialog(context: context, builder: (_) => DeleteConfirmationDialog(user: user, onConfirm: () async => notifier.deleteUser(user.id)));
+        },
+      ),
+    );
+  }
+
   Color _roleColor(String role) {
     switch (role.toLowerCase()) {
-      case 'admin':      return const Color(0xFFDC2626);
-      case 'client':     return const Color(0xFF22C55E);
+      case 'admin': return const Color(0xFFDC2626);
+      case 'client': return const Color(0xFF22C55E);
       case 'home_owner': return const Color(0xFF3B82F6);
       case 'operations': return const Color(0xFFF59E0B);
-      case 'finance':    return const Color(0xFF8B5CF6);
-      case 'support':    return const Color(0xFF14B8A6);
-      default:           return const Color(0xFF9CA3AF);
+      case 'finance': return const Color(0xFF8B5CF6);
+      case 'support': return const Color(0xFF14B8A6);
+      default: return const Color(0xFF9CA3AF);
     }
   }
 }
@@ -603,23 +433,12 @@ class _Badge extends StatelessWidget {
   const _Badge({required this.label, required this.color});
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(5),
-      ),
-      child: Text(label,
-          style: TextStyle(
-              fontSize: 9,
-              fontWeight: FontWeight.w700,
-              color: color)),
-    );
-  }
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+    decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(5)),
+    child: Text(label, style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: color)),
+  );
 }
-
-// ── Expanded Details ──────────────────────────────────────────────────────────
 
 class _ExpandedDetails extends StatelessWidget {
   final UserModel user;
@@ -643,33 +462,10 @@ class _ExpandedDetails extends StatelessWidget {
             crossAxisSpacing: 16,
             mainAxisSpacing: 6,
             children: [
-              _Detail('Phone',    user.phoneNumber),
-              _Detail('Country',  user.country),
+              _Detail('Phone', user.phoneNumber),
+              _Detail('Country', user.country),
               _Detail('Language', user.language),
-              _Detail('Address',  user.address1),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              _TextAction('Details', () => showDialog(
-                  context: context,
-                  builder: (_) => UserDetailsDialog(user: user))),
-              const SizedBox(width: 8),
-              _TextAction('Edit', () => showDialog(
-                  context: context,
-                  builder: (_) => EditUserDialog(
-                    user: user,
-                    onSave: (d) async => notifier.updateUser(user.id, d),
-                  ))),
-              const SizedBox(width: 8),
-              _TextAction('Password', () => showDialog(
-                  context: context,
-                  builder: (_) => ChangePasswordDialog(
-                    userId: user.id,
-                    onSave: (p) async => notifier.updatePassword(user.id, p),
-                  ))),
+              _Detail('Address', user.address1),
             ],
           ),
         ],
@@ -687,103 +483,82 @@ class _Detail extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: const TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF9CA3AF))),
-        Text(value.isNotEmpty ? value : '—',
-            style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: _brand),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis),
+        Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Color(0xFF9CA3AF))),
+        Text(value.isNotEmpty ? value : '—', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: _brand)),
       ],
     );
   }
 }
 
-class _TextAction extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
-  const _TextAction(this.label, this.onTap);
+class _ErrorBanner extends StatelessWidget {
+  final UserManagementState state;
+  final WidgetRef ref;
+  const _ErrorBanner({required this.state, required this.ref});
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF5F0E8),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(label,
-            style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: _brand)),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      color: const Color(0xFFFEF2F2),
+      child: Row(
+        children: [
+          const Icon(Icons.error_outline_rounded, size: 16, color: Color(0xFFDC2626)),
+          const SizedBox(width: 10),
+          Expanded(child: Text(state.error!, style: const TextStyle(fontSize: 12, color: Color(0xFFDC2626)))),
+          IconButton(icon: const Icon(Icons.close_rounded, color: Color(0xFFDC2626)), onPressed: () => ref.read(userManagementProvider.notifier).state = state.copyWith(error: null)),
+        ],
       ),
     );
   }
 }
 
-// ── Empty State ───────────────────────────────────────────────────────────────
+class _SearchBanner extends StatelessWidget {
+  final String query;
+  final int count;
+  const _SearchBanner({required this.query, required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      color: const Color(0xFFF5F0E8),
+      child: Row(
+        children: [
+          const Icon(Icons.search_rounded, size: 14, color: _brand),
+          const SizedBox(width: 8),
+          Text('"$query"  ·  $count result${count == 1 ? '' : 's'}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _brand)),
+        ],
+      ),
+    );
+  }
+}
 
 class _EmptyState extends StatelessWidget {
   final UserManagementState state;
   final String query;
   final VoidCallback onAdd;
-  const _EmptyState(
-      {required this.state, required this.query, required this.onAdd});
+  const _EmptyState({required this.state, required this.query, required this.onAdd});
 
   @override
   Widget build(BuildContext context) {
-    if (state.isLoading) {
-      return const Center(
-          child: CircularProgressIndicator(color: _brand));
-    }
+    if (state.isLoading) return const Center(child: CircularProgressIndicator(color: _brand));
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            query.isNotEmpty
-                ? Icons.search_off_rounded
-                : Icons.people_outline_rounded,
-            size: 48,
-            color: const Color(0xFFD1D5DB),
-          ),
+          Icon(query.isNotEmpty ? Icons.search_off_rounded : Icons.people_outline_rounded, size: 48, color: const Color(0xFFD1D5DB)),
           const SizedBox(height: 14),
-          Text(
-            query.isNotEmpty
-                ? 'No results for "$query"'
-                : 'No users yet',
-            style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF6B7280)),
-          ),
+          Text(query.isNotEmpty ? 'No results for "$query"' : 'No users yet', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF6B7280))),
           const SizedBox(height: 4),
-          const Text('Try adjusting your search or filters',
-              style: TextStyle(fontSize: 12, color: Color(0xFF9CA3AF))),
+          const Text('Try adjusting your search or filters', style: TextStyle(fontSize: 12, color: Color(0xFF9CA3AF))),
           if (query.isEmpty) ...[
             const SizedBox(height: 20),
             GestureDetector(
               onTap: onAdd,
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 20, vertical: 10),
-                decoration: BoxDecoration(
-                  color: _brand,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Text('Add First User',
-                    style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white)),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                decoration: BoxDecoration(color: _brand, borderRadius: BorderRadius.circular(10)),
+                child: const Text('Add First User', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
               ),
             ),
           ],
