@@ -4,35 +4,42 @@ const _brand = Color(0xFF1A3C34);
 const _gold = Color(0xFFC9A84C);
 const _stone = Color(0xFFF5F0E8);
 const _slate = Color(0xFF6B7280);
+const _border = Color(0xFFEAE6DE);
 
 class AboutContent extends StatelessWidget {
   const AboutContent({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isLarge = screenWidth > 1200;
-    final isMedium = screenWidth > 600;
+    return LayoutBuilder(builder: (context, constraints) {
+      final isLarge = constraints.maxWidth > 1100;
+      final isMedium = constraints.maxWidth > 700;
 
-    return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(horizontal: isLarge ? 36 : 24, vertical: 28),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const _HeaderSection(),
-          const SizedBox(height: 32),
-          isLarge ? const _MissionVisionRow() : const _MissionVisionColumn(),
-          const SizedBox(height: 32),
-          _TeamSection(isLarge: isLarge, isMedium: isMedium),
-          const SizedBox(height: 32),
-          _CoreValuesSection(isLarge: isLarge, isMedium: isMedium),
-          const SizedBox(height: 32),
-          const _ContactSection(),
-        ],
-      ),
-    );
+      return SingleChildScrollView(
+        padding: EdgeInsets.symmetric(
+          horizontal: isLarge ? 36 : 24,
+          vertical: 28,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const _HeaderSection(),
+            const SizedBox(height: 32),
+            isLarge ? const _MissionVisionRow() : const _MissionVisionColumn(),
+            const SizedBox(height: 32),
+            _TeamSection(isLarge: isLarge, isMedium: isMedium),
+            const SizedBox(height: 32),
+            _CoreValuesSection(isLarge: isLarge, isMedium: isMedium),
+            const SizedBox(height: 32),
+            const _ContactSection(),
+          ],
+        ),
+      );
+    });
   }
 }
+
+// ── Header ──────────────────────────────────────────────────────────────────
 
 class _HeaderSection extends StatelessWidget {
   const _HeaderSection();
@@ -43,31 +50,31 @@ class _HeaderSection extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFEAE6DE)),
+        border: Border.all(color: _border),
       ),
-      padding: const EdgeInsets.all(32),
-      child: Column(
+      padding: const EdgeInsets.all(36),
+      child: const Column(
         children: [
           CircleAvatar(
-            radius: 60,
-            backgroundImage: const NetworkImage(
+            radius: 58,
+            backgroundImage: NetworkImage(
               'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400&auto=format&fit=crop',
             ),
           ),
-          const SizedBox(height: 20),
-          const Text(
+          SizedBox(height: 24),
+          Text(
             'Premisave',
-            style: TextStyle(fontSize: 36, fontWeight: FontWeight.w800, color: _brand, letterSpacing: -0.8),
+            style: TextStyle(fontSize: 34, fontWeight: FontWeight.w800, color: _brand, letterSpacing: -0.8),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             'Revolutionizing Real Estate in Kenya',
-            style: TextStyle(fontSize: 16, color: _slate, fontWeight: FontWeight.w500),
+            style: TextStyle(fontSize: 16.5, color: _slate, fontWeight: FontWeight.w500),
           ),
-          const SizedBox(height: 20),
-          const Text(
+          SizedBox(height: 20),
+          Text(
             'Premisave connects property owners, buyers, and service providers through innovative technology.',
-            style: TextStyle(fontSize: 16, height: 1.6),
+            style: TextStyle(fontSize: 15.5, height: 1.6),
             textAlign: TextAlign.center,
           ),
         ],
@@ -76,26 +83,18 @@ class _HeaderSection extends StatelessWidget {
   }
 }
 
+// ── Mission & Vision ───────────────────────────────────────────────────────
+
 class _MissionVisionRow extends StatelessWidget {
   const _MissionVisionRow();
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: const [
-        Expanded(child: _MissionVisionCard(
-          icon: Icons.flag_rounded,
-          title: 'Our Mission',
-          content: 'To revolutionize real estate in Kenya with secure, transparent, and efficient digital solutions.',
-          color: Colors.green,
-        )),
+    return const Row(
+      children: [
+        Expanded(child: _MissionVisionCard(icon: Icons.flag_rounded, title: 'Our Mission', content: 'To revolutionize real estate in Kenya with secure, transparent, and efficient digital solutions.', color: Color(0xFF22C55E))),
         SizedBox(width: 20),
-        Expanded(child: _MissionVisionCard(
-          icon: Icons.visibility_rounded,
-          title: 'Our Vision',
-          content: 'To become East Africa\'s leading real estate platform, transforming property management.',
-          color: Colors.blue,
-        )),
+        Expanded(child: _MissionVisionCard(icon: Icons.visibility_rounded, title: 'Our Vision', content: "To become East Africa's leading real estate platform, transforming property management.", color: Color(0xFF3B82F6))),
       ],
     );
   }
@@ -106,21 +105,11 @@ class _MissionVisionColumn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: const [
-        _MissionVisionCard(
-          icon: Icons.flag_rounded,
-          title: 'Our Mission',
-          content: 'To revolutionize real estate in Kenya with secure, transparent, and efficient digital solutions.',
-          color: Colors.green,
-        ),
+    return const Column(
+      children: [
+        _MissionVisionCard(icon: Icons.flag_rounded, title: 'Our Mission', content: 'To revolutionize real estate in Kenya with secure, transparent, and efficient digital solutions.', color: Color(0xFF22C55E)),
         SizedBox(height: 20),
-        _MissionVisionCard(
-          icon: Icons.visibility_rounded,
-          title: 'Our Vision',
-          content: 'To become East Africa\'s leading real estate platform, transforming property management.',
-          color: Colors.blue,
-        ),
+        _MissionVisionCard(icon: Icons.visibility_rounded, title: 'Our Vision', content: "To become East Africa's leading real estate platform, transforming property management.", color: Color(0xFF3B82F6)),
       ],
     );
   }
@@ -132,12 +121,7 @@ class _MissionVisionCard extends StatelessWidget {
   final String content;
   final Color color;
 
-  const _MissionVisionCard({
-    required this.icon,
-    required this.title,
-    required this.content,
-    required this.color,
-  });
+  const _MissionVisionCard({required this.icon, required this.title, required this.content, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -146,27 +130,26 @@ class _MissionVisionCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFEAE6DE)),
+        border: Border.all(color: _border),
       ),
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
             child: Icon(icon, size: 32, color: color),
           ),
-          const SizedBox(height: 16),
-          Text(title, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: color)),
+          const SizedBox(height: 18),
+          Text(title, style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: color)),
           const SizedBox(height: 12),
-          Text(content, style: const TextStyle(fontSize: 15, height: 1.5), textAlign: TextAlign.center),
+          Text(content, style: const TextStyle(fontSize: 14.5, height: 1.55), textAlign: TextAlign.center),
         ],
       ),
     );
   }
 }
+
+// ── Team & Values ───────────────────────────────────────────────────────────
 
 class _TeamSection extends StatelessWidget {
   final bool isLarge;
@@ -183,26 +166,21 @@ class _TeamSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('Meet Our Team', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: _brand)),
-        const SizedBox(height: 8),
-        Text('Experts driving innovation in real estate', style: TextStyle(fontSize: 16, color: _slate)),
-        const SizedBox(height: 20),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: isLarge ? 4 : (isMedium ? 3 : 2),
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            childAspectRatio: 0.85,
-          ),
-          itemCount: teamMembers.length,
-          itemBuilder: (context, index) => _TeamMemberCard(member: teamMembers[index]),
+    return _Section(
+      title: 'Meet Our Team',
+      subtitle: 'Experts driving innovation in real estate',
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: isLarge ? 4 : (isMedium ? 3 : 2),
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          childAspectRatio: 0.82,
         ),
-      ],
+        itemCount: teamMembers.length,
+        itemBuilder: (_, i) => _TeamMemberCard(member: teamMembers[i]),
+      ),
     );
   }
 }
@@ -218,19 +196,16 @@ class _TeamMemberCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFEAE6DE)),
+        border: Border.all(color: _border),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircleAvatar(
-            radius: 42,
-            backgroundImage: NetworkImage(member['image']),
-          ),
+          CircleAvatar(radius: 40, backgroundImage: NetworkImage(member['image'])),
           const SizedBox(height: 16),
-          Text(member['name'], style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: _brand), textAlign: TextAlign.center),
+          Text(member['name'], style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w600, color: _brand), textAlign: TextAlign.center),
           const SizedBox(height: 4),
-          Text(member['role'], style: TextStyle(fontSize: 13.5, color: _slate)),
+          Text(member['role'], style: TextStyle(fontSize: 13, color: _slate)),
         ],
       ),
     );
@@ -244,34 +219,29 @@ class _CoreValuesSection extends StatelessWidget {
   const _CoreValuesSection({required this.isLarge, required this.isMedium});
 
   final List<Map<String, dynamic>> values = const [
-    {'icon': Icons.verified_rounded, 'title': 'Integrity', 'description': 'Honesty and transparency in all dealings', 'color': Colors.green},
-    {'icon': Icons.lightbulb_rounded, 'title': 'Innovation', 'description': 'Creating better solutions with technology', 'color': Colors.blue},
-    {'icon': Icons.people_rounded, 'title': 'Customer Focus', 'description': 'Our customers are at the heart of everything', 'color': Colors.orange},
-    {'icon': Icons.star_rounded, 'title': 'Excellence', 'description': 'Highest standards in service delivery', 'color': Colors.purple},
+    {'icon': Icons.verified_rounded, 'title': 'Integrity', 'description': 'Honesty and transparency in all dealings', 'color': Color(0xFF22C55E)},
+    {'icon': Icons.lightbulb_rounded, 'title': 'Innovation', 'description': 'Creating better solutions with technology', 'color': Color(0xFF3B82F6)},
+    {'icon': Icons.people_rounded, 'title': 'Customer Focus', 'description': 'Our customers are at the heart of everything', 'color': Color(0xFFF59E0B)},
+    {'icon': Icons.star_rounded, 'title': 'Excellence', 'description': 'Highest standards in service delivery', 'color': Color(0xFF8B5CF6)},
   ];
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('Core Values', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: _brand)),
-        const SizedBox(height: 8),
-        Text('The principles that guide our work', style: TextStyle(fontSize: 16, color: _slate)),
-        const SizedBox(height: 20),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: isLarge ? 4 : (isMedium ? 2 : 1),
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            childAspectRatio: 0.95,
-          ),
-          itemCount: values.length,
-          itemBuilder: (context, index) => _ValueCard(value: values[index]),
+    return _Section(
+      title: 'Core Values',
+      subtitle: 'The principles that guide our work',
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: isLarge ? 4 : (isMedium ? 2 : 1),
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          childAspectRatio: 1.0,
         ),
-      ],
+        itemCount: values.length,
+        itemBuilder: (_, i) => _ValueCard(value: values[i]),
+      ),
     );
   }
 }
@@ -284,53 +254,47 @@ class _ValueCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = value['color'] as Color;
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFEAE6DE)),
+        border: Border.all(color: _border),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
-            child: Icon(value['icon'] as IconData, size: 28, color: color),
+            child: Icon(value['icon'] as IconData, size: 30, color: color),
           ),
-          const SizedBox(height: 16),
-          Text(value['title'], style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: color)),
-          const SizedBox(height: 8),
-          Text(value['description'], style: const TextStyle(fontSize: 14, height: 1.4), textAlign: TextAlign.center),
+          const SizedBox(height: 18),
+          Text(value['title'], style: TextStyle(fontSize: 17.5, fontWeight: FontWeight.w700, color: color)),
+          const SizedBox(height: 10),
+          Text(value['description'], style: const TextStyle(fontSize: 14, height: 1.5), textAlign: TextAlign.center),
         ],
       ),
     );
   }
 }
 
+// ── Contact ─────────────────────────────────────────────────────────────────
+
 class _ContactSection extends StatelessWidget {
   const _ContactSection();
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFEAE6DE)),
-      ),
-      padding: const EdgeInsets.all(32),
+    return const _Section(
+      title: 'Get in Touch',
+      subtitle: "We'd love to hear from you",
       child: Column(
         children: [
-          const Text('Get in Touch', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: _brand)),
-          const SizedBox(height: 8),
-          Text('We\'d love to hear from you', style: TextStyle(fontSize: 16, color: _slate)),
-          const SizedBox(height: 24),
-          const _ContactInfo(icon: Icons.email_rounded, title: 'Email', value: 'contact@premisave.co.ke'),
-          const SizedBox(height: 16),
-          const _ContactInfo(icon: Icons.phone_rounded, title: 'Phone', value: '+254 700 123 456'),
-          const SizedBox(height: 16),
-          const _ContactInfo(icon: Icons.location_on_rounded, title: 'Address', value: 'Nairobi, Kenya'),
+          _ContactInfo(icon: Icons.email_rounded, title: 'Email', value: 'contact@premisave.co.ke'),
+          SizedBox(height: 16),
+          _ContactInfo(icon: Icons.phone_rounded, title: 'Phone', value: '+254 700 123 456'),
+          SizedBox(height: 16),
+          _ContactInfo(icon: Icons.location_on_rounded, title: 'Address', value: 'Nairobi, Kenya'),
         ],
       ),
     );
@@ -349,22 +313,56 @@ class _ContactInfo extends StatelessWidget {
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(11),
           decoration: BoxDecoration(color: _stone, shape: BoxShape.circle),
-          child: Icon(icon, color: _brand),
+          child: Icon(icon, color: _brand, size: 20),
         ),
         const SizedBox(width: 16),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: TextStyle(fontSize: 14, color: _slate)),
-              const SizedBox(height: 4),
-              Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: _brand)),
+              Text(title, style: TextStyle(fontSize: 13.5, color: _slate)),
+              const SizedBox(height: 2),
+              Text(value, style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w600, color: _brand)),
             ],
           ),
         ),
       ],
+    );
+  }
+}
+
+// ── Shared Section (Dashboard Style) ────────────────────────────────────────
+
+class _Section extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final Widget child;
+
+  const _Section({required this.title, required this.subtitle, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: _brand, letterSpacing: -0.5)),
+          const SizedBox(height: 6),
+          Text(subtitle, style: const TextStyle(fontSize: 14.5, color: _slate)),
+          const SizedBox(height: 18),
+          const Divider(color: Color(0xFFF3EFE6), thickness: 1),
+          const SizedBox(height: 20),
+          child,
+        ],
+      ),
     );
   }
 }
