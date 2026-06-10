@@ -17,14 +17,22 @@ class _HomeOwnerDashboardState extends ConsumerState<HomeOwnerDashboard> {
   String _currentRoute = '/dashboard/home-owner';
 
   static const _brand = Color(0xFF1A3C34);
-  static const _gold  = Color(0xFFC9A84C);
+  static const _gold = Color(0xFFC9A84C);
 
   final List<Map<String, dynamic>> _menuItems = [
-    {'icon': Icons.grid_view_rounded,    'label': 'Overview', 'route': '/dashboard/home-owner'},
+    {'icon': Icons.grid_view_rounded, 'label': 'Overview', 'route': '/dashboard/home-owner'},
     {'icon': Icons.people_outline_rounded, 'label': 'People', 'route': '/home-owner/people'},
+    {'icon': Icons.info_outline_rounded, 'label': 'About', 'route': '/about'},
+    {'icon': Icons.contact_support_rounded, 'label': 'Contact', 'route': '/contact'},
   ];
 
-  void _navigate(String route) => setState(() => _currentRoute = route);
+  void _navigate(String route) {
+    if (route == '/about' || route == '/contact') {
+      context.go(route);
+    } else {
+      setState(() => _currentRoute = route);
+    }
+  }
 
   Widget _buildContent() {
     switch (_currentRoute) {
@@ -38,8 +46,8 @@ class _HomeOwnerDashboardState extends ConsumerState<HomeOwnerDashboard> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
-    final notifier  = ref.read(authProvider.notifier);
-    final isMobile  = MediaQuery.of(context).size.width < 768;
+    final notifier = ref.read(authProvider.notifier);
+    final isMobile = MediaQuery.of(context).size.width < 768;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F0E8),
@@ -48,8 +56,6 @@ class _HomeOwnerDashboardState extends ConsumerState<HomeOwnerDashboard> {
       bottomNavigationBar: isMobile ? _buildBottomNav() : null,
     );
   }
-
-  // ── AppBar ────────────────────────────────────────────────────────────────
 
   PreferredSizeWidget _buildAppBar(UserModel? user, AuthNotifier notifier, bool isMobile) {
     return AppBar(
@@ -105,8 +111,6 @@ class _HomeOwnerDashboardState extends ConsumerState<HomeOwnerDashboard> {
     );
   }
 
-  // ── Desktop Nav ───────────────────────────────────────────────────────────
-
   Widget _buildDesktopNav() {
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -142,8 +146,6 @@ class _HomeOwnerDashboardState extends ConsumerState<HomeOwnerDashboard> {
       }).toList(),
     );
   }
-
-  // ── Profile Menu ──────────────────────────────────────────────────────────
 
   Widget _buildProfileMenu(UserModel? user, AuthNotifier notifier) {
     return PopupMenuButton<String>(
@@ -185,7 +187,6 @@ class _HomeOwnerDashboardState extends ConsumerState<HomeOwnerDashboard> {
         ),
         PopupMenuItem(
           value: 'logout',
-          onTap: () => notifier.confirmLogout(context),
           child: const Row(
             children: [
               Icon(Icons.logout_rounded, size: 16, color: Colors.red),
@@ -193,6 +194,7 @@ class _HomeOwnerDashboardState extends ConsumerState<HomeOwnerDashboard> {
               Text('Log out', style: TextStyle(fontSize: 13, color: Colors.red)),
             ],
           ),
+          onTap: () => notifier.confirmLogout(context),
         ),
       ],
       child: Container(
@@ -215,8 +217,6 @@ class _HomeOwnerDashboardState extends ConsumerState<HomeOwnerDashboard> {
     );
   }
 
-  // ── Avatar ────────────────────────────────────────────────────────────────
-
   Widget _buildAvatar(UserModel? user, {double radius = 16}) {
     if (user?.profilePictureUrl?.isNotEmpty == true) {
       return CircleAvatar(
@@ -236,8 +236,6 @@ class _HomeOwnerDashboardState extends ConsumerState<HomeOwnerDashboard> {
       ),
     );
   }
-
-  // ── Bottom Nav ────────────────────────────────────────────────────────────
 
   Widget _buildBottomNav() {
     final idx = _menuItems
