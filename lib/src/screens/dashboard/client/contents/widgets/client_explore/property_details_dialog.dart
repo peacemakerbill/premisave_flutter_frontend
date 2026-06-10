@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+const _brand = Color(0xFF1A3C34);
+const _gold = Color(0xFFC9A84C);
+
 class PropertyDetailsDialog extends StatelessWidget {
   final Map<String, dynamic> property;
   final String rentalType;
@@ -12,31 +15,25 @@ class PropertyDetailsDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen = screenWidth < 600;
-    final dialogWidth = screenWidth * 0.9;
-    final maxDialogWidth = 500.0;
-
     final price = rentalType == 'daily'
         ? '${property['dailyPrice']} / night'
         : '${property['monthlyPrice']} / month';
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      insetPadding: const EdgeInsets.all(20),
+      backgroundColor: Colors.white,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
       child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: dialogWidth > maxDialogWidth ? maxDialogWidth : dialogWidth,
-        ),
+        constraints: const BoxConstraints(maxWidth: 480),
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Image Section
+              // Image Header
               Stack(
                 children: [
                   Container(
-                    height: isSmallScreen ? 180 : 220,
+                    height: 220,
                     decoration: BoxDecoration(
                       image: DecorationImage(
                         image: NetworkImage(property['image']),
@@ -47,12 +44,21 @@ class PropertyDetailsDialog extends StatelessWidget {
                   Positioned(
                     top: 16,
                     right: 16,
-                    child: CircleAvatar(
-                      backgroundColor: Colors.white,
-                      radius: 20,
-                      child: IconButton(
-                        icon: const Icon(Icons.close, size: 18),
-                        onPressed: () => Navigator.pop(context),
+                    child: GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 8,
+                            ),
+                          ],
+                        ),
+                        child: const Icon(Icons.close, size: 20, color: _brand),
                       ),
                     ),
                   ),
@@ -61,19 +67,20 @@ class PropertyDetailsDialog extends StatelessWidget {
                       top: 16,
                       left: 16,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: Colors.green[50],
+                          color: Colors.white,
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.green!),
+                          boxShadow: [
+                            BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 6),
+                          ],
                         ),
                         child: Text(
                           property['badge'],
-                          style: TextStyle(
-                            color: Colors.green[800],
-                            fontWeight: FontWeight.w600,
+                          style: const TextStyle(
                             fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: _brand,
                           ),
                         ),
                       ),
@@ -81,13 +88,11 @@ class PropertyDetailsDialog extends StatelessWidget {
                 ],
               ),
 
-              // Content Section
               Padding(
-                padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
+                padding: const EdgeInsets.all(24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Title and Rating
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -97,49 +102,40 @@ class PropertyDetailsDialog extends StatelessWidget {
                             children: [
                               Text(
                                 property['title'],
-                                style: TextStyle(
-                                  fontSize: isSmallScreen ? 18 : 20,
-                                  fontWeight: FontWeight.w700,
-                                  height: 1.3,
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w800,
+                                  color: _brand,
+                                  letterSpacing: -0.4,
                                 ),
                               ),
                               const SizedBox(height: 6),
-                              Row(
-                                children: [
-                                  Icon(Icons.location_on_outlined,
-                                      size: 16, color: Colors.grey[600]),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    property['location'],
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
+                              Text(
+                                property['location'],
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Color(0xFF6B7280),
+                                ),
                               ),
                             ],
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                           decoration: BoxDecoration(
                             color: Colors.amber[50],
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Row(
-                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.star,
-                                  size: 16, color: Colors.amber[600]),
+                              const Icon(Icons.star, size: 18, color: Colors.amber),
                               const SizedBox(width: 4),
                               Text(
                                 property['rating'].toString(),
-                                style: TextStyle(
+                                style: const TextStyle(
+                                  fontSize: 15,
                                   fontWeight: FontWeight.w700,
-                                  color: Colors.amber[800],
-                                  fontSize: 14,
+                                  color: Colors.amber,
                                 ),
                               ),
                             ],
@@ -150,199 +146,96 @@ class PropertyDetailsDialog extends StatelessWidget {
 
                     const SizedBox(height: 16),
 
-                    // Property Type and Price
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 5),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: Colors.grey[100],
-                            borderRadius: BorderRadius.circular(6),
+                            color: const Color(0xFFF5F0E8),
+                            borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
                             property['type'],
-                            style: TextStyle(
-                              color: Colors.grey[700],
-                              fontWeight: FontWeight.w500,
+                            style: const TextStyle(
                               fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: _brand,
                             ),
                           ),
                         ),
-                        const Spacer(),
                         Text(
                           price,
-                          style: TextStyle(
-                            fontSize: isSmallScreen ? 17 : 18,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.green[800],
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: _brand,
                           ),
                         ),
                       ],
                     ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
 
-                    // Property Features
-                    Row(
+                    // Features
+                    const Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _buildFeatureItem(
-                          icon: Icons.king_bed,
-                          label: '3 Beds',
-                          isSmallScreen: isSmallScreen,
-                        ),
-                        _buildFeatureItem(
-                          icon: Icons.bathtub,
-                          label: '2 Baths',
-                          isSmallScreen: isSmallScreen,
-                        ),
-                        _buildFeatureItem(
-                          icon: Icons.aspect_ratio,
-                          label: '120 m²',
-                          isSmallScreen: isSmallScreen,
-                        ),
-                        _buildFeatureItem(
-                          icon: Icons.wifi,
-                          label: 'WiFi',
-                          isSmallScreen: isSmallScreen,
-                        ),
+                        _FeatureItem(icon: Icons.king_bed, label: '3 Beds'),
+                        _FeatureItem(icon: Icons.bathtub, label: '2 Baths'),
+                        _FeatureItem(icon: Icons.aspect_ratio, label: '120 m²'),
+                        _FeatureItem(icon: Icons.wifi, label: 'WiFi'),
                       ],
                     ),
 
-                    const SizedBox(height: 20),
-                    const Divider(height: 1),
+                    const SizedBox(height: 24),
+                    const Divider(color: Color(0xFFF3EFE6)),
 
-                    // Description
                     const SizedBox(height: 20),
                     const Text(
                       'Description',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _brand),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
                     Text(
-                      'Beautiful ${property['type'].toString().toLowerCase()} with stunning views, fully furnished with premium amenities. Perfect for both short stays and long-term rentals. Located in a prime area with easy access to all major facilities.',
-                      style: TextStyle(
-                        color: Colors.grey[700],
+                      'Beautiful ${property['type'].toString().toLowerCase()} with stunning views, fully furnished with premium amenities. Perfect for both short stays and long-term rentals.',
+                      style: const TextStyle(
                         fontSize: 14,
                         height: 1.5,
+                        color: Color(0xFF374151),
                       ),
                     ),
 
-                    const SizedBox(height: 20),
-                    const Divider(height: 1),
+                    const SizedBox(height: 32),
 
                     // Action Buttons
-                    const SizedBox(height: 20),
-                    isSmallScreen
-                        ? Column(
-                      children: [
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {},
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              foregroundColor: Colors.white,
-                              padding:
-                              const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12)),
-                            ),
-                            child: const Text(
-                              'Book Now',
-                              style: TextStyle(fontWeight: FontWeight.w600),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton.icon(
-                            onPressed: () {},
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.green,
-                              side: BorderSide(color: Colors.green!),
-                              padding:
-                              const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12)),
-                            ),
-                            icon: const Icon(Icons.favorite_border),
-                            label: const Text('Add to Wishlist'),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton.icon(
-                            onPressed: () {},
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.blue,
-                              side: BorderSide(color: Colors.blue!),
-                              padding:
-                              const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12)),
-                            ),
-                            icon: const Icon(Icons.reviews),
-                            label: const Text('View Reviews'),
-                          ),
-                        ),
-                      ],
-                    )
-                        : Row(
+                    Row(
                       children: [
                         Expanded(
                           child: OutlinedButton.icon(
                             onPressed: () {},
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.green,
-                              side: BorderSide(color: Colors.green!),
-                              padding:
-                              const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12)),
-                            ),
                             icon: const Icon(Icons.favorite_border),
                             label: const Text('Wishlist'),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () {},
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.blue,
-                              side: BorderSide(color: Colors.blue!),
-                              padding:
-                              const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12)),
+                              foregroundColor: _brand,
+                              side: const BorderSide(color: Color(0xFFEAE6DE)),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
-                            icon: const Icon(Icons.reviews),
-                            label: const Text('Reviews'),
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           flex: 2,
-                          child: ElevatedButton(
+                          child: ElevatedButton.icon(
                             onPressed: () {},
+                            icon: const Icon(Icons.calendar_today),
+                            label: const Text('Book Now'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
+                              backgroundColor: _brand,
                               foregroundColor: Colors.white,
-                              padding:
-                              const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12)),
-                            ),
-                            child: const Text(
-                              'Book Now',
-                              style: TextStyle(fontWeight: FontWeight.w600),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
                           ),
                         ),
@@ -357,22 +250,26 @@ class PropertyDetailsDialog extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _buildFeatureItem({
-    required IconData icon,
-    required String label,
-    required bool isSmallScreen,
-  }) {
+class _FeatureItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _FeatureItem({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       children: [
-        Icon(icon, color: Colors.green, size: isSmallScreen ? 22 : 24),
+        Icon(icon, color: _brand, size: 24),
         const SizedBox(height: 6),
         Text(
           label,
-          style: TextStyle(
-            fontSize: isSmallScreen ? 11 : 12,
-            color: Colors.grey[700],
+          style: const TextStyle(
+            fontSize: 12,
             fontWeight: FontWeight.w500,
+            color: Color(0xFF6B7280),
           ),
         ),
       ],

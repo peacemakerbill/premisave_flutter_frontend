@@ -4,719 +4,573 @@ import '../../../../models/auth/user_model.dart';
 import '../../../../providers/auth/auth_provider.dart';
 import 'widgets/client_explore/property_details_dialog.dart';
 
-class ClientDashboardContent extends ConsumerStatefulWidget {
+const _brand = Color(0xFF1A3C34);
+const _gold = Color(0xFFC9A84C);
+
+class ClientDashboardContent extends ConsumerWidget {
   const ClientDashboardContent({super.key});
 
   @override
-  ConsumerState<ClientDashboardContent> createState() => _ClientDashboardContentState();
-}
-
-class _ClientDashboardContentState extends ConsumerState<ClientDashboardContent>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    );
-    _fadeAnimation = CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    );
-    _animationController.forward();
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final authState = ref.watch(authProvider);
-    final screenWidth = MediaQuery.of(context).size.width;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(authProvider).currentUser;
+    final isWide = MediaQuery.of(context).size.width >= 768;
 
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(
-        horizontal: screenWidth < 600 ? 12 : 24,
-        vertical: screenWidth < 600 ? 8 : 16,
+        horizontal: isWide ? 36 : 20,
+        vertical: 28,
       ),
-      child: AnimatedBuilder(
-        animation: _animationController,
-        builder: (context, child) => FadeTransition(
-          opacity: _fadeAnimation,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _WelcomeCard(user: authState.currentUser),
-              const SizedBox(height: 20),
-              _DashboardGrid(),
-              const SizedBox(height: 20),
-              _QuickActionsGrid(),
-              const SizedBox(height: 20),
-              _TrendingPropertiesSection(),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _WelcomeCard extends StatelessWidget {
-  final UserModel? user;
-  const _WelcomeCard({required this.user});
-
-  @override
-  Widget build(BuildContext context) {
-    final hasProfilePic = user?.profilePictureUrl?.isNotEmpty == true;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen = screenWidth < 600;
-
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.green[50]!, Colors.blue[50]!],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
+          _Header(user: user),
+          const SizedBox(height: 28),
+          _StatsRow(isWide: isWide),
+          const SizedBox(height: 28),
+          if (isWide)
+            Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Welcome back,',
-                  style: TextStyle(
-                    color: Colors.grey[700],
-                    fontSize: isSmallScreen ? 12 : 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  user?.firstName ?? 'Guest',
-                  style: TextStyle(
-                    fontSize: isSmallScreen ? 22 : 28,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black,
-                  ),
-                ),
-                SizedBox(height: isSmallScreen ? 8 : 12),
-                Wrap(
-                  spacing: isSmallScreen ? 6 : 8,
-                  runSpacing: isSmallScreen ? 6 : 8,
-                  children: [
-                    _buildStatusChip('Active', Icons.verified, Colors.green),
-                    _buildStatusChip('Premium', Icons.diamond, Colors.blue),
-                    _buildStatusChip('Member', Icons.star, Colors.amber),
-                  ],
-                ),
+                Expanded(flex: 3, child: _UpcomingBookings()),
+                const SizedBox(width: 20),
+                Expanded(flex: 2, child: _QuickActions()),
               ],
-            ),
-          ),
-          SizedBox(width: isSmallScreen ? 12 : 16),
-          Container(
-            width: isSmallScreen ? 60 : 80,
-            height: isSmallScreen ? 60 : 80,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.green, width: 2),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(isSmallScreen ? 30 : 40),
-              child: hasProfilePic
-                  ? Image.network(
-                user!.profilePictureUrl!,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _buildProfileFallback(isSmallScreen),
-              )
-                  : _buildProfileFallback(isSmallScreen),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProfileFallback(bool isSmallScreen) {
-    return Container(
-      color: Colors.green[100],
-      child: Icon(
-        Icons.person,
-        size: isSmallScreen ? 30 : 40,
-        color: Colors.green,
-      ),
-    );
-  }
-
-  Widget _buildStatusChip(String text, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: color),
-          const SizedBox(width: 4),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: color,
-            ),
-          ),
+            )
+          else ...[
+            _UpcomingBookings(),
+            const SizedBox(height: 20),
+            _QuickActions(),
+          ],
+          const SizedBox(height: 24),
+          _TrendingProperties(),
         ],
       ),
     );
   }
 }
 
-class _DashboardGrid extends StatelessWidget {
-  final List<_StatInfo> stats = [
-    _StatInfo('Properties', '5', Icons.home, Colors.green),
-    _StatInfo('Payments', 'KES 250K', Icons.payments, Colors.blue),
-    _StatInfo('Pending', 'KES 45K', Icons.pending, Colors.orange),
-    _StatInfo('Support', '2', Icons.support, Colors.purple),
-  ];
+// ── Header ────────────────────────────────────────────────────────────────
+
+class _Header extends StatelessWidget {
+  final UserModel? user;
+  const _Header({required this.user});
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-
-    // Responsive grid logic
-    int crossAxisCount;
-    if (screenWidth < 400) {
-      crossAxisCount = 2;
-    } else if (screenWidth < 768) {
-      crossAxisCount = 2;
-    } else if (screenWidth < 1024) {
-      crossAxisCount = 4;
-    } else {
-      crossAxisCount = 4;
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        const _SectionTitle('My Overview'),
-        const SizedBox(height: 16),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            // Calculate child aspect ratio based on screen size
-            final childAspectRatio = screenWidth < 400 ? 1.3 :
-            screenWidth < 600 ? 1.5 :
-            screenWidth < 1024 ? 1.2 : 1.1;
-
-            return GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: crossAxisCount,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: childAspectRatio,
-              ),
-              itemCount: stats.length,
-              itemBuilder: (context, index) => _StatCard(info: stats[index]),
-            );
-          },
-        ),
-      ],
-    );
-  }
-}
-
-class _StatInfo {
-  final String title;
-  final String value;
-  final IconData icon;
-  final Color color;
-  _StatInfo(this.title, this.value, this.icon, this.color);
-}
-
-class _StatCard extends StatelessWidget {
-  final _StatInfo info;
-  const _StatCard({required this.info});
-
-  @override
-  Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen = screenWidth < 400;
-
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: LinearGradient(
-            colors: [info.color.withOpacity(0.1), Colors.white],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
-        child: Column(
+        Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              padding: EdgeInsets.all(isSmallScreen ? 6 : 8),
-              decoration: BoxDecoration(
-                color: info.color.withOpacity(0.2),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(info.icon, color: info.color, size: isSmallScreen ? 16 : 20),
-            ),
-            SizedBox(height: isSmallScreen ? 8 : 12),
             Text(
-              info.value,
-              style: TextStyle(
-                fontSize: isSmallScreen ? 16 : 20,
-                fontWeight: FontWeight.w700,
-                color: info.color,
+              'Welcome back, ${user?.firstName ?? "Client"}',
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w800,
+                color: _brand,
+                letterSpacing: -0.8,
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             ),
-            SizedBox(height: isSmallScreen ? 2 : 4),
-            Text(
-              info.title,
+            const SizedBox(height: 4),
+            const Text(
+              'June 2026  ·  Q2',
               style: TextStyle(
-                fontSize: isSmallScreen ? 10 : 12,
-                color: Colors.grey[600],
+                fontSize: 13,
+                color: Color(0xFF9CA3AF),
                 fontWeight: FontWeight.w500,
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _QuickActionsGrid extends StatelessWidget {
-  final List<_ActionInfo> actions = [
-    _ActionInfo('Pay Bills', Icons.payment, Colors.green),
-    _ActionInfo('Properties', Icons.home_work, Colors.blue),
-    _ActionInfo('Support', Icons.support, Colors.purple),
-    _ActionInfo('Settings', Icons.settings, Colors.orange),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-
-    // Responsive grid logic
-    int crossAxisCount;
-    if (screenWidth < 400) {
-      crossAxisCount = 2;
-    } else if (screenWidth < 768) {
-      crossAxisCount = 2;
-    } else if (screenWidth < 1024) {
-      crossAxisCount = 4;
-    } else {
-      crossAxisCount = 4;
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const _SectionTitle('Quick Actions'),
-        const SizedBox(height: 16),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            // Calculate child aspect ratio based on screen size
-            final childAspectRatio = screenWidth < 400 ? 1.8 :
-            screenWidth < 600 ? 1.6 :
-            screenWidth < 1024 ? 1.4 : 1.5;
-
-            return GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: crossAxisCount,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: childAspectRatio,
-              ),
-              itemCount: actions.length,
-              itemBuilder: (context, index) => _ActionCard(action: actions[index]),
-            );
-          },
-        ),
+        _StatusChip(label: 'Active Member', dot: true),
       ],
     );
   }
 }
 
-class _ActionInfo {
-  final String title;
-  final IconData icon;
-  final Color color;
-  _ActionInfo(this.title, this.icon, this.color);
-}
-
-class _ActionCard extends StatelessWidget {
-  final _ActionInfo action;
-  const _ActionCard({required this.action});
+class _StatusChip extends StatelessWidget {
+  final String label;
+  final bool dot;
+  const _StatusChip({required this.label, this.dot = false});
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen = screenWidth < 400;
-
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: InkWell(
-        onTap: () {},
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: EdgeInsets.all(isSmallScreen ? 8 : 12),
-                decoration: BoxDecoration(
-                  color: action.color.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(action.icon, color: action.color, size: isSmallScreen ? 20 : 24),
-              ),
-              SizedBox(height: isSmallScreen ? 8 : 12),
-              Text(
-                action.title,
-                style: TextStyle(
-                  fontSize: isSmallScreen ? 12 : 14,
-                  fontWeight: FontWeight.w600,
-                  color: action.color,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFFECFDF3),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFBBF7D0)),
       ),
-    );
-  }
-}
-
-class _TrendingPropertiesSection extends StatelessWidget {
-  final List<Map<String, dynamic>> trendingProperties = [
-    {
-      'image': 'https://images.unsplash.com/photo-1613490493576-7fde63acd811',
-      'title': 'Modern Apartment',
-      'location': 'Nairobi CBD',
-      'dailyPrice': 'KSh 8,500',
-      'monthlyPrice': 'KSh 150,000',
-      'rating': 4.92,
-      'type': 'Apartment',
-      'badge': 'Trending',
-    },
-    {
-      'image': 'https://images.unsplash.com/photo-1518780664697-55e3ad937233',
-      'title': 'Luxury Villa',
-      'location': 'Mombasa',
-      'dailyPrice': 'KSh 25,000',
-      'monthlyPrice': 'KSh 450,000',
-      'rating': 4.88,
-      'type': 'Villa',
-      'badge': 'Popular',
-    },
-    {
-      'image': 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00',
-      'title': 'Mountain Cabin',
-      'location': 'Mount Kenya',
-      'dailyPrice': 'KSh 12,000',
-      'monthlyPrice': 'KSh 220,000',
-      'rating': 4.95,
-      'type': 'Cabin',
-      'badge': 'New',
-    },
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const _SectionTitle('Trending Right Now'),
-            TextButton(
-              onPressed: () => _showAllProperties(context),
-              child: const Row(
-                children: [
-                  Text('Show More'),
-                  SizedBox(width: 4),
-                  Icon(Icons.arrow_forward, size: 16),
-                ],
-              ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (dot) ...[
+            Container(
+              width: 6,
+              height: 6,
+              decoration: const BoxDecoration(color: Color(0xFF22C55E), shape: BoxShape.circle),
             ),
+            const SizedBox(width: 6),
           ],
-        ),
-        const SizedBox(height: 16),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            // Responsive card width calculation
-            final availableWidth = constraints.maxWidth;
-            double cardWidth;
-            int itemCount;
-
-            if (screenWidth < 400) {
-              cardWidth = availableWidth * 0.75;
-              itemCount = 1;
-            } else if (screenWidth < 600) {
-              cardWidth = availableWidth * 0.6;
-              itemCount = 2;
-            } else if (screenWidth < 900) {
-              cardWidth = availableWidth * 0.45;
-              itemCount = 2;
-            } else {
-              cardWidth = availableWidth * 0.3;
-              itemCount = 3;
-            }
-
-            // Ensure card has minimum and maximum width
-            cardWidth = cardWidth.clamp(180, 280);
-
-            return SizedBox(
-              height: screenWidth < 400 ? 200 : 220,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: itemCount,
-                itemBuilder: (context, index) => Padding(
-                  padding: EdgeInsets.only(
-                    right: index < itemCount - 1 ? 12 : 0,
-                    left: index == 0 ? 0 : 0,
-                  ),
-                  child: _TrendingPropertyCard(
-                    property: trendingProperties[index],
-                    width: cardWidth,
-                    onTap: () => _showPropertyDetails(context, trendingProperties[index]),
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  void _showAllProperties(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('All Trending Properties'),
-        content: SizedBox(
-          width: MediaQuery.of(context).size.width * 0.9,
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: trendingProperties.length,
-            itemBuilder: (context, index) => ListTile(
-              leading: Image.network(
-                trendingProperties[index]['image'],
-                width: 50,
-                height: 50,
-                fit: BoxFit.cover,
-              ),
-              title: Text(trendingProperties[index]['title']),
-              subtitle: Text(trendingProperties[index]['location']),
-              trailing: Text(trendingProperties[index]['dailyPrice']),
-              onTap: () {
-                Navigator.pop(context);
-                _showPropertyDetails(context, trendingProperties[index]);
-              },
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF16A34A),
             ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
           ),
         ],
       ),
     );
   }
+}
 
-  void _showPropertyDetails(BuildContext context, Map<String, dynamic> property) {
-    showDialog(
-      context: context,
-      builder: (context) => PropertyDetailsDialog(property: property, rentalType: 'daily'),
+// ── Stats Row ─────────────────────────────────────────────────────────────
+
+class _StatsRow extends StatelessWidget {
+  final bool isWide;
+  const _StatsRow({required this.isWide});
+
+  static const _stats = [
+    _StatData('Saved Properties', '12', '4 this month', Icons.favorite_rounded, true),
+    _StatData('Total Spent', 'KES 450K', '↑ 18% vs last Q', Icons.payments_rounded, true),
+    _StatData('Upcoming Stays', '3', 'Next in 12 days', Icons.calendar_today_rounded, false),
+    _StatData('Active Bookings', '2', 'All confirmed', Icons.check_circle_rounded, true),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    if (isWide) {
+      return Row(
+        children: _stats
+            .map((s) => Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(right: s == _stats.last ? 0 : 14),
+            child: _StatCard(data: s),
+          ),
+        ))
+            .toList(),
+      );
+    }
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 14,
+        mainAxisSpacing: 14,
+        mainAxisExtent: 148,
+      ),
+      itemCount: _stats.length,
+      itemBuilder: (_, i) => _StatCard(data: _stats[i]),
     );
   }
 }
 
-class _TrendingPropertyCard extends StatelessWidget {
-  final Map<String, dynamic> property;
-  final VoidCallback onTap;
-  final double width;
+class _StatData {
+  final String label, value, sub;
+  final IconData icon;
+  final bool positive;
+  const _StatData(this.label, this.value, this.sub, this.icon, this.positive);
+}
 
-  const _TrendingPropertyCard({
-    required this.property,
-    required this.onTap,
-    required this.width,
-  });
+class _StatCard extends StatelessWidget {
+  final _StatData data;
+  const _StatCard({required this.data});
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen = screenWidth < 400;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: SizedBox(
-        width: width,
-        child: Card(
-          elevation: 4,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: const Border(left: BorderSide(color: _gold, width: 3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: NetworkImage(property['image']),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  child: Stack(
-                    children: [
-                      if (property['badge'] != null)
-                        Positioned(
-                          top: 8,
-                          left: 8,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.green,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              property['badge'],
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: isSmallScreen ? 9 : 10,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
+              Icon(data.icon, size: 18, color: _brand),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                decoration: BoxDecoration(
+                  color: data.positive ? const Color(0xFFECFDF3) : const Color(0xFFFEF2F2),
+                  borderRadius: BorderRadius.circular(6),
                 ),
-              ),
-              Padding(
-                padding: EdgeInsets.all(isSmallScreen ? 8 : 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      property['title'],
-                      style: TextStyle(
-                        fontSize: isSmallScreen ? 13 : 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      property['location'],
-                      style: TextStyle(
-                        fontSize: isSmallScreen ? 11 : 12,
-                        color: Colors.grey[600],
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Flexible(
-                          child: Text(
-                            property['dailyPrice'],
-                            style: TextStyle(
-                              fontSize: isSmallScreen ? 13 : 14,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.green[800],
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            Icon(Icons.star, size: isSmallScreen ? 12 : 14, color: Colors.amber[600]),
-                            const SizedBox(width: 2),
-                            Text(
-                              property['rating'].toString(),
-                              style: TextStyle(
-                                fontSize: isSmallScreen ? 11 : 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
+                child: Text(
+                  data.positive ? '↑' : '↓',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: data.positive ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+                  ),
                 ),
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 10),
+          Text(
+            data.value,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              color: _brand,
+              letterSpacing: -0.8,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            data.label,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF374151),
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            data.sub,
+            style: const TextStyle(fontSize: 10, color: Color(0xFF9CA3AF)),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _SectionTitle extends StatelessWidget {
-  final String title;
-  const _SectionTitle(this.title);
+// ── Upcoming Bookings ─────────────────────────────────────────────────────
+
+class _UpcomingBookings extends StatelessWidget {
+  const _UpcomingBookings();
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    return _Section(
+      title: 'Upcoming Bookings',
+      trailing: 'View all',
+      child: Column(
+        children: const [
+          _BookingRow(
+            property: 'Ocean View Villa',
+            location: 'Diani Beach · 5 nights',
+            date: '22 - 27 Jan 2026',
+            amount: 'KES 125,000',
+            status: 'Confirmed',
+          ),
+          Divider(height: 1, color: Color(0xFFF3EFE6)),
+          _BookingRow(
+            property: 'Mountain Cabin',
+            location: 'Mount Kenya · 3 nights',
+            date: '10 - 13 Feb 2026',
+            amount: 'KES 36,000',
+            status: 'Confirmed',
+          ),
+        ],
+      ),
+    );
+  }
+}
 
-    return Text(
-      title,
-      style: TextStyle(
-        fontSize: screenWidth < 400 ? 18 : 20,
-        fontWeight: FontWeight.w700,
-        color: Colors.black,
+class _BookingRow extends StatelessWidget {
+  final String property, location, date, amount, status;
+  const _BookingRow({
+    required this.property,
+    required this.location,
+    required this.date,
+    required this.amount,
+    required this.status,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF5F0E8),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(Icons.home_outlined, color: _brand, size: 22),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(property, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _brand)),
+                Text(location, style: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF))),
+                const SizedBox(height: 4),
+                Text(date, style: const TextStyle(fontSize: 11.5, color: Color(0xFF6B7280))),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(amount, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: _brand)),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFECFDF3),
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                child: Text(
+                  status,
+                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Color(0xFF22C55E)),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Quick Actions ─────────────────────────────────────────────────────────
+
+class _QuickActions extends StatelessWidget {
+  const _QuickActions();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Section(
+      title: 'Quick Actions',
+      child: Column(
+        children: [
+          _ActionTile(icon: Icons.search_rounded, title: 'Browse Properties', subtitle: 'Find your next stay'),
+          const Divider(height: 1, color: Color(0xFFF3EFE6)),
+          _ActionTile(icon: Icons.favorite_rounded, title: 'My Wishlists', subtitle: '12 saved properties'),
+          const Divider(height: 1, color: Color(0xFFF3EFE6)),
+          _ActionTile(icon: Icons.calendar_month_rounded, title: 'Manage Bookings', subtitle: '3 upcoming'),
+        ],
+      ),
+    );
+  }
+}
+
+class _ActionTile extends StatelessWidget {
+  final IconData icon;
+  final String title, subtitle;
+
+  const _ActionTile({required this.icon, required this.title, required this.subtitle});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+      leading: Container(
+        padding: const EdgeInsets.all(9),
+        decoration: BoxDecoration(
+          color: _brand.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(icon, size: 20, color: _brand),
+      ),
+      title: Text(title, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: _brand)),
+      subtitle: Text(subtitle, style: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF))),
+      trailing: const Icon(Icons.chevron_right_rounded, color: Color(0xFF9CA3AF)),
+      onTap: () {},
+    );
+  }
+}
+
+// ── Trending Properties ───────────────────────────────────────────────────
+
+class _TrendingProperties extends StatelessWidget {
+  const _TrendingProperties();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Section(
+      title: 'Trending Properties',
+      trailing: 'See all',
+      child: const _TrendingList(),
+    );
+  }
+}
+
+class _TrendingList extends StatelessWidget {
+  const _TrendingList();
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: const [
+          _TrendingCard(
+            title: 'Ocean View Villa',
+            location: 'Diani Beach',
+            price: 'KSh 25,000/night',
+            rating: 4.9,
+            image: 'https://picsum.photos/id/1015/400/220',
+          ),
+          _TrendingCard(
+            title: 'Modern Penthouse',
+            location: 'Nairobi CBD',
+            price: 'KSh 12,500/night',
+            rating: 4.8,
+            image: 'https://picsum.photos/id/106/400/220',
+          ),
+          _TrendingCard(
+            title: 'Forest Retreat',
+            location: 'Aberdare',
+            price: 'KSh 9,800/night',
+            rating: 4.95,
+            image: 'https://picsum.photos/id/1018/400/220',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TrendingCard extends StatelessWidget {
+  final String title, location, price, image;
+  final double rating;
+
+  const _TrendingCard({
+    required this.title,
+    required this.location,
+    required this.price,
+    required this.rating,
+    required this.image,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => _showPropertyDetails(context),
+      child: Container(
+        width: 240,
+        margin: const EdgeInsets.only(right: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              child: Image.network(
+                image,
+                height: 140,
+                width: double.infinity,
+                fit: BoxFit.cover,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _brand)),
+                  const SizedBox(height: 4),
+                  Text(location, style: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF))),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(price, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: _brand)),
+                      Row(
+                        children: [
+                          const Icon(Icons.star, size: 14, color: Colors.amber),
+                          const SizedBox(width: 3),
+                          Text(rating.toString(), style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showPropertyDetails(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => PropertyDetailsDialog(
+        property: {
+          'title': title,
+          'location': location,
+          'dailyPrice': price.replaceAll('/night', '').trim(),
+          'monthlyPrice': '${(double.tryParse(price.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0 * 30).toInt()} / month',
+          'rating': rating,
+          'image': image,
+          'type': 'Villa',
+          'badge': 'Trending',
+        },
+        rentalType: 'daily',
+      ),
+    );
+  }
+}
+
+// ── Shared Section Wrapper ───────────────────────────────────────────────────
+
+class _Section extends StatelessWidget {
+  final String title;
+  final String? trailing;
+  final Widget child;
+
+  const _Section({required this.title, this.trailing, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: _brand,
+                  letterSpacing: -0.2,
+                ),
+              ),
+              if (trailing != null)
+                Text(
+                  trailing!,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: _gold,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          const Divider(color: Color(0xFFF3EFE6)),
+          child,
+        ],
       ),
     );
   }
