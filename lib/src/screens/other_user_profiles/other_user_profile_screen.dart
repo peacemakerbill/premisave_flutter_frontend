@@ -7,9 +7,11 @@ import '../../providers/social/social_provider.dart';
 import 'profile_reviews_section.dart';
 
 const _brand = Color(0xFF1A3C34);
+const _brandLight = Color(0xFF2D5A4F);
 const _gold  = Color(0xFFC9A84C);
 const _stone = Color(0xFFF5F0E8);
 const _slate = Color(0xFF6B7280);
+const _border = Color(0xFFEAE6DE);
 
 class OtherUserProfileScreen extends ConsumerStatefulWidget {
   final String userId;
@@ -26,7 +28,10 @@ class _State extends ConsumerState<OtherUserProfileScreen> {
   String? _error;
 
   @override
-  void initState() { super.initState(); _load(); }
+  void initState() {
+    super.initState();
+    _load();
+  }
 
   Future<void> _load() async {
     final n = ref.read(socialProvider.notifier);
@@ -38,9 +43,14 @@ class _State extends ConsumerState<OtherUserProfileScreen> {
       _loadingProfile = false;
       _error = p == null ? 'Profile not found' : null;
     });
-    final s = await n.getUserStats(widget.userId);
-    if (!mounted) return;
-    setState(() { _stats = s; _loadingStats = false; });
+    if (p != null) {
+      final s = await n.getUserStats(widget.userId);
+      if (!mounted) return;
+      setState(() {
+        _stats = s;
+        _loadingStats = false;
+      });
+    }
   }
 
   @override
@@ -51,23 +61,22 @@ class _State extends ConsumerState<OtherUserProfileScreen> {
     final wide  = MediaQuery.of(context).size.width >= 768;
 
     return Scaffold(
-      backgroundColor: _stone,
+      backgroundColor: const Color(0xFFFBFBFA),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        surfaceTintColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: Color(0xFFEAE6DE)),
+          child: Divider(height: 1, color: _border),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: _brand),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: _brand, size: 18),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           _loadingProfile ? 'Profile' : (_profile?.fullName ?? 'Profile'),
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700,
-              color: _brand, letterSpacing: -0.3),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: _brand, letterSpacing: -0.3),
         ),
         centerTitle: true,
         actions: [
@@ -76,7 +85,7 @@ class _State extends ConsumerState<OtherUserProfileScreen> {
               profileId: _profile!.id,
               isLiked: ss.likedUserIds.contains(_profile!.id),
             ),
-          const SizedBox(width: 4),
+          const SizedBox(width: 8),
         ],
       ),
       body: _loadingProfile
@@ -131,36 +140,50 @@ class _WideLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 28),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Left sidebar (fixed ~260px, like GitHub) ──────────────────────
-          SizedBox(
-            width: 260,
-            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              _SidebarAvatar(profile: profile),
-              const SizedBox(height: 16),
-              _SidebarIdentity(profile: profile),
-              if (!isOwn) ...[
-                const SizedBox(height: 12),
-                _SidebarActions(profile: profile, isLiked: isLiked, isFollowing: isFollowing),
-              ],
-              const SizedBox(height: 16),
-              _DetailsCard(profile: profile),
-            ]),
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 32),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1100),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Left sidebar
+              SizedBox(
+                width: 280,
+                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                  _SidebarAvatar(profile: profile),
+                  const SizedBox(height: 20),
+                  _SidebarIdentity(profile: profile),
+                  if (!isOwn) ...[
+                    const SizedBox(height: 16),
+                    _SidebarActions(profile: profile, isLiked: isLiked, isFollowing: isFollowing),
+                  ],
+                  const SizedBox(height: 20),
+                  _DetailsCard(profile: profile),
+                ]),
+              ),
+              const SizedBox(width: 32),
+              // Right content
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                  _StatsCard(stats: stats, loading: loadingStats),
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: _border),
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.01), blurRadius: 10, offset: const Offset(0, 4))],
+                    ),
+                    child: ReviewsSection(targetId: profile.id, isOwnProfile: isOwn),
+                  ),
+                  const SizedBox(height: 32),
+                ]),
+              ),
+            ],
           ),
-          const SizedBox(width: 24),
-          // ── Right content ─────────────────────────────────────────────────
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              _StatsCard(stats: stats, loading: loadingStats),
-              const SizedBox(height: 16),
-              ReviewsSection(targetId: profile.id, isOwnProfile: isOwn),
-              const SizedBox(height: 32),
-            ]),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -181,19 +204,27 @@ class _NarrowLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       child: Column(children: [
         _HeroCard(profile: profile),
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
         _StatsCard(stats: stats, loading: loadingStats),
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
         if (!isOwn) ...[
           _SocialCard(profile: profile, isLiked: isLiked, isFollowing: isFollowing),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
         ],
         _DetailsCard(profile: profile),
-        const SizedBox(height: 16),
-        ReviewsSection(targetId: profile.id, isOwnProfile: isOwn),
+        const SizedBox(height: 14),
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: _border),
+          ),
+          child: ReviewsSection(targetId: profile.id, isOwnProfile: isOwn),
+        ),
         const SizedBox(height: 32),
       ]),
     );
@@ -213,37 +244,35 @@ class _SidebarAvatar extends StatelessWidget {
         clipBehavior: Clip.none,
         children: [
           Container(
+            padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: _gold, width: 3),
+              border: Border.all(color: _gold.withOpacity(0.4), width: 2),
               boxShadow: [
-                BoxShadow(color: _brand.withOpacity(0.12),
-                    blurRadius: 18, offset: const Offset(0, 6)),
+                BoxShadow(color: _brand.withOpacity(0.06), blurRadius: 20, offset: const Offset(0, 8)),
               ],
             ),
             child: CircleAvatar(
-              radius: 60,
-              backgroundColor: const Color(0xFFE8F0ED),
+              radius: 64,
+              backgroundColor: _stone,
               backgroundImage: (profile.profilePictureUrl?.isNotEmpty ?? false)
                   ? CachedNetworkImageProvider(profile.profilePictureUrl!) as ImageProvider
                   : null,
               child: (profile.profilePictureUrl?.isNotEmpty ?? false)
                   ? null
                   : Text(
-                profile.firstName.isNotEmpty
-                    ? profile.firstName[0].toUpperCase() : '?',
-                style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w800,
-                    color: _brand),
+                profile.firstName.isNotEmpty ? profile.firstName[0].toUpperCase() : '?',
+                style: const TextStyle(fontSize: 44, fontWeight: FontWeight.w900, color: _brand),
               ),
             ),
           ),
           if (profile.verified)
             Positioned(
-              bottom: 4, right: 4,
+              bottom: 6, right: 6,
               child: Container(
-                width: 24, height: 24,
-                decoration: const BoxDecoration(color: _gold, shape: BoxShape.circle),
-                child: const Icon(Icons.check, size: 14, color: Colors.white),
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(color: _brand, shape: BoxShape.circle),
+                child: const Icon(Icons.verified_rounded, size: 14, color: _gold),
               ),
             ),
         ],
@@ -262,24 +291,23 @@ class _SidebarIdentity extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text(profile.fullName,
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800,
-              color: _brand, letterSpacing: -0.5)),
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: _brand, letterSpacing: -0.5)),
       if (profile.username.isNotEmpty) ...[
-        const SizedBox(height: 3),
+        const SizedBox(height: 2),
         Text('@${profile.username}',
-            style: const TextStyle(fontSize: 14, color: _slate, fontWeight: FontWeight.w400)),
+            style: const TextStyle(fontSize: 14, color: _slate, fontWeight: FontWeight.w500)),
       ],
-      const SizedBox(height: 10),
+      const SizedBox(height: 12),
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
         decoration: BoxDecoration(
-          color: _brand.withOpacity(0.07),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: _brand.withOpacity(0.12)),
+          color: _stone.withOpacity(0.6),
+          borderRadius: BorderRadius.circular(30),
+          border: Border.all(color: _border),
         ),
         child: Text(
           profile.displayRole.isNotEmpty ? profile.displayRole : profile.role,
-          style: const TextStyle(fontSize: 12, color: _brand, fontWeight: FontWeight.w600),
+          style: const TextStyle(fontSize: 11, color: _brandLight, fontWeight: FontWeight.w700, letterSpacing: 0.3),
         ),
       ),
     ]);
@@ -297,45 +325,35 @@ class _SidebarActions extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final n = ref.read(socialProvider.notifier);
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      // Follow button
-      AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        child: OutlinedButton.icon(
-          onPressed: () => n.toggleFollow(profile.id),
-          icon: Icon(
-            isFollowing ? Icons.how_to_reg_rounded : Icons.person_add_alt_1_rounded,
-            size: 16,
-          ),
-          label: Text(isFollowing ? 'Following' : 'Follow'),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: isFollowing ? _brand : Colors.white,
-            backgroundColor: isFollowing ? Colors.transparent : _brand,
-            side: BorderSide(color: isFollowing ? _brand : Colors.transparent),
-            padding: const EdgeInsets.symmetric(vertical: 11),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-          ),
+      ElevatedButton.icon(
+        onPressed: () => n.toggleFollow(profile.id),
+        icon: Icon(isFollowing ? Icons.done_rounded : Icons.person_add_alt_1_rounded, size: 16),
+        label: Text(isFollowing ? 'Following' : 'Follow'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: isFollowing ? Colors.white : _brand,
+          foregroundColor: isFollowing ? _brand : Colors.white,
+          elevation: 0,
+          side: BorderSide(color: isFollowing ? _border : Colors.transparent),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
         ),
       ),
       const SizedBox(height: 8),
-      // Like button
       OutlinedButton.icon(
         onPressed: () => n.toggleLike(profile.id),
         icon: Icon(
           isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
           size: 16,
-          color: isLiked ? Colors.red[400] : _slate,
+          color: isLiked ? Colors.red.shade700 : _slate,
         ),
-        label: Text(
-          isLiked ? 'Liked' : 'Like',
-          style: TextStyle(color: isLiked ? Colors.red[400] : _slate),
-        ),
+        label: Text(isLiked ? 'Liked Profile' : 'Like Profile'),
         style: OutlinedButton.styleFrom(
-          foregroundColor: isLiked ? Colors.red[400] : _slate,
-          backgroundColor: isLiked ? Colors.red[50] : Colors.transparent,
-          side: BorderSide(color: isLiked ? Colors.red[200]! : const Color(0xFFDDDDDD)),
-          padding: const EdgeInsets.symmetric(vertical: 11),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          foregroundColor: isLiked ? Colors.red.shade800 : _slate,
+          backgroundColor: isLiked ? Colors.red.withOpacity(0.05) : Colors.transparent,
+          side: BorderSide(color: isLiked ? Colors.red.shade200 : _border),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
         ),
       ),
@@ -353,16 +371,21 @@ class _HeroCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
-      decoration: BoxDecoration(color: _brand, borderRadius: BorderRadius.circular(20)),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: _brand,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [BoxShadow(color: _brand.withOpacity(0.15), blurRadius: 16, offset: const Offset(0, 6))],
+      ),
       child: Column(children: [
         Container(
+          padding: const EdgeInsets.all(3),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(color: _gold, width: 2.5),
+            border: Border.all(color: _gold.withOpacity(0.6), width: 1.5),
           ),
           child: CircleAvatar(
-            radius: 44,
+            radius: 46,
             backgroundColor: const Color(0xFF2A5446),
             backgroundImage: (profile.profilePictureUrl?.isNotEmpty ?? false)
                 ? CachedNetworkImageProvider(profile.profilePictureUrl!) as ImageProvider
@@ -370,44 +393,36 @@ class _HeroCard extends StatelessWidget {
             child: (profile.profilePictureUrl?.isNotEmpty ?? false)
                 ? null
                 : Text(
-              profile.firstName.isNotEmpty
-                  ? profile.firstName[0].toUpperCase() : '?',
-              style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800,
-                  color: Color(0xFF9DC4B8)),
+              profile.firstName.isNotEmpty ? profile.firstName[0].toUpperCase() : '?',
+              style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w900, color: Color(0xFF9DC4B8)),
             ),
           ),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 16),
         Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Text('${profile.firstName} ${profile.lastName}',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800,
-                  color: Colors.white, letterSpacing: -0.5)),
+          Text(profile.fullName,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.5)),
           if (profile.verified) ...[
             const SizedBox(width: 6),
-            Container(
-              padding: const EdgeInsets.all(3),
-              decoration: const BoxDecoration(color: _gold, shape: BoxShape.circle),
-              child: const Icon(Icons.check, size: 11, color: Colors.white),
-            ),
+            const Icon(Icons.verified_rounded, size: 16, color: _gold),
           ],
         ]),
         if (profile.username.isNotEmpty) ...[
           const SizedBox(height: 4),
           Text('@${profile.username}',
-              style: const TextStyle(fontSize: 13, color: _gold, fontWeight: FontWeight.w500)),
+              style: const TextStyle(fontSize: 13, color: _gold, fontWeight: FontWeight.w600)),
         ],
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white.withOpacity(0.2)),
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(color: Colors.white.withOpacity(0.15)),
           ),
           child: Text(
             profile.displayRole.isNotEmpty ? profile.displayRole : profile.role,
-            style: const TextStyle(fontSize: 12, color: Color(0xFF9DC4B8),
-                fontWeight: FontWeight.w500),
+            style: const TextStyle(fontSize: 11, color: Color(0xFFE8F0ED), fontWeight: FontWeight.w600, letterSpacing: 0.3),
           ),
         ),
       ]),
@@ -425,32 +440,39 @@ class _StatsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 8),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _border),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.01), blurRadius: 10, offset: const Offset(0, 4))],
+      ),
       child: loading
           ? SizedBox(
-          height: 70,
+          height: 60,
           child: Shimmer.fromColors(
               baseColor: const Color(0xFFEAE6DE), highlightColor: Colors.white,
               child: Container(color: Colors.white)))
-          : Row(children: [
-        _StatCell('${stats?.followerCount ?? 0}', 'Followers', Icons.people_rounded),
-        _vDiv(),
-        _StatCell('${stats?.followingCount ?? 0}', 'Following', Icons.person_add_rounded),
-        _vDiv(),
-        _StatCell('${stats?.likeCount ?? 0}', 'Likes', Icons.favorite_rounded, red: true),
-        _vDiv(),
-        _StatCell('${stats?.totalProfileViews ?? 0}', 'Views', Icons.visibility_rounded),
-        _vDiv(),
-        _StatCell(
-          (stats?.averageRating ?? 0.0).toStringAsFixed(1),
-          'Rating', Icons.star_rounded, gold: true,
-        ),
-      ]),
+          : LayoutBuilder(
+          builder: (context, constraints) {
+            final cells = [
+              _StatCell('${stats?.followerCount ?? 0}', 'Followers', Icons.people_rounded),
+              _StatCell('${stats?.followingCount ?? 0}', 'Following', Icons.person_add_rounded),
+              _StatCell('${stats?.likeCount ?? 0}', 'Likes', Icons.favorite_rounded, red: true),
+              _StatCell('${stats?.totalProfileViews ?? 0}', 'Views', Icons.visibility_rounded),
+              _StatCell((stats?.averageRating ?? 0.0).toStringAsFixed(1), 'Rating', Icons.star_rounded, gold: true),
+            ];
+
+            return Row(
+              children: List.generate(cells.length * 2 - 1, (index) {
+                if (index.isOdd) return Container(width: 1, height: 32, color: _border);
+                return Expanded(child: cells[index ~/ 2]);
+              }),
+            );
+          }
+      ),
     );
   }
-
-  Widget _vDiv() => Container(width: 1, height: 40, color: const Color(0xFFEAE6DE));
 }
 
 class _StatCell extends StatelessWidget {
@@ -461,16 +483,17 @@ class _StatCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = gold ? _gold : red ? Colors.red[400]! : _brand;
-    return Expanded(child: Column(children: [
-      Icon(icon, size: 15, color: color.withOpacity(0.6)),
-      const SizedBox(height: 4),
-      Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800,
-          color: color, letterSpacing: -0.5)),
-      const SizedBox(height: 2),
-      Text(label, style: const TextStyle(fontSize: 10, color: _slate,
-          fontWeight: FontWeight.w500)),
-    ]));
+    final color = gold ? _gold : red ? Colors.red.shade600 : _brand;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: color.withOpacity(0.5)),
+        const SizedBox(height: 4),
+        Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: color, letterSpacing: -0.5)),
+        const SizedBox(height: 2),
+        Text(label, style: const TextStyle(fontSize: 10, color: _slate, fontWeight: FontWeight.w600)),
+      ],
+    );
   }
 }
 
@@ -485,22 +508,26 @@ class _SocialCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final n = ref.read(socialProvider.notifier);
     return Container(
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _border),
+      ),
       child: Column(children: [
         _ActionTile(
-          icon: isFollowing ? Icons.how_to_reg_rounded : Icons.person_add_alt_1_rounded,
-          label: isFollowing ? 'Following' : 'Follow',
-          sub: isFollowing ? 'You follow this person' : 'Add to your network',
+          icon: isFollowing ? Icons.check_circle_rounded : Icons.person_add_alt_1_rounded,
+          label: isFollowing ? 'Following' : 'Follow User',
+          sub: isFollowing ? 'Connected in your network' : 'Add to your network updates',
           iconColor: _brand,
           active: isFollowing,
           onTap: () => n.toggleFollow(profile.id),
         ),
-        const Divider(height: 1, indent: 56, color: Color(0xFFEAE6DE)),
+        const Divider(height: 1, indent: 64, color: _border),
         _ActionTile(
           icon: isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-          label: isLiked ? 'Liked' : 'Like',
-          sub: isLiked ? 'You liked this profile' : 'Show appreciation',
-          iconColor: Colors.red[400]!,
+          label: isLiked ? 'Liked Profile' : 'Like Profile',
+          sub: isLiked ? 'You saved this profile' : 'Show your overall appreciation',
+          iconColor: Colors.red.shade600,
           active: isLiked,
           onTap: () => n.toggleLike(profile.id),
         ),
@@ -521,20 +548,22 @@ class _DetailsCard extends StatelessWidget {
       if (profile.username.isNotEmpty)
         _Row(Icons.alternate_email_rounded, 'Username', '@${profile.username}'),
       if (profile.country?.isNotEmpty ?? false)
-        _Row(Icons.location_on_outlined, 'Country', profile.country!),
-      _Row(Icons.badge_rounded, 'Role',
-          profile.displayRole.isNotEmpty ? profile.displayRole : profile.role),
+        _Row(Icons.location_on_outlined, 'Location Country', profile.country!),
+      _Row(Icons.badge_rounded, 'Account Designation', profile.displayRole.isNotEmpty ? profile.displayRole : profile.role),
     ];
 
     return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _border),
+      ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text('Details',
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700,
-                color: _brand, letterSpacing: -0.2)),
-        const SizedBox(height: 4),
-        const Divider(color: Color(0xFFEAE6DE)),
+        const Text('Profile Context', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: _brand, letterSpacing: -0.2)),
+        const SizedBox(height: 8),
+        const Divider(color: _border, height: 1),
+        const SizedBox(height: 6),
         ...rows.map((r) => _InfoRow(row: r)),
       ]),
     );
@@ -554,14 +583,18 @@ class _InfoRow extends StatelessWidget {
   const _InfoRow({required this.row});
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 10),
+    padding: const EdgeInsets.symmetric(vertical: 8),
     child: Row(children: [
-      Icon(row.icon, size: 17, color: _gold),
+      Container(
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(color: _stone.withOpacity(0.4), borderRadius: BorderRadius.circular(8)),
+        child: Icon(row.icon, size: 15, color: _gold),
+      ),
       const SizedBox(width: 12),
       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(row.label, style: const TextStyle(fontSize: 11, color: _slate)),
-        Text(row.value, style: const TextStyle(fontSize: 13,
-            fontWeight: FontWeight.w600, color: _brand)),
+        Text(row.label, style: const TextStyle(fontSize: 10.5, color: _slate, fontWeight: FontWeight.w500)),
+        const SizedBox(height: 1),
+        Text(row.value, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: _brand)),
       ])),
     ]),
   );
@@ -579,27 +612,26 @@ class _ActionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) => InkWell(
     onTap: onTap,
-    borderRadius: BorderRadius.circular(16),
+    borderRadius: BorderRadius.circular(20),
     child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(children: [
         AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.all(9),
+          padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: iconColor.withOpacity(active ? 0.14 : 0.08),
-            borderRadius: BorderRadius.circular(10),
+            color: iconColor.withOpacity(active ? 0.12 : 0.06),
+            borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(icon, size: 18, color: iconColor),
         ),
         const SizedBox(width: 14),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600,
-              color: active ? iconColor : _brand)),
+          Text(label, style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: active ? iconColor : _brand)),
+          const SizedBox(height: 1),
           Text(sub, style: const TextStyle(fontSize: 11, color: _slate)),
         ])),
-        Icon(active ? Icons.check_rounded : Icons.chevron_right_rounded,
-            size: 18, color: active ? iconColor : _slate),
+        Icon(active ? Icons.check_circle_rounded : Icons.chevron_right_rounded, size: 18, color: active ? iconColor : _slate),
       ]),
     ),
   );
@@ -620,7 +652,7 @@ class _LikeButton extends ConsumerWidget {
       child: Icon(
         isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
         key: ValueKey(isLiked),
-        color: isLiked ? Colors.red[400] : _slate,
+        color: isLiked ? Colors.red.shade600 : _slate,
         size: 22,
       ),
     ),
@@ -640,17 +672,18 @@ class _ErrorView extends StatelessWidget {
     child: Padding(
       padding: const EdgeInsets.all(32),
       child: Column(mainAxisSize: MainAxisSize.min, children: [
-        Icon(Icons.person_off_rounded, size: 56, color: Colors.grey[300]),
+        Icon(Icons.person_off_rounded, size: 48, color: Colors.grey[300]),
         const SizedBox(height: 14),
-        Text(error, style: const TextStyle(fontSize: 15, color: _slate)),
+        Text(error, style: const TextStyle(fontSize: 14, color: _slate, fontWeight: FontWeight.w500)),
         const SizedBox(height: 20),
         ElevatedButton(
           onPressed: onRetry,
           style: ElevatedButton.styleFrom(
               backgroundColor: _brand, foregroundColor: Colors.white,
               elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-          child: const Text('Retry', style: TextStyle(fontWeight: FontWeight.w600)),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+          child: const Text('Retry Connection', style: TextStyle(fontWeight: FontWeight.w700)),
         ),
       ]),
     ),
@@ -669,54 +702,40 @@ class _Shimmer extends StatelessWidget {
       baseColor: const Color(0xFFEAE6DE),
       highlightColor: Colors.white,
       child: Padding(
-        padding: EdgeInsets.all(wide ? 28 : 20),
+        padding: EdgeInsets.all(wide ? 32 : 16),
         child: wide
             ? Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          // Left column skeleton
           SizedBox(
-            width: 260,
+            width: 280,
             child: Column(children: [
-              Container(height: 120, width: 120,
-                  decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle)),
+              Container(height: 128, width: 128, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle)),
               const SizedBox(height: 16),
-              Container(height: 22, decoration: BoxDecoration(color: Colors.white,
-                  borderRadius: BorderRadius.circular(6))),
+              Container(height: 22, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(6))),
               const SizedBox(height: 8),
-              Container(height: 14, width: 100, decoration: BoxDecoration(color: Colors.white,
-                  borderRadius: BorderRadius.circular(6))),
+              Container(height: 14, width: 100, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(6))),
               const SizedBox(height: 16),
-              Container(height: 42, decoration: BoxDecoration(color: Colors.white,
-                  borderRadius: BorderRadius.circular(10))),
+              Container(height: 42, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10))),
               const SizedBox(height: 8),
-              Container(height: 42, decoration: BoxDecoration(color: Colors.white,
-                  borderRadius: BorderRadius.circular(10))),
+              Container(height: 42, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10))),
               const SizedBox(height: 16),
-              Container(height: 130, decoration: BoxDecoration(color: Colors.white,
-                  borderRadius: BorderRadius.circular(16))),
+              Container(height: 130, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16))),
             ]),
           ),
-          const SizedBox(width: 24),
-          // Right column skeleton
+          const SizedBox(width: 32),
           Expanded(child: Column(children: [
-            Container(height: 90, decoration: BoxDecoration(color: Colors.white,
-                borderRadius: BorderRadius.circular(16))),
+            Container(height: 80, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16))),
             const SizedBox(height: 16),
-            Container(height: 260, decoration: BoxDecoration(color: Colors.white,
-                borderRadius: BorderRadius.circular(16))),
+            Container(height: 260, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16))),
           ])),
         ])
             : Column(children: [
-          Container(height: 210, decoration: BoxDecoration(color: Colors.white,
-              borderRadius: BorderRadius.circular(20))),
+          Container(height: 210, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20))),
           const SizedBox(height: 16),
-          Container(height: 90, decoration: BoxDecoration(color: Colors.white,
-              borderRadius: BorderRadius.circular(16))),
+          Container(height: 80, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16))),
           const SizedBox(height: 16),
-          Container(height: 120, decoration: BoxDecoration(color: Colors.white,
-              borderRadius: BorderRadius.circular(16))),
+          Container(height: 120, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16))),
           const SizedBox(height: 16),
-          Container(height: 160, decoration: BoxDecoration(color: Colors.white,
-              borderRadius: BorderRadius.circular(16))),
+          Container(height: 160, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16))),
         ]),
       ),
     );
