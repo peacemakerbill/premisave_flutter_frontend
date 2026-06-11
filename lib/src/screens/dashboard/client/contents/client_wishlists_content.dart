@@ -2,117 +2,169 @@ import 'package:flutter/material.dart';
 import 'widgets/client_explore/property_details_dialog.dart';
 
 const _brand = Color(0xFF1A3C34);
+const _brandLight = Color(0xFF2D5A4F);
 const _gold = Color(0xFFC9A84C);
 const _stone = Color(0xFFF5F0E8);
 const _slate = Color(0xFF6B7280);
+const _border = Color(0xFFEAE6DE);
 
 class ClientWishlistsContent extends StatelessWidget {
   const ClientWishlistsContent({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isSmall = screenWidth < 768;
+    return LayoutBuilder(builder: (context, constraints) {
+      final isLarge = constraints.maxWidth > 1100;
 
-    return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(horizontal: isSmall ? 20 : 36, vertical: 28),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const _HeaderSection(),
-          const SizedBox(height: 28),
-          const _WishlistStats(),
-          const SizedBox(height: 28),
-          _WishlistSection(
-            title: 'Beachfront Properties',
-            properties: _beachfrontWishlist,
+      return SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        padding: EdgeInsets.symmetric(
+          horizontal: isLarge ? 36 : 20,
+          vertical: 28,
+        ),
+        child: Center(
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 1200),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const _HeaderSection(),
+                const SizedBox(height: 32),
+                const _WishlistStats(),
+                const SizedBox(height: 36),
+                _WishlistSection(
+                  title: 'Beachfront Properties',
+                  properties: _beachfrontWishlist,
+                ),
+                const SizedBox(height: 32),
+                _WishlistSection(
+                  title: 'Mountain Getaways',
+                  properties: _mountainWishlist,
+                ),
+                const SizedBox(height: 32),
+                _WishlistSection(
+                  title: 'City Apartments',
+                  properties: _cityWishlist,
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 28),
-          _WishlistSection(
-            title: 'Mountain Getaways',
-            properties: _mountainWishlist,
-          ),
-          const SizedBox(height: 28),
-          _WishlistSection(
-            title: 'City Apartments',
-            properties: _cityWishlist,
-          ),
-        ],
-      ),
-    );
+        ),
+      );
+    });
   }
 }
+
+// ── Premium Header Section ──────────────────────────────────────────────────
 
 class _HeaderSection extends StatelessWidget {
   const _HeaderSection();
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFEAE6DE)),
-      ),
-      padding: const EdgeInsets.all(28),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'My Wishlists',
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: _brand, letterSpacing: -0.8),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Save and organize your favorite properties',
-                  style: TextStyle(fontSize: 14, color: _slate),
-                ),
-              ],
+    return LayoutBuilder(builder: (context, constraints) {
+      final isSmall = constraints.maxWidth < 600;
+
+      return Container(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [_brand, _brandLight],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: _brand.withOpacity(0.12),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
+            )
+          ],
+        ),
+        padding: EdgeInsets.all(isSmall ? 24 : 32),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'My Wishlists',
+                    style: TextStyle(
+                      fontSize: isSmall ? 26 : 32,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      letterSpacing: -0.8,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Save and organize your favorite dream spaces',
+                    style: TextStyle(
+                      fontSize: 14.5,
+                      color: Colors.white.withOpacity(0.85),
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: _stone, shape: BoxShape.circle),
-            child: const Icon(Icons.favorite_rounded, color: Colors.pink, size: 28),
-          ),
-        ],
-      ),
-    );
+            const SizedBox(width: 16),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white.withOpacity(0.25), width: 1.5),
+              ),
+              child: const Icon(Icons.favorite_rounded, color: Colors.pink, size: 28),
+            ),
+          ],
+        ),
+      );
+    });
   }
 }
+
+// ── Fluid Wishlist Stats ─────────────────────────────────────────────────────
 
 class _WishlistStats extends StatelessWidget {
   const _WishlistStats();
 
+  static const stats = [
+    {'title': 'Total Saved', 'value': '12', 'color': Colors.pink, 'icon': Icons.favorite_rounded},
+    {'title': 'Lists Created', 'value': '3', 'color': _brand, 'icon': Icons.list_rounded},
+    {'title': 'Recently Viewed', 'value': '5', 'color': Colors.blue, 'icon': Icons.visibility_rounded},
+  ];
+
   @override
   Widget build(BuildContext context) {
-    final isSmall = MediaQuery.of(context).size.width < 600;
-
-    final stats = [
-      {'title': 'Total Saved', 'value': '12', 'color': Colors.pink, 'icon': Icons.favorite_rounded},
-      {'title': 'Lists Created', 'value': '3', 'color': _brand, 'icon': Icons.list_rounded},
-      {'title': 'Recently Viewed', 'value': '5', 'color': Colors.blue, 'icon': Icons.visibility_rounded},
-    ];
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Wishlist Overview', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: _brand)),
+        const Text(
+          'Wishlist Overview',
+          style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: _brand, letterSpacing: -0.3),
+        ),
         const SizedBox(height: 16),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: isSmall ? 2 : 3,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: 1.75,
-          ),
-          itemCount: stats.length,
-          itemBuilder: (context, index) => _StatCard(stat: stats[index]),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final screenWidth = constraints.maxWidth;
+            final double itemWidth = screenWidth > 900
+                ? (screenWidth - 24) / 3
+                : screenWidth > 600
+                ? (screenWidth - 24) / 3
+                : (screenWidth - 12) / 2;
+
+            return Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: stats.map((s) => SizedBox(
+                width: itemWidth,
+                child: _StatCard(stat: s),
+              )).toList(),
+            );
+          },
         ),
       ],
     );
@@ -127,24 +179,61 @@ class _StatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = stat['color'] as Color;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: const Border(left: BorderSide(color: _gold, width: 3)),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.015),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(stat['icon'] as IconData, color: color, size: 20),
-          const SizedBox(height: 10),
-          Text(stat['value'] as String, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: _brand)),
-          Text(stat['title'] as String, style: const TextStyle(fontSize: 11.5, color: _slate)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(stat['icon'] as IconData, color: color, size: 20),
+              ),
+              Container(
+                width: 14,
+                height: 3,
+                decoration: const BoxDecoration(
+                  color: _gold,
+                  borderRadius: BorderRadius.all(Radius.circular(4)),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            stat['value'] as String,
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: _brand, height: 1.1),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            stat['title'] as String,
+            style: const TextStyle(fontSize: 12.5, color: _slate, fontWeight: FontWeight.w600),
+          ),
         ],
       ),
     );
   }
 }
+
+// ── Dynamic Wishlist Section ─────────────────────────────────────────────────
 
 class _WishlistSection extends StatelessWidget {
   final String title;
@@ -154,41 +243,57 @@ class _WishlistSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isSmall = screenWidth < 600;
-
-    final crossAxisCount = isSmall ? 1 : (screenWidth > 1200 ? 4 : 2);
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: _brand)),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: _brand, letterSpacing: -0.3),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    '${properties.length} curated spaces saved',
+                    style: const TextStyle(fontSize: 13, color: _slate, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
+            ),
             TextButton(
               onPressed: () {},
+              style: TextButton.styleFrom(
+                foregroundColor: _brandLight,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
               child: const Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('View All'),
+                  Text('View All', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5)),
                   SizedBox(width: 4),
-                  Icon(Icons.arrow_forward_rounded, size: 16),
+                  Icon(Icons.arrow_forward_rounded, size: 15),
                 ],
               ),
             ),
           ],
         ),
-        const SizedBox(height: 6),
-        Text('${properties.length} properties', style: TextStyle(fontSize: 13, color: _slate)),
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            childAspectRatio: isSmall ? 0.75 : 0.85,
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 340,
+            crossAxisSpacing: 18,
+            mainAxisSpacing: 18,
+            mainAxisExtent: 395, // Clean defensive vertical blueprint budget to handle text variations
           ),
           itemCount: properties.length,
           itemBuilder: (context, index) => _WishlistPropertyCard(
@@ -225,6 +330,8 @@ class _WishlistSection extends StatelessWidget {
   }
 }
 
+// ── Enhanced Wishlist Property Card ──────────────────────────────────────────
+
 class _WishlistPropertyCard extends StatelessWidget {
   final Map<String, dynamic> property;
   final VoidCallback onTap;
@@ -233,81 +340,173 @@ class _WishlistPropertyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFEAE6DE)),
-        ),
+    return Card(
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: const BorderSide(color: _border),
+      ),
+      clipBehavior: Clip.antiAlias,
+      color: Colors.white,
+      child: InkWell(
+        onTap: onTap,
+        splashColor: _brand.withOpacity(0.04),
+        highlightColor: Colors.transparent,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-              child: Image.network(
-                property['image'],
-                height: 160,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          property['title'],
-                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: _brand),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          const Icon(Icons.star, size: 14, color: Colors.amber),
-                          const SizedBox(width: 4),
-                          Text(property['rating'].toString(), style: const TextStyle(fontWeight: FontWeight.w600)),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(property['location'], style: TextStyle(fontSize: 12.5, color: _slate)),
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(color: _stone, borderRadius: BorderRadius.circular(6)),
-                        child: Text(property['type'], style: TextStyle(fontSize: 11.5, color: _slate)),
-                      ),
-                      Text(
-                        property['price'],
-                        style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w700, color: _brand),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
+            Stack(
+              children: [
+                AspectRatio(
+                  aspectRatio: 16 / 10,
+                  child: Image.network(
+                    property['image'],
                     width: double.infinity,
-                    child: OutlinedButton(
-                      onPressed: onTap,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: _brand,
-                        side: const BorderSide(color: _brand),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                      ),
-                      child: const Text('View Details'),
+                    fit: BoxFit.cover,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        color: _stone,
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: const AlwaysStoppedAnimation<Color>(_brandLight),
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                : null,
+                          ),
+                        ),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: _stone,
+                      child: const Center(child: Icon(Icons.broken_image_rounded, color: _slate, size: 26)),
                     ),
                   ),
-                ],
+                ),
+                if (property['badge'] != null)
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4.5),
+                      decoration: BoxDecoration(
+                        color: _brand.withOpacity(0.95),
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))],
+                      ),
+                      child: Text(
+                        property['badge'],
+                        style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 0.2),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                property['title'],
+                                style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w700, color: _brand, height: 1.25),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFFBEB),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.star_rounded, size: 14, color: Colors.amber),
+                                  const SizedBox(width: 2),
+                                  Text(
+                                    property['rating'].toString(),
+                                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: _brand),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 5),
+                        Row(
+                          children: [
+                            const Icon(Icons.location_on_outlined, size: 13, color: _slate),
+                            const SizedBox(width: 3),
+                            Expanded(
+                              child: Text(
+                                property['location'],
+                                style: const TextStyle(fontSize: 12.5, color: _slate, fontWeight: FontWeight.w500),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(color: _stone, borderRadius: BorderRadius.circular(6)),
+                              child: Text(
+                                property['type'],
+                                style: const TextStyle(fontSize: 11, color: _brandLight, fontWeight: FontWeight.w700),
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                property['price'],
+                                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: _brand),
+                                textAlign: TextAlign.end,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton(
+                            onPressed: onTap,
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: _brand,
+                              side: const BorderSide(color: _brand, width: 1.2),
+                              padding: const EdgeInsets.symmetric(vertical: 11),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            child: const Text('View Details', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
