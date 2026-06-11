@@ -21,82 +21,64 @@ class ContactContent extends StatelessWidget {
           horizontal: isLarge ? 36 : 20,
           vertical: 28,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const _Header(),
-            const SizedBox(height: 28),
-            isLarge ? _buildContactCardsRow() : _buildContactCardsColumn(isMedium),
-            const SizedBox(height: 32),
-            isLarge
-                ? const Row(
+        child: Center(
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 1200),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(flex: 3, child: _MessageFormSection()),
-                SizedBox(width: 24),
-                Expanded(flex: 2, child: _MapSection()),
-              ],
-            )
-                : const Column(
-              children: [
-                _MessageFormSection(),
-                SizedBox(height: 24),
-                _MapSection(),
+                const _Header(),
+                const SizedBox(height: 28),
+                _buildContactCards(constraints.maxWidth, isLarge, isMedium),
+                const SizedBox(height: 32),
+                isLarge
+                    ? const Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(flex: 3, child: _MessageFormSection()),
+                    SizedBox(width: 24),
+                    Expanded(flex: 2, child: _MapSection()),
+                  ],
+                )
+                    : const Column(
+                  children: [
+                    _MessageFormSection(),
+                    SizedBox(height: 24),
+                    _MapSection(),
+                  ],
+                ),
+                const SizedBox(height: 32),
+                _TeamSection(isLarge: isLarge, isMedium: isMedium),
+                const SizedBox(height: 32),
+                _OfficesSection(isLarge: isLarge, isMedium: isMedium),
+                const SizedBox(height: 32),
+                const _FaqSection(),
               ],
             ),
-            const SizedBox(height: 32),
-            _TeamSection(isLarge: isLarge, isMedium: isMedium),
-            const SizedBox(height: 32),
-            _OfficesSection(isMedium: isMedium),
-            const SizedBox(height: 32),
-            const _FaqSection(),
-          ],
+          ),
         ),
       );
     });
   }
 
-  Widget _buildContactCardsRow() {
-    return const Row(
-      children: [
-        Expanded(child: _ContactCard(icon: Icons.location_on_rounded, title: 'Visit Us', items: ['Premisave Plaza, 4th Floor', 'Westlands, Nairobi'], color: Color(0xFF22C55E))),
-        SizedBox(width: 20),
-        Expanded(child: _ContactCard(icon: Icons.phone_rounded, title: 'Call Us', items: ['+254 700 123 456', '24/7 Support Line'], color: Color(0xFF3B82F6))),
-        SizedBox(width: 20),
-        Expanded(child: _ContactCard(icon: Icons.email_rounded, title: 'Email Us', items: ['info@premisave.co.ke', 'Reply within 2 hours'], color: Color(0xFFF59E0B))),
-        SizedBox(width: 20),
-        Expanded(child: _ContactCard(icon: Icons.access_time_rounded, title: 'Working Hours', items: ['Mon – Fri: 8AM – 6PM', 'Sat: 9AM – 2PM'], color: Color(0xFF8B5CF6))),
-      ],
-    );
-  }
-
-  Widget _buildContactCardsColumn(bool isMedium) {
-    final cards = const [
+  Widget _buildContactCards(double maxWidth, bool isLarge, bool isMedium) {
+    const cards = [
       _ContactCard(icon: Icons.location_on_rounded, title: 'Visit Us', items: ['Premisave Plaza, 4th Floor', 'Westlands, Nairobi'], color: Color(0xFF22C55E)),
       _ContactCard(icon: Icons.phone_rounded, title: 'Call Us', items: ['+254 700 123 456', '24/7 Support Line'], color: Color(0xFF3B82F6)),
       _ContactCard(icon: Icons.email_rounded, title: 'Email Us', items: ['info@premisave.co.ke', 'Reply within 2 hours'], color: Color(0xFFF59E0B)),
       _ContactCard(icon: Icons.access_time_rounded, title: 'Working Hours', items: ['Mon – Fri: 8AM – 6PM', 'Sat: 9AM – 2PM'], color: Color(0xFF8B5CF6)),
     ];
 
-    if (isMedium) {
-      return GridView.count(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        crossAxisCount: 2,
-        crossAxisSpacing: 20,
-        mainAxisSpacing: 20,
-        childAspectRatio: 1.4,
-        children: cards,
-      );
-    }
+    final double itemWidth = isLarge
+        ? (maxWidth - 60) / 4
+        : isMedium
+        ? (maxWidth - 20) / 2
+        : maxWidth;
 
-    return Column(
-      children: [
-        for (int i = 0; i < cards.length; i++) ...[
-          if (i > 0) const SizedBox(height: 20),
-          cards[i],
-        ],
-      ],
+    return Wrap(
+      spacing: 20,
+      runSpacing: 20,
+      children: cards.map((card) => SizedBox(width: itemWidth, child: card)).toList(),
     );
   }
 }
@@ -109,6 +91,7 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
@@ -124,8 +107,9 @@ class _Header extends StatelessWidget {
           ),
         ],
       ),
-      padding: const EdgeInsets.all(40),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
       child: Stack(
+        clipBehavior: Clip.antiAlias,
         children: [
           Positioned(
             top: -50,
@@ -134,15 +118,6 @@ class _Header extends StatelessWidget {
               width: 150,
               height: 150,
               decoration: BoxDecoration(shape: BoxShape.circle, color: _gold.withOpacity(0.12)),
-            ),
-          ),
-          Positioned(
-            bottom: -50,
-            left: -40,
-            child: Container(
-              width: 130,
-              height: 130,
-              decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withOpacity(0.05)),
             ),
           ),
           Column(
@@ -159,12 +134,12 @@ class _Header extends StatelessWidget {
               const SizedBox(height: 20),
               const Text(
                 'Get in Touch',
-                style: TextStyle(fontSize: 36, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.8),
+                style: TextStyle(fontSize: 34, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.8),
+                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 10),
               Text(
-                "Have a question, a property to list, or just want to say hi?\n"
-                    "Our team is ready to help — reach out anytime.",
+                "Have a question, a property to list, or just want to say hi?\nOur team is ready to help — reach out anytime.",
                 style: TextStyle(fontSize: 15, color: Colors.white.withOpacity(0.8), height: 1.6, fontWeight: FontWeight.w500),
                 textAlign: TextAlign.center,
               ),
@@ -189,32 +164,33 @@ class _ContactCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      width: double.infinity,
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _border),
         boxShadow: [
-          BoxShadow(color: color.withOpacity(0.06), blurRadius: 16, offset: const Offset(0, 6)),
+          BoxShadow(color: color.withOpacity(0.04), blurRadius: 16, offset: const Offset(0, 6)),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               gradient: LinearGradient(colors: [color.withOpacity(0.18), color.withOpacity(0.06)], begin: Alignment.topLeft, end: Alignment.bottomRight),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: color, size: 28),
+            child: Icon(icon, color: color, size: 24),
           ),
-          const SizedBox(height: 18),
-          Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: color)),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
+          Text(title, style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: color)),
+          const SizedBox(height: 10),
           ...items.map((item) => Padding(
             padding: const EdgeInsets.only(bottom: 4),
-            child: Text(item, style: const TextStyle(fontSize: 14, color: _slate, height: 1.5)),
+            child: Text(item, style: const TextStyle(fontSize: 13.5, color: _slate, height: 1.4)),
           )),
         ],
       ),
@@ -233,38 +209,49 @@ class _MessageFormSection extends StatelessWidget {
       title: 'Send Us a Message',
       subtitle: "Fill out the form and we'll get back to you shortly",
       icon: Icons.send_rounded,
-      child: Column(
-        children: [
-          Row(
-            children: const [
-              Expanded(child: _FormField(label: 'Full Name', hint: 'e.g. John Doe', icon: Icons.person_outline_rounded)),
-              SizedBox(width: 16),
-              Expanded(child: _FormField(label: 'Phone Number', hint: '+254 7XX XXX XXX', icon: Icons.phone_outlined)),
-            ],
-          ),
-          const SizedBox(height: 16),
-          const _FormField(label: 'Email Address', hint: 'you@example.com', icon: Icons.alternate_email_rounded),
-          const SizedBox(height: 16),
-          const _FormField(label: 'Subject', hint: 'What is this about?', icon: Icons.topic_outlined),
-          const SizedBox(height: 16),
-          const _FormField(label: 'Message', hint: 'Tell us more...', icon: Icons.message_outlined, maxLines: 5),
-          const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.send_rounded, size: 18),
-              label: const Text('Send Message', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _brand,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 18),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                elevation: 0,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isInline = constraints.maxWidth > 500;
+          return Column(
+            children: [
+              if (isInline)
+                const Row(
+                  children: [
+                    Expanded(child: _FormField(label: 'Full Name', hint: 'e.g. John Doe', icon: Icons.person_outline_rounded)),
+                    SizedBox(width: 16),
+                    Expanded(child: _FormField(label: 'Phone Number', hint: '+254 7XX XXX XXX', icon: Icons.phone_outlined)),
+                  ],
+                )
+              else ...const [
+                _FormField(label: 'Full Name', hint: 'e.g. John Doe', icon: Icons.person_outline_rounded),
+                SizedBox(height: 16),
+                _FormField(label: 'Phone Number', hint: '+254 7XX XXX XXX', icon: Icons.phone_outlined),
+              ],
+              const SizedBox(height: 16),
+              const _FormField(label: 'Email Address', hint: 'you@example.com', icon: Icons.alternate_email_rounded),
+              const SizedBox(height: 16),
+              const _FormField(label: 'Subject', hint: 'What is this about?', icon: Icons.topic_outlined),
+              const SizedBox(height: 16),
+              const _FormField(label: 'Message', hint: 'Tell us more...', icon: Icons.message_outlined, maxLines: 5),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {},
+                  icon: const Icon(Icons.send_rounded, size: 18),
+                  label: const Text('Send Message', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _brand,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    elevation: 0,
+                  ),
+                ),
               ),
-            ),
-          ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }
@@ -294,18 +281,9 @@ class _FormField extends StatelessWidget {
             filled: true,
             fillColor: _stone.withOpacity(0.5),
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: _border),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: _border),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: _brand, width: 1.5),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: _border)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: _border)),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: _brand, width: 1.5)),
           ),
         ),
       ],
@@ -346,11 +324,16 @@ class _MapSection extends StatelessWidget {
             alignment: Alignment.bottomLeft,
             padding: const EdgeInsets.all(16),
             child: const Row(
-              mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(Icons.location_on_rounded, color: _gold, size: 20),
                 SizedBox(width: 8),
-                Text('Premisave HQ — Westlands, Nairobi', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13.5)),
+                Expanded(
+                  child: Text(
+                    'Premisave HQ — Westlands, Nairobi',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13.5),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ],
             ),
           ),
@@ -368,10 +351,10 @@ class _MapSection extends StatelessWidget {
             children: [
               const Text('Connect With Us', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _brand)),
               const SizedBox(height: 14),
-              Wrap(
+              const Wrap(
                 spacing: 10,
                 runSpacing: 10,
-                children: const [
+                children: [
                   _SocialChip(icon: Icons.facebook_rounded, label: 'Facebook', color: Color(0xFF3B82F6)),
                   _SocialChip(icon: Icons.alternate_email_rounded, label: 'Twitter / X', color: Color(0xFF1A3C34)),
                   _SocialChip(icon: Icons.camera_alt_rounded, label: 'Instagram', color: Color(0xFFEF4444)),
@@ -382,6 +365,7 @@ class _MapSection extends StatelessWidget {
               const Divider(color: Color(0xFFF3EFE6)),
               const SizedBox(height: 14),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
                     padding: const EdgeInsets.all(10),
@@ -450,17 +434,20 @@ class _TeamSection extends StatelessWidget {
       title: 'Our Support Team',
       subtitle: 'Dedicated professionals ready to assist you',
       icon: Icons.support_rounded,
-      child: GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: isLarge ? 4 : (isMedium ? 2 : 1),
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          childAspectRatio: isLarge ? 0.85 : 1.7,
-        ),
-        itemCount: team.length,
-        itemBuilder: (_, i) => _TeamCard(member: team[i], isLarge: isLarge),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final double itemWidth = isLarge
+              ? (constraints.maxWidth - 48) / 4
+              : isMedium
+              ? (constraints.maxWidth - 16) / 2
+              : constraints.maxWidth;
+
+          return Wrap(
+            spacing: 16,
+            runSpacing: 16,
+            children: team.map((member) => SizedBox(width: itemWidth, child: _TeamCard(member: member, isLarge: isLarge))).toList(),
+          );
+        },
       ),
     );
   }
@@ -516,7 +503,7 @@ class _TeamCard extends StatelessWidget {
       ),
       child: isLarge
           ? Column(mainAxisAlignment: MainAxisAlignment.center, children: [avatar, const SizedBox(height: 14), details])
-          : Row(children: [avatar, const SizedBox(width: 16), Expanded(child: details)]),
+          : Row(crossAxisAlignment: CrossAxisAlignment.start, children: [avatar, const SizedBox(width: 16), Expanded(child: details)]),
     );
   }
 }
@@ -524,8 +511,9 @@ class _TeamCard extends StatelessWidget {
 // ── Offices ─────────────────────────────────────────────────────────────────
 
 class _OfficesSection extends StatelessWidget {
+  final bool isLarge;
   final bool isMedium;
-  const _OfficesSection({required this.isMedium});
+  const _OfficesSection({required this.isLarge, required this.isMedium});
 
   @override
   Widget build(BuildContext context) {
@@ -540,20 +528,15 @@ class _OfficesSection extends StatelessWidget {
       title: 'Regional Offices',
       subtitle: 'Find us across Kenya',
       icon: Icons.apartment_rounded,
-      child: isMedium
-          ? GridView.count(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        crossAxisCount: 2,
-        crossAxisSpacing: 14,
-        mainAxisSpacing: 14,
-        childAspectRatio: 2.6,
-        children: offices.map((o) => _OfficeCard(office: o)).toList(),
-      )
-          : Column(
-        children: offices
-            .map((o) => Padding(padding: const EdgeInsets.only(bottom: 14), child: _OfficeCard(office: o)))
-            .toList(),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final double itemWidth = isLarge || isMedium ? (constraints.maxWidth - 16) / 2 : constraints.maxWidth;
+          return Wrap(
+            spacing: 16,
+            runSpacing: 16,
+            children: offices.map((o) => SizedBox(width: itemWidth, child: _OfficeCard(office: o))).toList(),
+          );
+        },
       ),
     );
   }
@@ -572,39 +555,58 @@ class _OfficeCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _border),
       ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: const Color(0xFF22C55E).withOpacity(0.12), shape: BoxShape.circle),
-            child: const Icon(Icons.business_rounded, color: Color(0xFF22C55E)),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(office['name']!, style: const TextStyle(fontWeight: FontWeight.w700, color: _brand, fontSize: 15)),
-                const SizedBox(height: 3),
-                Text(office['area']!, style: const TextStyle(color: _slate, fontSize: 12.5)),
-                const SizedBox(height: 3),
-                Row(
-                  children: [
-                    const Icon(Icons.access_time_rounded, size: 12, color: _slate),
-                    const SizedBox(width: 4),
-                    Text(office['hours']!, style: const TextStyle(color: _slate, fontSize: 11.5)),
-                    const SizedBox(width: 10),
-                    const Icon(Icons.phone, size: 12, color: _slate),
-                    const SizedBox(width: 4),
-                    Text(office['phone']!, style: const TextStyle(color: _slate, fontSize: 11.5)),
-                  ],
-                ),
-              ],
+      child: LayoutBuilder(builder: (context, constraints) {
+        final showInlineRow = constraints.maxWidth > 280;
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: const Color(0xFF22C55E).withOpacity(0.12), shape: BoxShape.circle),
+              child: const Icon(Icons.business_rounded, color: Color(0xFF22C55E)),
             ),
-          ),
-          const Icon(Icons.arrow_forward_ios_rounded, color: _brand, size: 14),
-        ],
-      ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(office['name']!, style: const TextStyle(fontWeight: FontWeight.w700, color: _brand, fontSize: 15)),
+                  const SizedBox(height: 3),
+                  Text(office['area']!, style: const TextStyle(color: _slate, fontSize: 12.5)),
+                  const SizedBox(height: 4),
+                  if (showInlineRow)
+                    Row(
+                      children: [
+                        const Icon(Icons.access_time_rounded, size: 12, color: _slate),
+                        const SizedBox(width: 4),
+                        Text(office['hours']!, style: const TextStyle(color: _slate, fontSize: 11.5)),
+                        const SizedBox(width: 12),
+                        const Icon(Icons.phone, size: 12, color: _slate),
+                        const SizedBox(width: 4),
+                        Expanded(child: Text(office['phone']!, style: const TextStyle(color: _slate, fontSize: 11.5), overflow: TextOverflow.ellipsis)),
+                      ],
+                    )
+                  else ...[
+                    Row(children: [
+                      const Icon(Icons.access_time_rounded, size: 12, color: _slate),
+                      const SizedBox(width: 4),
+                      Text(office['hours']!, style: const TextStyle(color: _slate, fontSize: 11.5)),
+                    ]),
+                    const SizedBox(height: 2),
+                    Row(children: [
+                      const Icon(Icons.phone, size: 12, color: _slate),
+                      const SizedBox(width: 4),
+                      Text(office['phone']!, style: const TextStyle(color: _slate, fontSize: 11.5)),
+                    ]),
+                  ]
+                ],
+              ),
+            ),
+            const SizedBox(width: 4),
+            const Icon(Icons.arrow_forward_ios_rounded, color: _brand, size: 14),
+          ],
+        );
+      }),
     );
   }
 }
@@ -668,6 +670,7 @@ class _Section extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -691,17 +694,17 @@ class _Section extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: _brand, letterSpacing: -0.5)),
+                    Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: _brand, letterSpacing: -0.5)),
                     const SizedBox(height: 4),
-                    Text(subtitle, style: const TextStyle(fontSize: 14.5, color: _slate)),
+                    Text(subtitle, style: const TextStyle(fontSize: 13.5, color: _slate)),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           const Divider(color: Color(0xFFF3EFE6)),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           child,
         ],
       ),
