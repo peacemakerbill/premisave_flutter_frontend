@@ -152,7 +152,6 @@ class _PaymentMethods extends StatelessWidget {
         LayoutBuilder(
           builder: (context, constraints) {
             final screenWidth = constraints.maxWidth;
-            // Calculations split into columns dynamically depending on space available
             final double cardWidth = screenWidth > 900
                 ? (screenWidth - 24) / 3
                 : screenWidth > 600
@@ -291,12 +290,13 @@ class _RecentPayments extends StatelessWidget {
     );
   }
 
+  // Updated array matrix definitions to feature contextually current 2026 data timelines
   final List<Map<String, dynamic>> _payments = const [
-    {'date': '15 Dec 2024', 'amount': 'KES 42,500', 'method': 'M-Pesa', 'status': 'Paid'},
-    {'date': '10 Dec 2024', 'amount': 'KES 175,000', 'method': 'Visa', 'status': 'Paid'},
-    {'date': '5 Dec 2024', 'amount': 'KES 25,000', 'method': 'M-Pesa', 'status': 'Pending'},
-    {'date': '28 Nov 2024', 'amount': 'KES 32,500', 'method': 'M-Pesa', 'status': 'Paid'},
-    {'date': '15 Nov 2024', 'amount': 'KES 105,000', 'method': 'MasterCard', 'status': 'Refunded'},
+    {'date': '12 Jun 2026', 'amount': 'KES 42,500', 'method': 'M-Pesa', 'status': 'Paid'},
+    {'date': '04 Jun 2026', 'amount': 'KES 175,000', 'method': 'Visa', 'status': 'Paid'},
+    {'date': '28 May 2026', 'amount': 'KES 25,000', 'method': 'M-Pesa', 'status': 'Pending'},
+    {'date': '15 May 2026', 'amount': 'KES 32,500', 'method': 'M-Pesa', 'status': 'Paid'},
+    {'date': '30 Apr 2026', 'amount': 'KES 105,000', 'method': 'MasterCard', 'status': 'Refunded'},
   ];
 }
 
@@ -355,10 +355,10 @@ class _PaymentItem extends StatelessWidget {
               ),
               const SizedBox(height: 5),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   payment['status'] as String,
