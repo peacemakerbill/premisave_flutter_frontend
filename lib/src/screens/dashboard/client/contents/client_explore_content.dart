@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'widgets/client_explore/property_details_dialog.dart';
 
 const _brand = Color(0xFF1A3C34);
+const _brandLight = Color(0xFF2D5A4F);
 const _gold = Color(0xFFC9A84C);
 const _stone = Color(0xFFF5F0E8);
 const _slate = Color(0xFF6B7280);
+const _border = Color(0xFFEAE6DE);
 
 class ClientExploreContent extends StatefulWidget {
   const ClientExploreContent({super.key});
@@ -35,9 +37,14 @@ class _ClientExploreContentState extends State<ClientExploreContent> {
     if (_searchQuery.isEmpty) return _sampleProperties;
 
     return _sampleProperties.where((property) {
-      return property['title'].toLowerCase().contains(_searchQuery) ||
-          property['location'].toLowerCase().contains(_searchQuery) ||
-          property['type'].toLowerCase().contains(_searchQuery);
+      final titleMatch = property['title'].toString().toLowerCase().contains(_searchQuery);
+      final locationMatch = property['location'].toString().toLowerCase().contains(_searchQuery);
+      final typeMatch = property['type'].toString().toLowerCase().contains(_searchQuery);
+
+      final amenitiesList = property['amenities'] as List<String>? ?? [];
+      final amenitiesMatch = amenitiesList.any((a) => a.toLowerCase().contains(_searchQuery));
+
+      return titleMatch || locationMatch || typeMatch || amenitiesMatch;
     }).toList();
   }
 
@@ -45,7 +52,6 @@ class _ClientExploreContentState extends State<ClientExploreContent> {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 768;
-    final crossAxisCount = screenWidth < 600 ? 2 : screenWidth < 1200 ? 3 : 4;
 
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
@@ -54,35 +60,48 @@ class _ClientExploreContentState extends State<ClientExploreContent> {
           floating: true,
           snap: true,
           pinned: true,
-          expandedHeight: isSmallScreen ? 100 : 110,
+          expandedHeight: isSmallScreen ? 90 : 110,
           backgroundColor: Colors.white,
+          elevation: 0,
+          scrolledUnderElevation: 2,
           flexibleSpace: FlexibleSpaceBar(
             background: Container(
               color: Colors.white,
               padding: EdgeInsets.symmetric(
-                horizontal: isSmallScreen ? 20 : 36,
-                vertical: 16,
+                horizontal: isSmallScreen ? 16 : 36,
+                vertical: 12,
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Container(
+                    constraints: const BoxConstraints(maxWidth: 1200),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFFEAE6DE)),
-                      boxShadow: const [
-                        BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))
+                      border: Border.all(color: _border),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        )
                       ],
                     ),
                     child: TextField(
                       controller: _searchController,
                       decoration: InputDecoration(
                         hintText: 'Search properties, locations, or amenities...',
-                        hintStyle: TextStyle(color: _slate),
-                        prefixIcon: const Icon(Icons.search_rounded, color: _brand),
+                        hintStyle: const TextStyle(color: _slate, fontSize: 14),
+                        prefixIcon: const Icon(Icons.search_rounded, color: _brand, size: 22),
+                        suffixIcon: _searchQuery.isNotEmpty
+                            ? IconButton(
+                          icon: const Icon(Icons.clear_rounded, color: _slate, size: 20),
+                          onPressed: () => _searchController.clear(),
+                        )
+                            : null,
                         border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       ),
                     ),
                   ),
@@ -92,27 +111,33 @@ class _ClientExploreContentState extends State<ClientExploreContent> {
           ),
         ),
         SliverPadding(
-          padding: EdgeInsets.all(isSmallScreen ? 20 : 36),
+          padding: EdgeInsets.symmetric(
+            horizontal: isSmallScreen ? 16 : 36,
+            vertical: 20,
+          ),
           sliver: filteredProperties.isEmpty
               ? const SliverFillRemaining(
+            hasScrollBody: false,
             child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.search_off_rounded, size: 72, color: Colors.grey),
+                  Icon(Icons.search_off_rounded, size: 64, color: _slate),
                   SizedBox(height: 16),
-                  Text('No properties found', style: TextStyle(fontSize: 18, color: Colors.grey)),
-                  Text('Try different keywords', style: TextStyle(color: Colors.grey)),
+                  Text('No properties found', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: _brand)),
+                  SizedBox(height: 4),
+                  Text('Try matching different descriptive terms', style: TextStyle(color: _slate, fontSize: 13)),
                 ],
               ),
             ),
           )
               : SliverGrid(
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: crossAxisCount,
-              crossAxisSpacing: isSmallScreen ? 12 : 16,
-              mainAxisSpacing: isSmallScreen ? 16 : 20,
-              childAspectRatio: 0.72,
+            gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 320,
+              mainAxisSpacing: isSmallScreen ? 16 : 24,
+              crossAxisSpacing: isSmallScreen ? 16 : 24,
+              mainAxisExtent: isSmallScreen ? 370 : 385,
             ),
             delegate: SliverChildBuilderDelegate(
                   (context, index) => PropertyCard(
@@ -136,7 +161,8 @@ class _ClientExploreContentState extends State<ClientExploreContent> {
   }
 }
 
-// Enhanced Property Card
+// ── Enhanced Property Card ──────────────────────────────────────────────────
+
 class PropertyCard extends StatefulWidget {
   final Map<String, dynamic> property;
   final String rentalType;
@@ -160,120 +186,168 @@ class _PropertyCardState extends State<PropertyCard> {
   Widget build(BuildContext context) {
     final price = '${widget.property['dailyPrice']}/night';
 
-    return GestureDetector(
-      onTap: widget.onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFEAE6DE)),
-        ),
+    return Card(
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: _border),
+      ),
+      clipBehavior: Clip.antiAlias,
+      color: Colors.white,
+      child: InkWell(
+        onTap: widget.onTap,
+        splashColor: _brand.withOpacity(0.03),
+        highlightColor: Colors.transparent,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Stack(
               children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                AspectRatio(
+                  aspectRatio: 16 / 10,
                   child: Image.network(
                     widget.property['image'],
-                    height: 172,
                     width: double.infinity,
                     fit: BoxFit.cover,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        color: _stone,
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: const AlwaysStoppedAnimation<Color>(_brandLight),
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                : null,
+                          ),
+                        ),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: _stone,
+                      child: const Center(child: Icon(Icons.broken_image_rounded, color: _slate, size: 28)),
+                    ),
                   ),
                 ),
                 Positioned(
-                  top: 12,
-                  right: 12,
-                  child: GestureDetector(
-                    onTap: () => setState(() => _isFavorite = !_isFavorite),
-                    child: CircleAvatar(
-                      radius: 18,
-                      backgroundColor: Colors.white,
-                      child: Icon(
-                        _isFavorite ? Icons.favorite : Icons.favorite_border,
+                  top: 10,
+                  right: 10,
+                  child: Material(
+                    type: MaterialType.circle,
+                    color: Colors.white.withOpacity(0.9),
+                    elevation: 2,
+                    shadowColor: Colors.black12,
+                    child: IconButton(
+                      icon: Icon(
+                        _isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
                         size: 18,
-                        color: _isFavorite ? Colors.pink : Colors.grey[700],
+                        color: _isFavorite ? Colors.pink : _slate,
                       ),
+                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                      padding: EdgeInsets.zero,
+                      splashRadius: 18,
+                      onPressed: () => setState(() => _isFavorite = !_isFavorite),
                     ),
                   ),
                 ),
                 if (widget.property['badge'] != null)
                   Positioned(
-                    top: 12,
-                    left: 12,
+                    top: 10,
+                    left: 10,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
+                        color: _brand.withOpacity(0.95),
+                        borderRadius: BorderRadius.circular(6),
                         boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
                       ),
                       child: Text(
                         widget.property['badge'],
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: _brand),
+                        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white),
                       ),
                     ),
                   ),
               ],
             ),
-            Padding(
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          widget.property['location'],
-                          style: TextStyle(color: _slate, fontSize: 12.5),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                widget.property['location'],
+                                style: const TextStyle(color: _slate, fontSize: 12, fontWeight: FontWeight.w500),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Row(
+                              children: [
+                                const Icon(Icons.star_rounded, size: 14, color: Colors.amber),
+                                const SizedBox(width: 2),
+                                Text(
+                                  widget.property['rating'].toString(),
+                                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: _brand),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          widget.property['title'],
+                          style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700, color: _brand, height: 1.2),
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                      Row(
-                        children: [
-                          const Icon(Icons.star_rounded, size: 15, color: Colors.amber),
-                          const SizedBox(width: 3),
-                          Text(widget.property['rating'].toString(), style: const TextStyle(fontWeight: FontWeight.w600)),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    widget.property['title'],
-                    style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w600, color: _brand),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(widget.property['type'], style: TextStyle(color: _slate, fontSize: 13)),
-                  const SizedBox(height: 8),
-
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: (widget.property['amenities'] as List<String>? ?? ['WiFi', 'Kitchen'])
-                        .take(3)
-                        .map((a) => Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: _stone,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(a, style: const TextStyle(fontSize: 10.5, color: _slate)),
-                    ))
-                        .toList(),
-                  ),
-
-                  const SizedBox(height: 12),
-                  Text(
-                    price,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _brand),
-                  ),
-                ],
+                        const SizedBox(height: 4),
+                        Text(
+                          widget.property['type'],
+                          style: const TextStyle(color: _slate, fontSize: 12, fontWeight: FontWeight.w500),
+                        ),
+                      ],
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Wrap(
+                          spacing: 4,
+                          runSpacing: 4,
+                          children: (widget.property['amenities'] as List<String>? ?? ['WiFi', 'Kitchen'])
+                              .take(3)
+                              .map((a) => Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
+                            decoration: BoxDecoration(
+                              color: _stone,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              a,
+                              style: const TextStyle(fontSize: 10, color: _brandLight, fontWeight: FontWeight.w600),
+                            ),
+                          ))
+                              .toList(),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          price,
+                          style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w800, color: _brand),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -283,7 +357,8 @@ class _PropertyCardState extends State<PropertyCard> {
   }
 }
 
-// Enhanced Sample Properties
+// ── Sample Properties Data ──────────────────────────────────────────────────
+
 final List<Map<String, dynamic>> _sampleProperties = [
   {
     'image': 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800&auto=format&fit=crop',
