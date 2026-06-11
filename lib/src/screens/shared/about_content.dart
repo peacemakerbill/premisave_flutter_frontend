@@ -21,25 +21,30 @@ class AboutContent extends StatelessWidget {
           horizontal: isLarge ? 36 : 20,
           vertical: 28,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const _HeaderSection(),
-            const SizedBox(height: 24),
-            _StatsRow(isLarge: isLarge, isMedium: isMedium),
-            const SizedBox(height: 32),
-            isLarge ? const _MissionVisionRow() : const _MissionVisionColumn(),
-            const SizedBox(height: 32),
-            const _StorySection(),
-            const SizedBox(height: 32),
-            _TeamSection(isLarge: isLarge, isMedium: isMedium),
-            const SizedBox(height: 32),
-            _CoreValuesSection(isLarge: isLarge, isMedium: isMedium),
-            const SizedBox(height: 32),
-            const _TimelineSection(),
-            const SizedBox(height: 32),
-            const _ContactSection(),
-          ],
+        child: Center(
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 1200),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const _HeaderSection(),
+                const SizedBox(height: 24),
+                _StatsRow(isLarge: isLarge, isMedium: isMedium),
+                const SizedBox(height: 32),
+                isLarge ? const _MissionVisionRow() : const _MissionVisionColumn(),
+                const SizedBox(height: 32),
+                const _StorySection(),
+                const SizedBox(height: 32),
+                _TeamSection(isLarge: isLarge, isMedium: isMedium),
+                const SizedBox(height: 32),
+                _CoreValuesSection(isLarge: isLarge, isMedium: isMedium),
+                const SizedBox(height: 32),
+                const _TimelineSection(),
+                const SizedBox(height: 32),
+                const _ContactSection(),
+              ],
+            ),
+          ),
         ),
       );
     });
@@ -54,6 +59,7 @@ class _HeaderSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
@@ -69,10 +75,10 @@ class _HeaderSection extends StatelessWidget {
           ),
         ],
       ),
-      padding: const EdgeInsets.all(40),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
       child: Stack(
+        clipBehavior: Clip.antiAlias,
         children: [
-          // Decorative background circles
           Positioned(
             top: -40,
             right: -40,
@@ -85,19 +91,8 @@ class _HeaderSection extends StatelessWidget {
               ),
             ),
           ),
-          Positioned(
-            bottom: -60,
-            left: -30,
-            child: Container(
-              width: 140,
-              height: 140,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.05),
-              ),
-            ),
-          ),
           Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Container(
                 padding: const EdgeInsets.all(4),
@@ -106,23 +101,24 @@ class _HeaderSection extends StatelessWidget {
                   border: Border.all(color: _gold, width: 3),
                 ),
                 child: const CircleAvatar(
-                  radius: 56,
+                  radius: 50,
                   backgroundImage: NetworkImage(
                     'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400&auto=format&fit=crop',
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
               const Text(
                 'Premisave',
                 style: TextStyle(
-                  fontSize: 38,
+                  fontSize: 34,
                   fontWeight: FontWeight.w800,
                   color: Colors.white,
                   letterSpacing: -0.8,
                 ),
+                textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                 decoration: BoxDecoration(
@@ -133,11 +129,11 @@ class _HeaderSection extends StatelessWidget {
                 child: const Text(
                   'Revolutionizing Real Estate in Kenya',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 13,
                     color: _gold,
                     fontWeight: FontWeight.w600,
-                    letterSpacing: 0.3,
                   ),
+                  textAlign: TextAlign.center,
                 ),
               ),
               const SizedBox(height: 20),
@@ -146,8 +142,8 @@ class _HeaderSection extends StatelessWidget {
                     'through innovative technology — making real estate transactions '
                     'simpler, safer, and more transparent for everyone in Kenya.',
                 style: TextStyle(
-                  fontSize: 15.5,
-                  height: 1.7,
+                  fontSize: 15,
+                  height: 1.6,
                   color: Colors.white.withOpacity(0.85),
                 ),
                 textAlign: TextAlign.center,
@@ -176,51 +172,56 @@ class _StatsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final crossAxisCount = isLarge ? 4 : (isMedium ? 4 : 2);
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        childAspectRatio: isLarge ? 1.5 : 1.3,
-      ),
-      itemCount: _stats.length,
-      itemBuilder: (_, i) {
-        final s = _stats[i];
-        final color = s['color'] as Color;
-        return Container(
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: _border),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(s['icon'] as IconData, color: color, size: 22),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Automatically determine item width based on viewport flags
+        final double itemWidth = isLarge
+            ? (constraints.maxWidth - 48) / 4
+            : isMedium
+            ? (constraints.maxWidth - 48) / 4
+            : (constraints.maxWidth - 16) / 2;
+
+        return Wrap(
+          spacing: 16,
+          runSpacing: 16,
+          children: _stats.map((s) {
+            final color = s['color'] as Color;
+            return Container(
+              width: itemWidth,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: _border),
               ),
-              const SizedBox(height: 12),
-              Text(
-                s['value'] as String,
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: _brand),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(s['icon'] as IconData, color: color, size: 20),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    s['value'] as String,
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: _brand),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    s['label'] as String,
+                    style: const TextStyle(fontSize: 12, color: _slate, fontWeight: FontWeight.w500),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
-              const SizedBox(height: 2),
-              Text(
-                s['label'] as String,
-                style: const TextStyle(fontSize: 12.5, color: _slate, fontWeight: FontWeight.w500),
-              ),
-            ],
-          ),
+            );
+          }).toList(),
         );
       },
     );
@@ -235,7 +236,7 @@ class _MissionVisionRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
           child: _MissionVisionCard(
@@ -246,7 +247,7 @@ class _MissionVisionRow extends StatelessWidget {
             color: Color(0xFF22C55E),
           ),
         ),
-        SizedBox(width: 20),
+        SizedBox(width: 16),
         Expanded(
           child: _MissionVisionCard(
             icon: Icons.visibility_rounded,
@@ -256,7 +257,7 @@ class _MissionVisionRow extends StatelessWidget {
             color: Color(0xFF3B82F6),
           ),
         ),
-        SizedBox(width: 20),
+        SizedBox(width: 16),
         Expanded(
           child: _MissionVisionCard(
             icon: Icons.diamond_rounded,
@@ -285,7 +286,7 @@ class _MissionVisionColumn extends StatelessWidget {
               'and efficient digital solutions that put people first.',
           color: Color(0xFF22C55E),
         ),
-        SizedBox(height: 20),
+        SizedBox(height: 16),
         _MissionVisionCard(
           icon: Icons.visibility_rounded,
           title: 'Our Vision',
@@ -293,7 +294,7 @@ class _MissionVisionColumn extends StatelessWidget {
               "transforming how communities buy, sell, and manage property.",
           color: Color(0xFF3B82F6),
         ),
-        SizedBox(height: 20),
+        SizedBox(height: 16),
         _MissionVisionCard(
           icon: Icons.diamond_rounded,
           title: 'Our Promise',
@@ -317,14 +318,15 @@ class _MissionVisionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(26),
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: _border),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.06),
+            color: color.withOpacity(0.04),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -333,7 +335,7 @@ class _MissionVisionCard extends StatelessWidget {
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [color.withOpacity(0.18), color.withOpacity(0.06)],
@@ -342,12 +344,12 @@ class _MissionVisionCard extends StatelessWidget {
               ),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, size: 32, color: color),
+            child: Icon(icon, size: 28, color: color),
           ),
-          const SizedBox(height: 18),
-          Text(title, style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: color)),
-          const SizedBox(height: 12),
-          Text(content, style: const TextStyle(fontSize: 14.5, height: 1.6, color: _slate), textAlign: TextAlign.center),
+          const SizedBox(height: 16),
+          Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: color)),
+          const SizedBox(height: 10),
+          Text(content, style: const TextStyle(fontSize: 14, height: 1.5, color: _slate), textAlign: TextAlign.center),
         ],
       ),
     );
@@ -370,14 +372,14 @@ class _StorySection extends StatelessWidget {
         children: [
           Container(
             width: 4,
-            height: 130,
-            margin: const EdgeInsets.only(right: 20, top: 4),
+            height: 100,
+            margin: const EdgeInsets.only(right: 16, top: 4),
             decoration: BoxDecoration(
               color: _gold,
               borderRadius: BorderRadius.circular(4),
             ),
           ),
-          const Expanded(
+          Expanded(
             child: Text(
               'Founded in Nairobi, Premisave began with a simple idea: real estate '
                   'in Kenya should be easier to navigate, safer to invest in, and open '
@@ -386,7 +388,7 @@ class _StorySection extends StatelessWidget {
                   'grown into a trusted platform serving thousands of clients across the '
                   'country, with a mission to bring transparency and digital innovation '
                   'to every corner of the housing market.',
-              style: TextStyle(fontSize: 14.5, height: 1.75, color: _slate),
+              style: const TextStyle(fontSize: 14, height: 1.6, color: _slate),
             ),
           ),
         ],
@@ -395,7 +397,7 @@ class _StorySection extends StatelessWidget {
   }
 }
 
-// ── Team & Values ───────────────────────────────────────────────────────────
+// ── Team ────────────────────────────────────────────────────────────────────
 
 class _TeamSection extends StatelessWidget {
   final bool isLarge;
@@ -416,17 +418,23 @@ class _TeamSection extends StatelessWidget {
       title: 'Meet Our Team',
       subtitle: 'Experts driving innovation in real estate',
       icon: Icons.groups_rounded,
-      child: GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: isLarge ? 4 : (isMedium ? 2 : 1),
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          childAspectRatio: isLarge ? 0.78 : 1.6,
-        ),
-        itemCount: teamMembers.length,
-        itemBuilder: (_, i) => _TeamMemberCard(member: teamMembers[i], isLarge: isLarge),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final double itemWidth = isLarge
+              ? (constraints.maxWidth - 48) / 4
+              : isMedium
+              ? (constraints.maxWidth - 16) / 2
+              : constraints.maxWidth;
+
+          return Wrap(
+            spacing: 16,
+            runSpacing: 16,
+            children: teamMembers.map((m) => SizedBox(
+              width: itemWidth,
+              child: _TeamMemberCard(member: m, isLarge: isLarge),
+            )).toList(),
+          );
+        },
       ),
     );
   }
@@ -439,38 +447,37 @@ class _TeamMemberCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final content = [
-      CircleAvatar(radius: isLarge ? 42 : 32, backgroundImage: NetworkImage(member['image'])),
-      SizedBox(width: isLarge ? 0 : 16, height: isLarge ? 16 : 0),
-    ];
+    final avatar = CircleAvatar(radius: 36, backgroundImage: NetworkImage(member['image']));
 
     final textBlock = Column(
       crossAxisAlignment: isLarge ? CrossAxisAlignment.center : CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(member['name'], style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w700, color: _brand), textAlign: isLarge ? TextAlign.center : TextAlign.left),
-        const SizedBox(height: 4),
+        Text(
+          member['name'],
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: _brand),
+          textAlign: isLarge ? TextAlign.center : TextAlign.left,
+        ),
+        const SizedBox(height: 6),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
           decoration: BoxDecoration(
             color: _gold.withOpacity(0.12),
             borderRadius: BorderRadius.circular(20),
           ),
-          child: Text(member['role'], style: const TextStyle(fontSize: 11.5, color: _gold, fontWeight: FontWeight.w700)),
+          child: Text(member['role'], style: const TextStyle(fontSize: 11, color: _gold, fontWeight: FontWeight.w700)),
         ),
         const SizedBox(height: 8),
         Text(
           member['bio'],
-          style: const TextStyle(fontSize: 12.5, color: _slate, height: 1.4),
+          style: const TextStyle(fontSize: 12, color: _slate, height: 1.4),
           textAlign: isLarge ? TextAlign.center : TextAlign.left,
-          maxLines: 3,
-          overflow: TextOverflow.ellipsis,
         ),
       ],
     );
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -478,16 +485,18 @@ class _TeamMemberCard extends StatelessWidget {
       ),
       child: isLarge
           ? Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [content[0], const SizedBox(height: 14), Expanded(child: textBlock)],
+        mainAxisSize: MainAxisSize.min,
+        children: [avatar, const SizedBox(height: 14), textBlock],
       )
           : Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [content[0], const SizedBox(width: 16), Expanded(child: textBlock)],
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [avatar, const SizedBox(width: 16), Expanded(child: textBlock)],
       ),
     );
   }
 }
+
+// ── Core Values ─────────────────────────────────────────────────────────────
 
 class _CoreValuesSection extends StatelessWidget {
   final bool isLarge;
@@ -510,17 +519,23 @@ class _CoreValuesSection extends StatelessWidget {
       title: 'Core Values',
       subtitle: 'The principles that guide our work',
       icon: Icons.diamond_outlined,
-      child: GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: isLarge ? 3 : (isMedium ? 2 : 1),
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          childAspectRatio: isLarge ? 1.35 : (isMedium ? 1.2 : 1.7),
-        ),
-        itemCount: values.length,
-        itemBuilder: (_, i) => _ValueCard(value: values[i]),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final double itemWidth = isLarge
+              ? (constraints.maxWidth - 32) / 3
+              : isMedium
+              ? (constraints.maxWidth - 16) / 2
+              : constraints.maxWidth;
+
+          return Wrap(
+            spacing: 16,
+            runSpacing: 16,
+            children: values.map((v) => SizedBox(
+              width: itemWidth,
+              child: _ValueCard(value: v),
+            )).toList(),
+          );
+        },
       ),
     );
   }
@@ -534,7 +549,7 @@ class _ValueCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = value['color'] as Color;
     return Container(
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -542,17 +557,16 @@ class _ValueCard extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-            child: Icon(value['icon'] as IconData, size: 26, color: color),
+            child: Icon(value['icon'] as IconData, size: 24, color: color),
           ),
-          const SizedBox(height: 16),
-          Text(value['title'], style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: _brand)),
-          const SizedBox(height: 8),
-          Text(value['description'], style: const TextStyle(fontSize: 13.5, height: 1.5, color: _slate)),
+          const SizedBox(height: 14),
+          Text(value['title'], style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _brand)),
+          const SizedBox(height: 6),
+          Text(value['description'], style: const TextStyle(fontSize: 13, height: 1.4, color: _slate)),
         ],
       ),
     );
@@ -581,46 +595,47 @@ class _TimelineSection extends StatelessWidget {
         children: List.generate(_milestones.length, (i) {
           final m = _milestones[i];
           final isLast = i == _milestones.length - 1;
-          return IntrinsicHeight(
+          final dotColor = isLast ? _gold : _brand;
+          return Padding(
+            padding: EdgeInsets.only(bottom: isLast ? 0 : 24),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Column(
-                  children: [
-                    Container(
-                      width: 14,
-                      height: 14,
-                      decoration: BoxDecoration(
-                        color: i == _milestones.length - 1 ? _gold : _brand,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 3),
-                        boxShadow: [BoxShadow(color: (i == _milestones.length - 1 ? _gold : _brand).withOpacity(0.3), blurRadius: 6)],
-                      ),
-                    ),
-                    if (!isLast)
-                      Expanded(
-                        child: Container(
-                          width: 2,
-                          color: _border,
-                          margin: const EdgeInsets.symmetric(vertical: 4),
+                SizedBox(
+                  width: 14,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Container(
+                        width: 14,
+                        height: 14,
+                        decoration: BoxDecoration(
+                          color: dotColor,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 3),
                         ),
                       ),
-                  ],
+                      if (!isLast)
+                        Positioned(
+                          top: 14,
+                          bottom: -24,
+                          left: 6,
+                          child: Container(width: 2, color: _border),
+                        ),
+                    ],
+                  ),
                 ),
-                const SizedBox(width: 18),
+                const SizedBox(width: 16),
                 Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(bottom: isLast ? 0 : 28),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(m['year']!, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: _gold, letterSpacing: 1)),
-                        const SizedBox(height: 4),
-                        Text(m['title']!, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _brand)),
-                        const SizedBox(height: 4),
-                        Text(m['desc']!, style: const TextStyle(fontSize: 13.5, color: _slate, height: 1.5)),
-                      ],
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(m['year']!, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: _gold, letterSpacing: 1)),
+                      const SizedBox(height: 2),
+                      Text(m['title']!, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: _brand)),
+                      const SizedBox(height: 4),
+                      Text(m['desc']!, style: const TextStyle(fontSize: 13, color: _slate, height: 1.4)),
+                    ],
                   ),
                 ),
               ],
@@ -640,7 +655,8 @@ class _ContactSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(32),
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
@@ -653,8 +669,8 @@ class _ContactSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text('Get in Touch', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.5)),
-          const SizedBox(height: 6),
-          Text("We'd love to hear from you", style: TextStyle(fontSize: 14.5, color: Colors.white.withOpacity(0.7))),
+          const SizedBox(height: 4),
+          Text("We'd love to hear from you", style: TextStyle(fontSize: 14, color: Colors.white.withOpacity(0.7))),
           const SizedBox(height: 24),
           const _ContactInfo(icon: Icons.email_rounded, title: 'Email', value: 'contact@premisave.co.ke'),
           const SizedBox(height: 14),
@@ -679,18 +695,18 @@ class _ContactInfo extends StatelessWidget {
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(11),
+          padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), shape: BoxShape.circle),
-          child: Icon(icon, color: _gold, size: 20),
+          child: Icon(icon, color: _gold, size: 18),
         ),
-        const SizedBox(width: 16),
+        const SizedBox(width: 14),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: TextStyle(fontSize: 13.5, color: Colors.white.withOpacity(0.6))),
+              Text(title, style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.6))),
               const SizedBox(height: 2),
-              Text(value, style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w600, color: Colors.white)),
+              Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white)),
             ],
           ),
         ),
@@ -699,7 +715,7 @@ class _ContactInfo extends StatelessWidget {
   }
 }
 
-// ── Shared Section (Dashboard Style) ────────────────────────────────────────
+// ── Shared Section ──────────────────────────────────────────────────────────
 
 class _Section extends StatelessWidget {
   final String title;
@@ -712,6 +728,7 @@ class _Section extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -738,17 +755,17 @@ class _Section extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: _brand, letterSpacing: -0.5)),
+                    Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: _brand, letterSpacing: -0.5)),
                     const SizedBox(height: 4),
-                    Text(subtitle, style: const TextStyle(fontSize: 14.5, color: _slate)),
+                    Text(subtitle, style: const TextStyle(fontSize: 13.5, color: _slate)),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           const Divider(color: Color(0xFFF3EFE6), thickness: 1),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           child,
         ],
       ),
