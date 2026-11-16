@@ -54,6 +54,14 @@ class AuthRepository {
   Future<AuthTokens> facebook(String accessToken) async =>
       _tokens(await _api.post('/auth/facebook', body: {'token': accessToken}));
 
+  /// Linux and Windows desktop: the backend exchanges the authorization code with its own secret.
+  /// [redirectUri] must be the address the code was issued for.
+  Future<AuthTokens> googleCode(String code, String redirectUri) async =>
+      _tokens(await _api.post('/auth/google', body: {'token': code, 'redirectUri': redirectUri}));
+
+  Future<AuthTokens> facebookCode(String code, String redirectUri) async =>
+      _tokens(await _api.post('/auth/facebook', body: {'token': code, 'redirectUri': redirectUri}));
+
   /// [code] is the authorization code GitHub sent back after the person approved.
   Future<AuthTokens> github(String code) async =>
       _tokens(await _api.post('/auth/github', body: {'token': code}));
@@ -71,7 +79,7 @@ class AuthRepository {
 
   Future<String> resendActivation(String email) async {
     final res = await _api.post('/auth/resend-activation', query: {'email': email.trim()});
-    return strOr(asMap(res)['message'], 'If an unverified account exists, a new email is on its way.');
+    return strOr(asMap(res)['message'], 'If there is an account for that address, we have emailed it what to do next. Check your inbox and your spam folder.');
   }
 
   Future<String> forgotPassword(String email) async {

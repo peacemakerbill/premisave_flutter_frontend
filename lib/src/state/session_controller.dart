@@ -93,6 +93,12 @@ class SessionController extends Notifier<SessionState> {
 
   /// Returns false when the person closed the Google or Facebook sheet.
   Future<bool> signInWithGoogle() async {
+    if (SocialAuthService.usesCodeFlow) {
+      final code = await SocialAuthService.googleAuthCode();
+      if (code == null) return false;
+      await _complete(await ref.read(authRepositoryProvider).googleCode(code, SocialAuthService.codeRedirectUri));
+      return true;
+    }
     final token = await SocialAuthService.googleIdToken();
     if (token == null) return false;
     await _complete(await ref.read(authRepositoryProvider).google(token));
@@ -100,6 +106,12 @@ class SessionController extends Notifier<SessionState> {
   }
 
   Future<bool> signInWithFacebook() async {
+    if (SocialAuthService.usesCodeFlow) {
+      final code = await SocialAuthService.facebookAuthCode();
+      if (code == null) return false;
+      await _complete(await ref.read(authRepositoryProvider).facebookCode(code, SocialAuthService.codeRedirectUri));
+      return true;
+    }
     final token = await SocialAuthService.facebookAccessToken();
     if (token == null) return false;
     await _complete(await ref.read(authRepositoryProvider).facebook(token));

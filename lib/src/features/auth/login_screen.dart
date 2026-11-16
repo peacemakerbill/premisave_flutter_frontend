@@ -24,6 +24,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _busy = false;
   bool _socialBusy = false;
   String? _error;
+  String? _info;
   bool _needsVerification = false;
 
   @override
@@ -39,6 +40,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() {
       _busy = true;
       _error = null;
+      _info = null;
       _needsVerification = false;
     });
     try {
@@ -79,6 +81,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             children: <Widget>[
               if (notice != null) ...<Widget>[
                 InlineMessage(notice),
+                const SizedBox(height: 16),
+              ],
+              if (_info != null) ...<Widget>[
+                InlineMessage(_info!),
                 const SizedBox(height: 16),
               ],
               if (_error != null) ...<Widget>[
@@ -143,6 +149,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 },
                 onError: (m) {
                   if (mounted) setState(() => _error = m);
+                },
+                onNotice: (m) {
+                  if (mounted) {
+                    setState(() {
+                      _info = m;
+                      if (m != null) _error = null;
+                    });
+                  }
                 },
               ),
             ],

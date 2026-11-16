@@ -1,3 +1,4 @@
+import 'dart:io' show InternetAddress, ServerSocket, SocketException;
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
@@ -24,21 +25,31 @@ class SocialAuthService {
   static bool get _windows => !kIsWeb && defaultTargetPlatform == TargetPlatform.windows;
   static bool get _linux => !kIsWeb && defaultTargetPlatform == TargetPlatform.linux;
 
-  /// Google's plugin has no Linux or Windows implementation, and its web version often returns
-  /// no ID token. On those platforms Google opens in the browser instead, like GitHub does.
-  static bool get _googleViaBrowser => _isWeb || _linux || _windows;
+  /// Google's web plugin often returns no ID token, so on the web Google opens its own sign in
+  /// page instead. That flow hands the token back after the # in the address, which a browser
+  /// never sends to the small local listener Linux and Windows use for the redirect. Those two
+  /// ask for an authorization code instead (see [usesCodeFlow]).
+  static bool get _googleViaBrowser => _isWeb;
+
+  /// Linux and Windows cannot run Google's or Facebook's own sign in. They open the provider in
+  /// the browser, receive an authorization code on a local port (the same way GitHub works) and
+  /// hand the code to the backend, which exchanges it with the provider secret it holds.
+  static bool get usesCodeFlow => _linux || _windows;
+
+  /// The redirect the browser returns to. The backend must be sent the same address with the code.
+  static String get codeRedirectUri => AppConfig.githubRedirectUri;
 
   static bool get googleAvailable {
-    if (_googleViaBrowser) {
+    if (_googleViaBrowser || usesCodeFlow) {
       return AppConfig.googleClientId.isNotEmpty && AppConfig.githubRedirectUri.isNotEmpty;
     }
     return _android || _ios || _mac;
   }
 
-  /// Facebook's plugin has no Linux implementation, and web and desktop need the app ID.
+  /// Facebook's plugin has no Linux or Windows implementation, and web and macOS need the app ID.
   static bool get facebookAvailable {
-    if (_linux) return false;
-    if (_isWeb || _windows || _mac) return AppConfig.facebookAppId.isNotEmpty;
+    if (usesCodeFlow) return AppConfig.facebookAppId.isNotEmpty && AppConfig.githubRedirectUri.isNotEmpty;
+    if (_isWeb || _mac) return AppConfig.facebookAppId.isNotEmpty;
     return true;
   }
 
@@ -59,13 +70,15 @@ class SocialAuthService {
     switch (provider) {
       case 'google':
         if (googleAvailable) return null;
-        if (_googleViaBrowser) {
+        if (_googleViaBrowser || usesCodeFlow) {
           return 'Google sign in needs GOOGLE_CLIENT_ID and GITHUB_REDIRECT_URI (the shared browser redirect) in your environment file.';
         }
         return 'Google sign in is not available on $_where. Use the web app, Android or iOS, or sign in another way.';
       case 'facebook':
         if (facebookAvailable) return null;
-        if (_linux) return 'Facebook sign in is not available on Linux desktop. Use the web app, Android or iOS, or sign in another way.';
+        if (usesCodeFlow) {
+          return 'Facebook sign in needs FACEBOOK_APP_ID and GITHUB_REDIRECT_URI (the shared browser redirect) in your environment file.';
+        }
         return 'Facebook sign in needs FACEBOOK_APP_ID in your environment file.';
       default:
         if (githubAvailable) return null;
@@ -75,7 +88,7 @@ class SocialAuthService {
 
   /// Call once at start-up. Facebook on web and desktop must be told the app ID first.
   static Future<void> init() async {
-    if (!(_isWeb || _windows || _mac) || AppConfig.facebookAppId.isEmpty) return;
+    if (!(_isWeb || _mac) || AppConfig.facebookAppId.isEmpty) return;
     try {
       await FacebookAuth.instance.webAndDesktopInitialize(
         appId: AppConfig.facebookAppId,
@@ -170,6 +183,75 @@ class SocialAuthService {
     }
   }
 
+  /// Google authorization code for Linux and Windows desktop, or null when the person cancelled.
+  /// The code goes to the backend together with [codeRedirectUri].
+  static Future<String?> googleAuthCode() async {
+    final redirect = Uri.tryParse(AppConfig.githubRedirectUri);
+    if (redirect == null || AppConfig.googleClientId.isEmpty) {
+      throw ApiException(unavailableReason('google') ?? 'Google sign in is not set up.');
+    }
+    final state = _randomState();
+    final authorize = Uri.https('accounts.google.com', '/o/oauth2/v2/auth', <String, String>{
+      'client_id': AppConfig.googleClientId,
+      'redirect_uri': AppConfig.githubRedirectUri,
+      'response_type': 'code',
+      'scope': 'openid email profile',
+      'state': state,
+      'prompt': 'select_account',
+    });
+    return _browserCode(authorize, state, redirect, 'Google');
+  }
+
+  /// Facebook authorization code for Linux and Windows desktop, or null when the person cancelled.
+  static Future<String?> facebookAuthCode() async {
+    final redirect = Uri.tryParse(AppConfig.githubRedirectUri);
+    if (redirect == null || AppConfig.facebookAppId.isEmpty) {
+      throw ApiException(unavailableReason('facebook') ?? 'Facebook sign in is not set up.');
+    }
+    final state = _randomState();
+    final authorize = Uri.https('www.facebook.com', '/v19.0/dialog/oauth', <String, String>{
+      'client_id': AppConfig.facebookAppId,
+      'redirect_uri': AppConfig.githubRedirectUri,
+      'response_type': 'code',
+      'scope': 'email,public_profile',
+      'state': state,
+    });
+    return _browserCode(authorize, state, redirect, 'Facebook');
+  }
+
+  /// Opens [authorize] in the browser and waits for the redirect to the local port. Returns the
+  /// authorization code, or null when the person closed the page or declined.
+  static Future<String?> _browserCode(Uri authorize, String state, Uri redirect, String name) async {
+    try {
+      await _ensureCallbackPortFree(redirect);
+      final result = await FlutterWebAuth2.authenticate(
+        url: authorize.toString(),
+        callbackUrlScheme: _callbackScheme(redirect),
+        options: const FlutterWebAuth2Options(useWebview: false),
+      );
+      final back = Uri.parse(result);
+      final error = back.queryParameters['error'];
+      if (error != null) {
+        if (error == 'access_denied') return null;
+        throw ApiException(back.queryParameters['error_description'] ?? '$name sign-in did not complete.');
+      }
+      if (back.queryParameters['state'] != state) {
+        throw ApiException('$name sign-in could not be verified. Please try again.');
+      }
+      final code = back.queryParameters['code'];
+      if (code == null || code.isEmpty) throw ApiException('$name did not return an authorization code.');
+      return code;
+    } on ApiException {
+      rethrow;
+    } on PlatformException catch (e) {
+      if (_cancelled(e.code) || _cancelled(e.message)) return null;
+      throw ApiException('$name sign-in could not start: ${_short(e)}');
+    } catch (e) {
+      if (_cancelled(e.toString())) return null;
+      throw ApiException('$name sign-in could not start: ${_short(e)}');
+    }
+  }
+
   /// Facebook user access token, or null when the person cancelled.
   static Future<String?> facebookAccessToken() async {
     try {
@@ -205,6 +287,7 @@ class SocialAuthService {
       'allow_signup': 'true',
     });
     try {
+      await _ensureCallbackPortFree(redirect);
       final result = await FlutterWebAuth2.authenticate(
         url: authorize.toString(),
         callbackUrlScheme: _callbackScheme(redirect),
@@ -230,6 +313,21 @@ class SocialAuthService {
     } catch (e) {
       if (_cancelled(e.toString())) return null;
       throw ApiException('GitHub sign-in could not start: ${_short(e)}');
+    }
+  }
+
+  /// Linux and Windows catch the redirect on a local port. When another program already holds it,
+  /// usually the web build of this same app on port 3000, say so instead of showing a socket error.
+  static Future<void> _ensureCallbackPortFree(Uri redirect) async {
+    if (!(_linux || _windows)) return;
+    try {
+      final probe = await ServerSocket.bind(InternetAddress.loopbackIPv4, redirect.port);
+      await probe.close();
+    } on SocketException {
+      throw ApiException(
+        'Port ${redirect.port} is already in use by another program, most likely the web version of '
+        'this app still running. Close it and try again.',
+      );
     }
   }
 

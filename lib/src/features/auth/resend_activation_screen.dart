@@ -54,8 +54,8 @@ class _ResendActivationScreenState extends ConsumerState<ResendActivationScreen>
         title: 'Check your email',
         child: AuthResultView(
           icon: Icons.mark_email_read_outlined,
-          title: 'On its way',
-          message: _done!,
+          title: 'Check your inbox',
+          message: '${_done!}\n\nIf you already verified your account, you can sign in right away.',
           actions: <Widget>[
             PButton(label: 'Back to sign in', expand: true, onPressed: () => context.go('/login')),
             ResendActivationButton(email: _email.text.trim(), label: 'Send it again'),

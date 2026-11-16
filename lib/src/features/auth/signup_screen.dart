@@ -35,6 +35,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   bool _socialBusy = false;
   bool _agreed = false;
   String? _error;
+  String? _info;
   Map<String, String> _fieldErrors = <String, String>{};
   String? _acceptedMessage;
 
@@ -56,6 +57,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     setState(() {
       _busy = true;
       _error = null;
+      _info = null;
       _fieldErrors = <String, String>{};
     });
     try {
@@ -113,6 +115,10 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
+              if (_info != null) ...<Widget>[
+                InlineMessage(_info!),
+                const SizedBox(height: 16),
+              ],
               if (_error != null) ...<Widget>[
                 InlineMessage(_error!, kind: MessageKind.error),
                 const SizedBox(height: 16),
@@ -253,6 +259,14 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 },
                 onError: (m) {
                   if (mounted) setState(() => _error = m);
+                },
+                onNotice: (m) {
+                  if (mounted) {
+                    setState(() {
+                      _info = m;
+                      if (m != null) _error = null;
+                    });
+                  }
                 },
               ),
             ],

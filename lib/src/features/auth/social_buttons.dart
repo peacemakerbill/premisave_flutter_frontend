@@ -9,10 +9,20 @@ import '../../state/session_controller.dart';
 /// "Or continue with" row for sign in and sign up. All three providers are always shown; one
 /// that cannot work on this device says why when it is tapped, instead of failing.
 class SocialAuthButtons extends ConsumerStatefulWidget {
-  const SocialAuthButtons({super.key, required this.onError, this.disabled = false, this.onBusyChanged});
+  const SocialAuthButtons({
+    super.key,
+    required this.onError,
+    this.onNotice,
+    this.disabled = false,
+    this.onBusyChanged,
+  });
 
   /// Receives the message to show, or null to clear the previous one.
   final ValueChanged<String?> onError;
+
+  /// Receives the explanation for a provider that cannot work on this device. It is information,
+  /// not a failure, so a screen can show it more gently. Falls back to [onError] when not given.
+  final ValueChanged<String?>? onNotice;
   final bool disabled;
   final ValueChanged<bool>? onBusyChanged;
 
@@ -26,12 +36,13 @@ class _SocialAuthButtonsState extends ConsumerState<SocialAuthButtons> {
   Future<void> _run(String provider) async {
     final reason = SocialAuthService.unavailableReason(provider);
     if (reason != null) {
-      widget.onError(reason);
+      (widget.onNotice ?? widget.onError)(reason);
       return;
     }
     setState(() => _active = provider);
     widget.onBusyChanged?.call(true);
     widget.onError(null);
+    widget.onNotice?.call(null);
     try {
       final session = ref.read(sessionProvider.notifier);
       switch (provider) {
