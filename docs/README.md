@@ -16,7 +16,7 @@ New to the project? Read the [README](../README.md) first, then [SETUP.md](SETUP
 
 ## The pictures
 
-Everything in `assets/` is plain SVG, drawn by [`tool/readme_assets.py`](../tool/readme_assets.py) with nothing but the Python standard library. The colour themes, the roles grid and the code statistics are **read from the real source files**, so they stay true to the code. After a large change, refresh them:
+Everything in `assets/` is plain SVG, drawn by [`tool/readme_assets.py`](../tool/readme_assets.py) with nothing but the Python standard library. The fonts the pictures use are small subsets kept in [`tool/fonts`](../tool/fonts), embedded into each file so they look the same on GitHub as anywhere else. The colour themes, the roles grid and the code statistics are **read from the real source files**, so they stay true to the code. After a large change, refresh them:
 
 ```bash
 python3 tool/readme_assets.py
