@@ -13,7 +13,7 @@ InputDecoration _decoration(
   String? counter,
 }) {
   OutlineInputBorder border(Color c, [double w = 1.2]) => OutlineInputBorder(
-        borderRadius: BorderRadius.circular(Brand.radiusSmall + 2),
+        borderRadius: BorderRadius.circular(context.radius(Brand.radiusSmall + 2)),
         borderSide: BorderSide(color: c, width: w),
       );
   return InputDecoration(
@@ -223,7 +223,7 @@ class PSelectField<T> extends StatelessWidget {
       children: <Widget>[
         _FieldLabel(label, optional: optional),
         InkWell(
-          borderRadius: BorderRadius.circular(Brand.radiusSmall + 2),
+          borderRadius: BorderRadius.circular(context.radius(Brand.radiusSmall + 2)),
           onTap: enabled ? () => _open(context) : null,
           child: InputDecorator(
             isEmpty: selected == null,
@@ -390,7 +390,7 @@ class PDateField extends StatelessWidget {
       children: <Widget>[
         _FieldLabel(label, optional: optional),
         InkWell(
-          borderRadius: BorderRadius.circular(Brand.radiusSmall + 2),
+          borderRadius: BorderRadius.circular(context.radius(Brand.radiusSmall + 2)),
           onTap: () async {
             final now = DateTime.now();
             final picked = await showDatePicker(

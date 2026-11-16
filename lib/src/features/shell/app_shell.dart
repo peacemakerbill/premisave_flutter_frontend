@@ -27,7 +27,7 @@ class AppShell extends ConsumerWidget {
 
     if (context.isWide) {
       final extended = MediaQuery.of(context).size.width >= 1240;
-      return Scaffold(
+      return PScaffold(
         body: Row(
           children: <Widget>[
             NavigationRail(
@@ -44,7 +44,7 @@ class AppShell extends ConsumerWidget {
                         children: <Widget>[
                           BrandMark(size: 34, onDark: context.isDark),
                           const SizedBox(width: 10),
-                          const Text('premisave', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, letterSpacing: -0.6)),
+                          Text('premisave', style: context.display(size: 19, weight: FontWeight.w800, spacing: -0.6)),
                         ],
                       )
                     : BrandMark(size: 34, onDark: context.isDark),
@@ -85,7 +85,7 @@ class AppShell extends ConsumerWidget {
       );
     }
 
-    return Scaffold(
+    return PScaffold(
       body: child,
       bottomNavigationBar: DecoratedBox(
         decoration: BoxDecoration(border: Border(top: BorderSide(color: context.borderColor))),

@@ -5,6 +5,7 @@ import 'package:shimmer/shimmer.dart';
 import '../branding/premisave_logo.dart';
 import '../network/api_exception.dart';
 import '../theme/brand.dart';
+import '../theme/palette.dart';
 import 'p_button.dart';
 
 class LoadingState extends StatelessWidget {
@@ -59,10 +60,10 @@ class EmptyState extends StatelessWidget {
                 width: 72,
                 height: 72,
                 decoration: BoxDecoration(
-                  color: (context.isDark ? Brand.gold : Brand.green).op(0.1),
+                  color: context.pal.accent.op(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, size: 32, color: context.isDark ? Brand.gold : Brand.green),
+                child: Icon(icon, size: 32, color: context.pal.accent),
               ),
               const SizedBox(height: 18),
               Text(title, textAlign: TextAlign.center, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
@@ -113,10 +114,9 @@ class SkeletonList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = context.isDark;
     return Shimmer.fromColors(
-      baseColor: dark ? Brand.darkSurface : const Color(0xFFEAE4D6),
-      highlightColor: dark ? Brand.greenTonal : const Color(0xFFF7F3EA),
+      baseColor: context.pal.panel2,
+      highlightColor: context.pal.line,
       child: ListView.separated(
         physics: const NeverScrollableScrollPhysics(),
         padding: padding ?? const EdgeInsets.all(20),
@@ -124,7 +124,7 @@ class SkeletonList extends StatelessWidget {
         separatorBuilder: (_, __) => const SizedBox(height: 12),
         itemBuilder: (_, __) => Container(
           height: height,
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(Brand.radius)),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(context.radius(Brand.radius))),
         ),
       ),
     );

@@ -6,6 +6,7 @@ import '../../core/theme/brand.dart';
 import '../../core/widgets/widgets.dart';
 import '../../data/models/user_model.dart';
 import '../../state/session_controller.dart';
+import '../../core/theme/palette.dart';
 
 /// Account hub: profile, security, preferences and sign out.
 class AccountScreen extends ConsumerWidget {
@@ -39,7 +40,7 @@ class AccountScreen extends ConsumerWidget {
                       Wrap(
                         spacing: 8,
                         children: <Widget>[
-                          StatusPill(user.role.label, color: context.isDark ? Brand.gold : Brand.green, dense: true),
+                          StatusPill(user.role.label, color: context.pal.accent, dense: true),
                           StatusPill(user.verified ? 'Verified' : 'Not verified', color: user.verified ? Brand.success : Brand.warning, dense: true),
                         ],
                       ),
@@ -96,7 +97,7 @@ class AccountScreen extends ConsumerWidget {
           const SectionHeader('App'),
           MenuGroup(
             children: <Widget>[
-              MenuTile(icon: Icons.palette_outlined, title: 'Appearance', subtitle: 'Light, dark or follow the device', onTap: () => context.push('/account/settings')),
+              MenuTile(icon: Icons.palette_outlined, title: 'Appearance', subtitle: '14 themes, 9 fonts, corner styles', onTap: () => context.push('/account/settings')),
               MenuTile(icon: Icons.info_outline_rounded, title: 'About Premisave', onTap: () => context.push('/home/about')),
               MenuTile(icon: Icons.support_agent_outlined, title: 'Contact us', onTap: () => context.push('/home/contact')),
             ],

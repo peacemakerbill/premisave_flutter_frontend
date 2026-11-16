@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../branding/premisave_logo.dart' show PremisaveColors;
+import 'palette.dart';
 
 /// Premisave brand tokens. Flat colour only: no gradients, no glows.
 class Brand {
@@ -44,15 +45,41 @@ extension BrandColorX on Color {
   Color op(double opacity) => withValues(alpha: opacity);
 }
 
+/// Scales every corner radius in the shared components (Sharp, Standard, Soft).
+@immutable
+class AppShape extends ThemeExtension<AppShape> {
+  const AppShape({this.scale = 1});
+
+  final double scale;
+
+  @override
+  AppShape copyWith({double? scale}) => AppShape(scale: scale ?? this.scale);
+
+  @override
+  AppShape lerp(ThemeExtension<AppShape>? other, double t) {
+    if (other is! AppShape) return this;
+    return AppShape(scale: scale + (other.scale - scale) * t);
+  }
+}
+
 extension BrandContextX on BuildContext {
   bool get isDark => Theme.of(this).brightness == Brightness.dark;
   ColorScheme get scheme => Theme.of(this).colorScheme;
   TextTheme get text => Theme.of(this).textTheme;
-  Color get borderColor => isDark ? Brand.darkBorder : Brand.border;
-  Color get surfaceColor => isDark ? Brand.darkSurface : Brand.surface;
-  Color get mutedColor => isDark ? Brand.cream.op(0.65) : Brand.muted;
-  Color get inkColor => isDark ? Brand.cream : Brand.ink;
+  Color get borderColor => pal.line;
+  Color get surfaceColor => pal.panel;
+  Color get mutedColor => pal.ink3;
+  Color get inkColor => pal.ink;
   Size get screenSize => MediaQuery.of(this).size;
   bool get isWide => MediaQuery.of(this).size.width >= 900;
   bool get isCompact => MediaQuery.of(this).size.width < 600;
+
+  /// A corner radius that follows the chosen corner style.
+  double radius(double base) => base * (Theme.of(this).extension<AppShape>()?.scale ?? 1);
+
+  /// Heading style in the display font of the chosen font pairing.
+  TextStyle display({double? size, FontWeight? weight, double? spacing, double? height, Color? color}) {
+    final base = Theme.of(this).textTheme.headlineMedium ?? const TextStyle();
+    return base.copyWith(fontSize: size, fontWeight: weight, letterSpacing: spacing, height: height, color: color);
+  }
 }

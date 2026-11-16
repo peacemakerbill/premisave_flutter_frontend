@@ -9,6 +9,7 @@ import '../../core/widgets/widgets.dart';
 import '../../data/models/user_model.dart';
 import '../../state/data_providers.dart';
 import '../../state/providers.dart';
+import '../../core/theme/palette.dart';
 
 enum _UserFilter { all, active, inactive, unverified, archived }
 
@@ -91,7 +92,7 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
   @override
   Widget build(BuildContext context) {
     final value = ref.watch(adminUsersProvider);
-    return Scaffold(
+    return PScaffold(
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _create,
         icon: const Icon(Icons.person_add_alt_1_rounded),
@@ -215,7 +216,7 @@ class _UserTile extends StatelessWidget {
                     spacing: 6,
                     runSpacing: 4,
                     children: <Widget>[
-                      StatusPill(user.role.label, dense: true, color: context.isDark ? Brand.gold : Brand.green),
+                      StatusPill(user.role.label, dense: true, color: context.pal.accent),
                       if (user.archived)
                         const StatusPill('Archived', dense: true, color: Brand.muted)
                       else if (!user.active)

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../network/api_exception.dart';
 import '../theme/brand.dart';
+import '../theme/palette.dart';
 import 'p_button.dart';
 import 'p_text_field.dart';
 
@@ -12,10 +13,10 @@ void showToast(BuildContext context, String message, {bool error = false}) {
     ..hideCurrentSnackBar()
     ..showSnackBar(
       SnackBar(
-        backgroundColor: error ? Brand.danger : null,
+        backgroundColor: error ? context.pal.bad : null,
         content: Row(
           children: <Widget>[
-            Icon(error ? Icons.error_outline_rounded : Icons.check_circle_outline_rounded, size: 20, color: error ? Colors.white : Brand.gold),
+            Icon(error ? Icons.error_outline_rounded : Icons.check_circle_outline_rounded, size: 20, color: error ? Colors.white : context.pal.bg),
             const SizedBox(width: 12),
             Expanded(child: Text(message, style: TextStyle(color: error ? Colors.white : null))),
           ],
@@ -41,7 +42,7 @@ Future<bool> confirmDialog(
     builder: (ctx) => AlertDialog(
       backgroundColor: ctx.surfaceColor,
       surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Brand.radiusLarge)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(ctx.radius(Brand.radiusLarge))),
       title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
       content: Text(message, style: TextStyle(height: 1.45, color: ctx.mutedColor)),
       actions: <Widget>[
@@ -134,7 +135,7 @@ class _PromptDialogState extends State<_PromptDialog> {
     return AlertDialog(
       backgroundColor: context.surfaceColor,
       surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Brand.radiusLarge)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.radius(Brand.radiusLarge))),
       title: Text(widget.title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
       content: SizedBox(
         width: 420,

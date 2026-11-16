@@ -40,7 +40,7 @@ class InlineMessage extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
       decoration: BoxDecoration(
         color: c.op(0.09),
-        borderRadius: BorderRadius.circular(Brand.radiusSmall + 2),
+        borderRadius: BorderRadius.circular(context.radius(Brand.radiusSmall + 2)),
         border: Border.all(color: c.op(0.28)),
       ),
       child: Row(

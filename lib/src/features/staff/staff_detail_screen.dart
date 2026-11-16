@@ -337,7 +337,7 @@ class _StatusDialogState extends State<_StatusDialog> {
     return AlertDialog(
       backgroundColor: context.surfaceColor,
       surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Brand.radiusLarge)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.radius(Brand.radiusLarge))),
       title: Text(_title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
       content: SizedBox(
         width: 440,
@@ -427,7 +427,7 @@ class _DocReviewDialogState extends State<_DocReviewDialog> {
     return AlertDialog(
       backgroundColor: context.surfaceColor,
       surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Brand.radiusLarge)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.radius(Brand.radiusLarge))),
       title: Text(widget.doc.typeLabel, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
       content: SizedBox(
         width: 420,

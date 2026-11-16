@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/brand.dart';
+import '../theme/palette.dart';
 
 /// Flat bordered surface. Taps ripple inside the rounded corners.
 class PCard extends StatelessWidget {
@@ -11,7 +12,7 @@ class PCard extends StatelessWidget {
     this.onTap,
     this.color,
     this.borderColor,
-    this.radius = Brand.radius,
+    this.radius,
     this.margin,
   });
 
@@ -20,7 +21,7 @@ class PCard extends StatelessWidget {
   final VoidCallback? onTap;
   final Color? color;
   final Color? borderColor;
-  final double radius;
+  final double? radius;
   final EdgeInsetsGeometry? margin;
 
   @override
@@ -29,7 +30,7 @@ class PCard extends StatelessWidget {
       color: color ?? context.surfaceColor,
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(radius),
+        borderRadius: BorderRadius.circular(context.radius(radius ?? Brand.radius)),
         side: BorderSide(color: borderColor ?? context.borderColor),
       ),
       child: InkWell(
@@ -41,7 +42,7 @@ class PCard extends StatelessWidget {
   }
 }
 
-/// A solid brand-green panel for hero areas. Text inside should be cream.
+/// A solid panel in the theme's hero colour for feature areas. Text inside should be cream.
 class HeroPanel extends StatelessWidget {
   const HeroPanel({super.key, required this.child, this.padding = const EdgeInsets.all(22)});
 
@@ -54,8 +55,8 @@ class HeroPanel extends StatelessWidget {
       width: double.infinity,
       padding: padding,
       decoration: BoxDecoration(
-        color: context.isDark ? Brand.greenTonal : Brand.green,
-        borderRadius: BorderRadius.circular(Brand.radiusLarge),
+        color: context.pal.hero,
+        borderRadius: BorderRadius.circular(context.radius(Brand.radiusLarge)),
       ),
       child: DefaultTextStyle.merge(
         style: const TextStyle(color: Brand.cream),
@@ -116,7 +117,7 @@ class StatTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = tint ?? (context.isDark ? Brand.gold : Brand.green);
+    final c = tint ?? context.pal.accent;
     return PCard(
       onTap: onTap,
       padding: const EdgeInsets.all(16),
@@ -127,7 +128,7 @@ class StatTile extends StatelessWidget {
           Container(
             width: 38,
             height: 38,
-            decoration: BoxDecoration(color: c.op(0.13), borderRadius: BorderRadius.circular(11)),
+            decoration: BoxDecoration(color: c.op(0.13), borderRadius: BorderRadius.circular(context.radius(11))),
             child: Icon(icon, color: c, size: 20),
           ),
           const SizedBox(height: 14),
@@ -266,7 +267,7 @@ class MenuTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = tint ?? (context.isDark ? Brand.gold : Brand.green);
+    final c = tint ?? context.pal.accent;
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -276,7 +277,7 @@ class MenuTile extends StatelessWidget {
             Container(
               width: 36,
               height: 36,
-              decoration: BoxDecoration(color: c.op(0.12), borderRadius: BorderRadius.circular(10)),
+              decoration: BoxDecoration(color: c.op(0.12), borderRadius: BorderRadius.circular(context.radius(10))),
               child: Icon(icon, size: 19, color: c),
             ),
             const SizedBox(width: 14),

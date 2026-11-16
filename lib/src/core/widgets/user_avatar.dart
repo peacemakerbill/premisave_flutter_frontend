@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../config/app_config.dart';
-import '../theme/brand.dart';
+import '../theme/palette.dart';
 
 /// Round profile picture that falls back to initials.
 class UserAvatar extends StatelessWidget {
@@ -33,7 +33,7 @@ class UserAvatar extends StatelessWidget {
     if (!ring) return avatar;
     return Container(
       padding: const EdgeInsets.all(2.5),
-      decoration: const BoxDecoration(shape: BoxShape.circle, color: Brand.gold),
+      decoration: BoxDecoration(shape: BoxShape.circle, color: context.pal.accent),
       child: avatar,
     );
   }
@@ -48,12 +48,12 @@ class _Initials extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: context.isDark ? Brand.greenTonal : Brand.green,
+      color: context.pal.hero,
       alignment: Alignment.center,
       child: Text(
         initials,
         style: TextStyle(
-          color: Brand.gold,
+          color: context.pal.dark ? context.pal.accent : context.pal.accentInk,
           fontWeight: FontWeight.w800,
           fontSize: size * 0.36,
           letterSpacing: 0.5,

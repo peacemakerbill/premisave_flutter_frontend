@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../theme/brand.dart';
+import 'p_scaffold.dart';
 
 /// Centres content and caps its width so wide screens do not stretch forms and lists.
 class ContentWidth extends StatelessWidget {
@@ -111,7 +112,7 @@ class PageTitle extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text(title, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800, letterSpacing: -0.8)),
+                Text(title, style: context.display(size: 26, weight: FontWeight.w800, spacing: -0.8, height: 1.15)),
                 if (subtitle != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
@@ -138,7 +139,7 @@ class SubPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PScaffold(
       appBar: AppBar(
         leading: Navigator.of(context).canPop()
             ? null
@@ -147,7 +148,7 @@ class SubPage extends StatelessWidget {
                 icon: const Icon(Icons.arrow_back_rounded),
                 onPressed: () => context.go(fallbackRoute),
               ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+        title: Text(title, style: context.display(size: 18, weight: FontWeight.w800)),
         centerTitle: false,
         elevation: 0,
         scrolledUnderElevation: 0,

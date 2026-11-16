@@ -1,118 +1,118 @@
 import 'package:flutter/material.dart';
 
+import '../../state/appearance_controller.dart';
+import 'appearance_options.dart';
 import 'brand.dart';
+import 'palette.dart';
 
-/// Light and dark themes. Component styling that changes between Flutter releases
-/// (cards, dialogs, inputs, tabs) lives in the widgets under core/widgets instead.
+/// Builds the Flutter theme from a colour palette, a font and a corner style.
 class AppTheme {
   AppTheme._();
 
-  static ThemeData get light => _build(Brightness.light);
-  static ThemeData get dark => _build(Brightness.dark);
+  /// The theme for an explicit palette, or for the light or dark Premisave palette while following the device.
+  static ThemeData forAppearance(Appearance a, {Brightness device = Brightness.light}) {
+    final palette = a.palette ?? (device == Brightness.dark ? AppPalette.premisaveNight : AppPalette.premisave);
+    return build(palette, font: a.font, corner: a.corner);
+  }
 
-  static ThemeData _build(Brightness brightness) {
-    final dark = brightness == Brightness.dark;
+  static ThemeData build(AppPalette p, {required FontOption font, required CornerOption corner}) {
+    final dark = p.dark;
+    final s = corner.scale;
+    final brightness = dark ? Brightness.dark : Brightness.light;
 
     final scheme = ColorScheme(
       brightness: brightness,
-      primary: dark ? Brand.gold : Brand.green,
-      onPrimary: dark ? Brand.green : Brand.cream,
-      secondary: dark ? Brand.cream : Brand.gold,
-      onSecondary: Brand.green,
-      tertiary: Brand.gold,
-      onTertiary: Brand.green,
-      error: Brand.danger,
-      onError: Colors.white,
-      surface: dark ? Brand.darkSurface : Brand.surface,
-      onSurface: dark ? Brand.cream : Brand.ink,
-      surfaceContainerHighest: dark ? Brand.greenTonal : const Color(0xFFEFE9DB),
-      onSurfaceVariant: dark ? Brand.cream.op(0.7) : Brand.muted,
-      outline: dark ? Brand.darkBorder : Brand.border,
-      outlineVariant: dark ? Brand.darkBorder : Brand.border,
-      primaryContainer: dark ? Brand.greenTonal : const Color(0xFFDCEBE4),
-      onPrimaryContainer: dark ? Brand.cream : Brand.green,
-      secondaryContainer: dark ? Brand.greenTonal : const Color(0xFFFBEBC8),
-      onSecondaryContainer: dark ? Brand.gold : Brand.goldDeep,
+      primary: p.accent,
+      onPrimary: p.accentInk,
+      secondary: p.accent,
+      onSecondary: p.accentInk,
+      tertiary: p.warn,
+      onTertiary: p.accentInk,
+      error: p.bad,
+      onError: dark ? Colors.black : Colors.white,
+      surface: p.panel,
+      onSurface: p.ink,
+      surfaceContainerHighest: p.panel2,
+      onSurfaceVariant: p.ink3,
+      outline: p.line2,
+      outlineVariant: p.line,
+      primaryContainer: p.accentSoft,
+      onPrimaryContainer: p.ink,
+      secondaryContainer: p.accentSoft,
+      onSecondaryContainer: p.ink,
     );
 
-    final base = ThemeData(brightness: brightness, useMaterial3: true);
-    final textTheme = base.textTheme.apply(
-      fontFamily: Brand.fontFamily,
-      bodyColor: scheme.onSurface,
-      displayColor: scheme.onSurface,
-    );
+    final base = ThemeData(brightness: brightness, useMaterial3: true).textTheme;
+    var text = base.apply(fontFamily: font.sans, bodyColor: p.ink, displayColor: p.ink);
+    final heading = font.display;
+    if (heading != null) {
+      TextStyle? h(TextStyle? t) => t?.copyWith(fontFamily: heading);
+      text = text.copyWith(
+        displayLarge: h(text.displayLarge),
+        displayMedium: h(text.displayMedium),
+        displaySmall: h(text.displaySmall),
+        headlineLarge: h(text.headlineLarge),
+        headlineMedium: h(text.headlineMedium),
+        headlineSmall: h(text.headlineSmall),
+        titleLarge: h(text.titleLarge),
+      );
+    }
 
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
       colorScheme: scheme,
-      fontFamily: Brand.fontFamily,
-      textTheme: textTheme,
-      scaffoldBackgroundColor: dark ? Brand.darkBackground : Brand.cream,
-      canvasColor: dark ? Brand.darkBackground : Brand.cream,
+      fontFamily: font.sans,
+      textTheme: text,
+      scaffoldBackgroundColor: p.bg,
+      canvasColor: p.panel,
       splashFactory: InkRipple.splashFactory,
       visualDensity: VisualDensity.standard,
-      dividerTheme: DividerThemeData(color: scheme.outline, thickness: 1, space: 1),
+      extensions: <ThemeExtension<dynamic>>[p, AppShape(scale: s)],
+      dividerTheme: DividerThemeData(color: p.line, thickness: 1, space: 1),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: dark ? Brand.cream : Brand.green,
-        contentTextStyle: TextStyle(
-          fontFamily: Brand.fontFamily,
-          color: dark ? Brand.green : Brand.cream,
-          fontWeight: FontWeight.w600,
-        ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Brand.radiusSmall + 2)),
+        backgroundColor: p.ink,
+        contentTextStyle: TextStyle(color: p.bg, fontWeight: FontWeight.w600),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12 * s)),
       ),
       bottomSheetTheme: BottomSheetThemeData(
-        backgroundColor: scheme.surface,
+        backgroundColor: p.panel,
         surfaceTintColor: Colors.transparent,
         showDragHandle: true,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(Brand.radiusLarge)),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(Brand.radiusLarge * s))),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: scheme.surface,
+        backgroundColor: p.panel,
         surfaceTintColor: Colors.transparent,
-        indicatorColor: dark ? Brand.greenTonal : Brand.green,
+        indicatorColor: p.accent,
         height: 68,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
           return TextStyle(
-            fontFamily: Brand.fontFamily,
             fontSize: 12,
             fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-            color: selected ? scheme.onSurface : scheme.onSurfaceVariant,
+            color: selected ? p.ink : p.ink3,
           );
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
-          return IconThemeData(
-            color: selected ? (dark ? Brand.gold : Brand.cream) : scheme.onSurfaceVariant,
-          );
+          return IconThemeData(color: selected ? p.accentInk : p.ink3);
         }),
       ),
       navigationRailTheme: NavigationRailThemeData(
-        backgroundColor: scheme.surface,
-        indicatorColor: dark ? Brand.greenTonal : Brand.green,
-        selectedIconTheme: IconThemeData(color: dark ? Brand.gold : Brand.cream),
-        unselectedIconTheme: IconThemeData(color: scheme.onSurfaceVariant),
-        selectedLabelTextStyle: TextStyle(
-          fontFamily: Brand.fontFamily,
-          fontWeight: FontWeight.w700,
-          color: scheme.onSurface,
-        ),
-        unselectedLabelTextStyle: TextStyle(
-          fontFamily: Brand.fontFamily,
-          fontWeight: FontWeight.w500,
-          color: scheme.onSurfaceVariant,
-        ),
+        backgroundColor: p.panel,
+        indicatorColor: p.accent,
+        selectedIconTheme: IconThemeData(color: p.accentInk),
+        unselectedIconTheme: IconThemeData(color: p.ink3),
+        selectedLabelTextStyle: TextStyle(fontWeight: FontWeight.w700, color: p.ink),
+        unselectedLabelTextStyle: TextStyle(fontWeight: FontWeight.w500, color: p.ink3),
       ),
-      progressIndicatorTheme: ProgressIndicatorThemeData(color: scheme.primary),
+      progressIndicatorTheme: ProgressIndicatorThemeData(color: p.accent),
       chipTheme: ChipThemeData(
-        side: BorderSide(color: scheme.outline),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Brand.radiusSmall)),
-        labelStyle: const TextStyle(fontFamily: Brand.fontFamily, fontWeight: FontWeight.w600),
+        side: BorderSide(color: p.line),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Brand.radiusSmall * s)),
+        labelStyle: const TextStyle(fontWeight: FontWeight.w600),
       ),
     );
   }

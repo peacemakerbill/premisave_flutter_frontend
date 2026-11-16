@@ -10,6 +10,7 @@ import '../../state/providers.dart';
 import '../../state/session_controller.dart';
 import 'people_screen.dart';
 import 'person_tile.dart';
+import '../../core/theme/palette.dart';
 
 class PublicProfileScreen extends ConsumerStatefulWidget {
   const PublicProfileScreen({super.key, required this.userId});
@@ -110,7 +111,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                   runSpacing: 6,
                   alignment: WrapAlignment.center,
                   children: <Widget>[
-                    StatusPill(u.role.label, color: context.isDark ? Brand.gold : Brand.green),
+                    StatusPill(u.role.label, color: context.pal.accent),
                     if (u.verified) const StatusPill('Verified', color: Brand.success, icon: Icons.verified_rounded),
                     if (u.country.isNotEmpty) StatusPill(u.country, color: Brand.info, icon: Icons.public_rounded),
                     if (p.mutual) const StatusPill('You follow each other', color: Brand.gold),

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/branding/premisave_logo.dart';
 import '../../core/theme/brand.dart';
 import '../../core/widgets/widgets.dart';
+import '../../core/theme/palette.dart';
 
 /// First screen for signed-out visitors.
 class WelcomeScreen extends StatelessWidget {
@@ -13,7 +14,7 @@ class WelcomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final wide = context.isWide;
     return Scaffold(
-      backgroundColor: Brand.green,
+      backgroundColor: context.pal.hero,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/brand.dart';
+import '../theme/palette.dart';
 
 enum PButtonKind { primary, accent, outline, text, danger }
 
@@ -27,7 +28,7 @@ class PButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = context.isDark;
+    final pal = context.pal;
     final enabled = onPressed != null && !loading;
 
     late final Color bg;
@@ -35,35 +36,35 @@ class PButton extends StatelessWidget {
     Color? border;
     switch (kind) {
       case PButtonKind.primary:
-        bg = dark ? Brand.gold : Brand.green;
-        fg = dark ? Brand.green : Brand.cream;
+        bg = pal.accent;
+        fg = pal.accentInk;
         break;
       case PButtonKind.accent:
-        bg = Brand.gold;
-        fg = Brand.green;
+        bg = pal.accentSoft;
+        fg = pal.dark ? pal.accent : pal.ink;
+        border = pal.accent.op(0.5);
         break;
       case PButtonKind.danger:
-        bg = Brand.danger;
-        fg = Colors.white;
+        bg = pal.bad;
+        fg = pal.dark ? Colors.black : Colors.white;
         break;
       case PButtonKind.outline:
         bg = Colors.transparent;
-        fg = dark ? Brand.cream : Brand.green;
-        border = context.borderColor;
+        fg = pal.ink;
+        border = pal.line2;
         break;
       case PButtonKind.text:
         bg = Colors.transparent;
-        fg = dark ? Brand.gold : Brand.green;
+        fg = pal.accent;
         break;
     }
 
     final height = small ? 38.0 : 50.0;
     final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(small ? 10 : 14),
+      borderRadius: BorderRadius.circular(context.radius(small ? 10 : 14)),
       side: border == null ? BorderSide.none : BorderSide(color: border, width: 1.4),
     );
     final textStyle = TextStyle(
-      fontFamily: Brand.fontFamily,
       fontSize: small ? 13 : 15,
       fontWeight: FontWeight.w700,
       letterSpacing: 0.1,

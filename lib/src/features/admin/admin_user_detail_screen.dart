@@ -9,6 +9,7 @@ import '../../data/models/user_model.dart';
 import '../../state/data_providers.dart';
 import '../../state/providers.dart';
 import '../../state/session_controller.dart';
+import '../../core/theme/palette.dart';
 
 /// Administrators: one account, with every management action.
 class AdminUserDetailScreen extends ConsumerStatefulWidget {
@@ -128,7 +129,7 @@ class _AdminUserDetailScreenState extends ConsumerState<AdminUserDetailScreen> {
                   runSpacing: 6,
                   alignment: WrapAlignment.center,
                   children: <Widget>[
-                    StatusPill(u.role.label, color: context.isDark ? Brand.gold : Brand.green),
+                    StatusPill(u.role.label, color: context.pal.accent),
                     StatusPill(u.active ? 'Active' : 'Inactive', color: u.active ? Brand.success : Brand.danger),
                     StatusPill(u.verified ? 'Verified' : 'Not verified', color: u.verified ? Brand.success : Brand.warning),
                     if (u.archived) const StatusPill('Archived', color: Brand.muted),

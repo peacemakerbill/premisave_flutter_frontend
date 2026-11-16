@@ -53,6 +53,96 @@ flutter:
           weight: 700
         - asset: assets/fonts/PlusJakartaSans-ExtraBold.ttf
           weight: 800
+    - family: IBMPlexSans
+      fonts:
+        - asset: assets/fonts/IBMPlexSans-400.ttf
+          weight: 400
+        - asset: assets/fonts/IBMPlexSans-600.ttf
+          weight: 600
+        - asset: assets/fonts/IBMPlexSans-700.ttf
+          weight: 700
+    - family: IBMPlexSansCondensed
+      fonts:
+        - asset: assets/fonts/IBMPlexSansCondensed-400.ttf
+          weight: 400
+        - asset: assets/fonts/IBMPlexSansCondensed-600.ttf
+          weight: 600
+        - asset: assets/fonts/IBMPlexSansCondensed-700.ttf
+          weight: 700
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-400.ttf
+          weight: 400
+        - asset: assets/fonts/Inter-600.ttf
+          weight: 600
+        - asset: assets/fonts/Inter-700.ttf
+          weight: 700
+        - asset: assets/fonts/Inter-800.ttf
+          weight: 800
+    - family: DMSans
+      fonts:
+        - asset: assets/fonts/DMSans-400.ttf
+          weight: 400
+        - asset: assets/fonts/DMSans-600.ttf
+          weight: 600
+        - asset: assets/fonts/DMSans-700.ttf
+          weight: 700
+        - asset: assets/fonts/DMSans-800.ttf
+          weight: 800
+    - family: SpaceGrotesk
+      fonts:
+        - asset: assets/fonts/SpaceGrotesk-400.ttf
+          weight: 400
+        - asset: assets/fonts/SpaceGrotesk-600.ttf
+          weight: 600
+        - asset: assets/fonts/SpaceGrotesk-700.ttf
+          weight: 700
+    - family: SourceSans3
+      fonts:
+        - asset: assets/fonts/SourceSans3-400.ttf
+          weight: 400
+        - asset: assets/fonts/SourceSans3-600.ttf
+          weight: 600
+        - asset: assets/fonts/SourceSans3-700.ttf
+          weight: 700
+        - asset: assets/fonts/SourceSans3-800.ttf
+          weight: 800
+    - family: Fraunces
+      fonts:
+        - asset: assets/fonts/Fraunces-400.ttf
+          weight: 400
+        - asset: assets/fonts/Fraunces-600.ttf
+          weight: 600
+        - asset: assets/fonts/Fraunces-700.ttf
+          weight: 700
+        - asset: assets/fonts/Fraunces-800.ttf
+          weight: 800
+    - family: SourceSerif4
+      fonts:
+        - asset: assets/fonts/SourceSerif4-400.ttf
+          weight: 400
+        - asset: assets/fonts/SourceSerif4-600.ttf
+          weight: 600
+        - asset: assets/fonts/SourceSerif4-700.ttf
+          weight: 700
+        - asset: assets/fonts/SourceSerif4-800.ttf
+          weight: 800
+    - family: AtkinsonHyperlegible
+      fonts:
+        - asset: assets/fonts/AtkinsonHyperlegible-400.ttf
+          weight: 400
+        - asset: assets/fonts/AtkinsonHyperlegible-700.ttf
+          weight: 700
+    - family: JetBrainsMono
+      fonts:
+        - asset: assets/fonts/JetBrainsMono-400.ttf
+          weight: 400
+        - asset: assets/fonts/JetBrainsMono-600.ttf
+          weight: 600
+        - asset: assets/fonts/JetBrainsMono-700.ttf
+          weight: 700
+        - asset: assets/fonts/JetBrainsMono-800.ttf
+          weight: 800
 
 # Generates the launcher icons for every platform: dart run flutter_launcher_icons
 flutter_launcher_icons:

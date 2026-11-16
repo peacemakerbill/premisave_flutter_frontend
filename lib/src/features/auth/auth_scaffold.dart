@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../core/branding/premisave_logo.dart';
 import '../../core/theme/brand.dart';
+import '../../core/widgets/p_scaffold.dart';
+import '../../core/theme/palette.dart';
 
 /// Shared frame for every signed-out screen. Wide screens get a brand panel beside the form.
 class AuthScaffold extends StatelessWidget {
@@ -25,7 +27,7 @@ class AuthScaffold extends StatelessWidget {
     final wide = MediaQuery.of(context).size.width >= 920;
     final form = _FormColumn(title: title, subtitle: subtitle, footer: footer, leading: leading, showLogo: !wide, child: child);
 
-    return Scaffold(
+    return PScaffold(
       body: wide
           ? Row(
               children: <Widget>[
@@ -103,7 +105,7 @@ class _BrandPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Brand.green,
+      color: context.pal.hero,
       padding: const EdgeInsets.all(48),
       child: const SafeArea(
         child: Column(

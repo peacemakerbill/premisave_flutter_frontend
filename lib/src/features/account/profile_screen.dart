@@ -6,6 +6,7 @@ import '../../core/theme/brand.dart';
 import '../../core/widgets/widgets.dart';
 import '../../state/data_providers.dart';
 import '../../state/session_controller.dart';
+import '../../core/theme/palette.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -41,7 +42,7 @@ class ProfileScreen extends ConsumerWidget {
                   child: Wrap(
                     spacing: 8,
                     children: <Widget>[
-                      StatusPill(user.role.label, color: context.isDark ? Brand.gold : Brand.green),
+                      StatusPill(user.role.label, color: context.pal.accent),
                       StatusPill(user.verified ? 'Email verified' : 'Email not verified', color: user.verified ? Brand.success : Brand.warning),
                     ],
                   ),
