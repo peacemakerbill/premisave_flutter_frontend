@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1146 230" width="1146" height="230" role="img" aria-labelledby="t d"><title id="t">Tech stack</title><desc id="d">The main libraries and tools the app is built with.</desc><defs></defs><style>
+text { font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+.t { animation: in .6s both; } @keyframes in { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform:none; } }</style><rect width="1146" height="230" rx="22" fill="#0E3B2F"/><text x="24" y="38" font-size="22" font-weight="800" fill="#F6F1E7">Built with</text><g class="t" style="animation-delay:0.00s"><rect x="16" y="66" width="210" height="66" rx="16" fill="#14493B" stroke="#E3A72F" stroke-opacity=".45"/>
+<circle cx="46" cy="99.0" r="9" fill="#E3A72F"/><circle cx="46" cy="99.0" r="3.5" fill="#14493B"/>
+<text x="68" y="97.0" font-size="15" font-weight="700" fill="#F6F1E7">Flutter</text><text x="68" y="115.0" font-size="12" fill="#A9C4B8">3.x</text></g><g class="t" style="animation-delay:0.08s"><rect x="242" y="66" width="210" height="66" rx="16" fill="#14493B" stroke="#E3A72F" stroke-opacity=".45"/>
+<circle cx="272" cy="99.0" r="9" fill="#E3A72F"/><circle cx="272" cy="99.0" r="3.5" fill="#14493B"/>
+<text x="294" y="97.0" font-size="15" font-weight="700" fill="#F6F1E7">Dart</text><text x="294" y="115.0" font-size="12" fill="#A9C4B8">&gt;= 3.3</text></g><g class="t" style="animation-delay:0.16s"><rect x="468" y="66" width="210" height="66" rx="16" fill="#14493B" stroke="#E3A72F" stroke-opacity=".45"/>
+<circle cx="498" cy="99.0" r="9" fill="#E3A72F"/><circle cx="498" cy="99.0" r="3.5" fill="#14493B"/>
+<text x="520" y="97.0" font-size="15" font-weight="700" fill="#F6F1E7">Riverpod</text><text x="520" y="115.0" font-size="12" fill="#A9C4B8">2</text></g><g class="t" style="animation-delay:0.24s"><rect x="694" y="66" width="210" height="66" rx="16" fill="#14493B" stroke="#E3A72F" stroke-opacity=".45"/>
+<circle cx="724" cy="99.0" r="9" fill="#E3A72F"/><circle cx="724" cy="99.0" r="3.5" fill="#14493B"/>
+<text x="746" y="97.0" font-size="15" font-weight="700" fill="#F6F1E7">go_router</text><text x="746" y="115.0" font-size="12" fill="#A9C4B8">14</text></g><g class="t" style="animation-delay:0.32s"><rect x="920" y="66" width="210" height="66" rx="16" fill="#14493B" stroke="#E3A72F" stroke-opacity=".45"/>
+<circle cx="950" cy="99.0" r="9" fill="#E3A72F"/><circle cx="950" cy="99.0" r="3.5" fill="#14493B"/>
+<text x="972" y="97.0" font-size="15" font-weight="700" fill="#F6F1E7">Dio</text><text x="972" y="115.0" font-size="12" fill="#A9C4B8">HTTP</text></g><g class="t" style="animation-delay:0.40s"><rect x="16" y="148" width="210" height="66" rx="16" fill="#14493B" stroke="#E3A72F" stroke-opacity=".45"/>
+<circle cx="46" cy="181.0" r="9" fill="#E3A72F"/><circle cx="46" cy="181.0" r="3.5" fill="#14493B"/>
+<text x="68" y="179.0" font-size="15" font-weight="700" fill="#F6F1E7">flutter_map</text><text x="68" y="197.0" font-size="12" fill="#A9C4B8">OSM</text></g><g class="t" style="animation-delay:0.48s"><rect x="242" y="148" width="210" height="66" rx="16" fill="#14493B" stroke="#E3A72F" stroke-opacity=".45"/>
+<circle cx="272" cy="181.0" r="9" fill="#E3A72F"/><circle cx="272" cy="181.0" r="3.5" fill="#14493B"/>
+<text x="294" y="179.0" font-size="15" font-weight="700" fill="#F6F1E7">google_maps_flutter</text><text x="294" y="197.0" font-size="12" fill="#A9C4B8">maps</text></g><g class="t" style="animation-delay:0.56s"><rect x="468" y="148" width="210" height="66" rx="16" fill="#14493B" stroke="#E3A72F" stroke-opacity=".45"/>
+<circle cx="498" cy="181.0" r="9" fill="#E3A72F"/><circle cx="498" cy="181.0" r="3.5" fill="#14493B"/>
+<text x="520" y="179.0" font-size="15" font-weight="700" fill="#F6F1E7">secure storage</text><text x="520" y="197.0" font-size="12" fill="#A9C4B8">tokens</text></g><g class="t" style="animation-delay:0.64s"><rect x="694" y="148" width="210" height="66" rx="16" fill="#14493B" stroke="#E3A72F" stroke-opacity=".45"/>
+<circle cx="724" cy="181.0" r="9" fill="#E3A72F"/><circle cx="724" cy="181.0" r="3.5" fill="#14493B"/>
+<text x="746" y="179.0" font-size="15" font-weight="700" fill="#F6F1E7">shared_preferences</text><text x="746" y="197.0" font-size="12" fill="#A9C4B8">look</text></g><g class="t" style="animation-delay:0.72s"><rect x="920" y="148" width="210" height="66" rx="16" fill="#14493B" stroke="#E3A72F" stroke-opacity=".45"/>
+<circle cx="950" cy="181.0" r="9" fill="#E3A72F"/><circle cx="950" cy="181.0" r="3.5" fill="#14493B"/>
+<text x="972" y="179.0" font-size="15" font-weight="700" fill="#F6F1E7">Spring Boot</text><text x="972" y="197.0" font-size="12" fill="#A9C4B8">backend</text></g></svg>

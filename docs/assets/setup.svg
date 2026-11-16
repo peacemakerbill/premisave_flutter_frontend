@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 230" width="1200" height="230" role="img" aria-labelledby="t d"><title id="t">Setup steps</title><desc id="d">Six steps from installing the tools to signing in to the running app.</desc><defs></defs><style>
+text { font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+.n0 { animation: n0 12s infinite; }
+@keyframes n0 { 0%,0.0% { fill:#14493B; } 2.0%,14.7% { fill:#E3A72F; } 100% { fill:#14493B; } }
+.n1 { animation: n1 12s infinite; }
+@keyframes n1 { 0%,16.7% { fill:#14493B; } 18.7%,31.3% { fill:#E3A72F; } 100% { fill:#14493B; } }
+.n2 { animation: n2 12s infinite; }
+@keyframes n2 { 0%,33.3% { fill:#14493B; } 35.3%,48.0% { fill:#E3A72F; } 100% { fill:#14493B; } }
+.n3 { animation: n3 12s infinite; }
+@keyframes n3 { 0%,50.0% { fill:#14493B; } 52.0%,64.7% { fill:#E3A72F; } 100% { fill:#14493B; } }
+.n4 { animation: n4 12s infinite; }
+@keyframes n4 { 0%,66.7% { fill:#14493B; } 68.7%,81.3% { fill:#E3A72F; } 100% { fill:#14493B; } }
+.n5 { animation: n5 12s infinite; }
+@keyframes n5 { 0%,83.3% { fill:#14493B; } 85.3%,98.0% { fill:#E3A72F; } 100% { fill:#14493B; } }
+</style><rect width="1200" height="230" rx="22" fill="#0E3B2F"/><text x="24" y="38" font-size="22" font-weight="800" fill="#F6F1E7">From clone to running in six steps</text><line x1="120" y1="96" x2="1080" y2="96" stroke="#7DC9AC" stroke-opacity=".5" stroke-width="3" stroke-dasharray="3 9"/><circle r="7" fill="#F6F1E7"><animateMotion dur="12s" repeatCount="indefinite" path="M120 96H1080"/></circle><circle class="n0" cx="120" cy="96" r="30" fill="#14493B" stroke="#E3A72F" stroke-width="2.5"/>
+<text x="120" y="105" text-anchor="middle" font-size="24" font-weight="800" fill="#F6F1E7">1</text>
+<text x="120" y="154" text-anchor="middle" font-size="16" font-weight="700" fill="#F6F1E7">Install</text>
+<text x="120" y="176" text-anchor="middle" font-size="12.5" fill="#A9C4B8">Flutter, a JDK, git</text><circle class="n1" cx="312" cy="96" r="30" fill="#14493B" stroke="#E3A72F" stroke-width="2.5"/>
+<text x="312" y="105" text-anchor="middle" font-size="24" font-weight="800" fill="#F6F1E7">2</text>
+<text x="312" y="154" text-anchor="middle" font-size="16" font-weight="700" fill="#F6F1E7">Run backend</text>
+<text x="312" y="176" text-anchor="middle" font-size="12.5" fill="#A9C4B8">auth-service on :8080</text><circle class="n2" cx="504" cy="96" r="30" fill="#14493B" stroke="#E3A72F" stroke-width="2.5"/>
+<text x="504" y="105" text-anchor="middle" font-size="24" font-weight="800" fill="#F6F1E7">3</text>
+<text x="504" y="154" text-anchor="middle" font-size="16" font-weight="700" fill="#F6F1E7">Clone</text>
+<text x="504" y="176" text-anchor="middle" font-size="12.5" fill="#A9C4B8">get the app and its packages</text><circle class="n3" cx="696" cy="96" r="30" fill="#14493B" stroke="#E3A72F" stroke-width="2.5"/>
+<text x="696" y="105" text-anchor="middle" font-size="24" font-weight="800" fill="#F6F1E7">4</text>
+<text x="696" y="154" text-anchor="middle" font-size="16" font-weight="700" fill="#F6F1E7">Configure</text>
+<text x="696" y="176" text-anchor="middle" font-size="12.5" fill="#A9C4B8">copy an env file, set BASE_URL</text><circle class="n4" cx="888" cy="96" r="30" fill="#14493B" stroke="#E3A72F" stroke-width="2.5"/>
+<text x="888" y="105" text-anchor="middle" font-size="24" font-weight="800" fill="#F6F1E7">5</text>
+<text x="888" y="154" text-anchor="middle" font-size="16" font-weight="700" fill="#F6F1E7">Run</text>
+<text x="888" y="176" text-anchor="middle" font-size="12.5" fill="#A9C4B8">flutter run with the file</text><circle class="n5" cx="1080" cy="96" r="30" fill="#14493B" stroke="#E3A72F" stroke-width="2.5"/>
+<text x="1080" y="105" text-anchor="middle" font-size="24" font-weight="800" fill="#F6F1E7">6</text>
+<text x="1080" y="154" text-anchor="middle" font-size="16" font-weight="700" fill="#F6F1E7">Sign in</text>
+<text x="1080" y="176" text-anchor="middle" font-size="12.5" fill="#A9C4B8">create an account, explore</text></svg>

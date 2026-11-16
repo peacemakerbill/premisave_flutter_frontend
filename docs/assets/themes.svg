@@ -1,0 +1,191 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1220 908" width="1220" height="908" role="img" aria-labelledby="t d"><title id="t">Theme gallery</title><desc id="d">The 14 colour themes of the app, each drawn with its real colours and background texture.</desc><defs><pattern id="pt0" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.1" fill="rgb(74,63,219)" fill-opacity="0.14"/></pattern><pattern id="pt1" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.1" fill="rgb(242,181,68)" fill-opacity="0.12"/></pattern><pattern id="pt2" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M.5 0V28M0 .5H28" stroke="rgb(27,31,28)" stroke-opacity="0.08" fill="none"/></pattern><pattern id="pt3" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.1" fill="rgb(255,255,255)" fill-opacity="0.1"/></pattern><pattern id="pt4" width="120" height="120" patternUnits="userSpaceOnUse"><path d="M0 20Q30 0 60 20Q90 40 120 20M0 60Q30 40 60 60Q90 80 120 60M0 100Q30 80 60 100Q90 120 120 100" stroke="rgb(255,255,255)" stroke-opacity="0.07" fill="none" stroke-width="1.2"/></pattern><pattern id="pt5" width="14" height="14" patternUnits="userSpaceOnUse"><path d="M0 14L14 0M-3 3L3 -3M11 17L17 11" stroke="rgb(42,32,24)" stroke-opacity="0.09" fill="none"/></pattern><pattern id="pt6" width="100" height="100" patternUnits="userSpaceOnUse"><path d="M0.5 0V100M0 0.5H100M20.5 0V100M0 20.5H100M40.5 0V100M0 40.5H100M60.5 0V100M0 60.5H100M80.5 0V100M0 80.5H100" stroke="rgb(255,255,255)" stroke-opacity="0.07" fill="none"/><path d="M.5 0V100M0 .5H100" stroke="rgb(255,255,255)" stroke-opacity="0.15" fill="none"/></pattern><pattern id="pt7" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M0 23.5H24" stroke="rgb(26,29,36)" stroke-opacity="0.07" fill="none"/></pattern><pattern id="pt8" width="48" height="48" patternUnits="userSpaceOnUse"><circle cx="24" cy="24" r="7" stroke="rgb(8,113,122)" stroke-opacity="0.11" fill="none"/><circle cx="24" cy="24" r="15" stroke="rgb(8,113,122)" stroke-opacity="0.11" fill="none"/><circle cx="24" cy="24" r="23" stroke="rgb(8,113,122)" stroke-opacity="0.11" fill="none"/></pattern><pattern id="pt9" width="36" height="36" patternUnits="userSpaceOnUse"><path d="M18 0L36 18L18 36L0 18Z" stroke="rgb(255,255,255)" stroke-opacity="0.065" fill="none"/></pattern><pattern id="pt10" width="26" height="26" patternUnits="userSpaceOnUse"><path d="M13 9V17M9 13H17" stroke="rgb(255,255,255)" stroke-opacity="0.08" fill="none"/></pattern><pattern id="pt11" width="4" height="4" patternUnits="userSpaceOnUse"><rect y="3" width="4" height="1" fill="rgb(57,255,122)" fill-opacity="0.06"/></pattern><pattern id="pt12" width="30" height="30" patternUnits="userSpaceOnUse"><circle cx="8" cy="8" r="2.2" stroke="rgb(160,43,95)" stroke-opacity="0.12" fill="none"/><circle cx="23" cy="23" r="2.2" stroke="rgb(160,43,95)" stroke-opacity="0.12" fill="none"/></pattern></defs><style>
+text { font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+
+.card { animation: pop .7s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes pop { from { opacity: 0; } to { opacity: 1; } }
+.head { animation: pop .8s both; }
+</style><rect width="1220" height="908" rx="22" fill="#0E3B2F"/><text class="head" x="24" y="40" font-size="22" font-weight="800" fill="#F6F1E7">14 themes, one tap apart</text><text class="head" x="1196" y="40" text-anchor="end" font-size="14" fill="#A9C4B8">Press T in the app to step through them</text><g class="card" style="animation-delay:0.00s" transform="translate(20 76)">
+<clipPath id="cc0"><rect width="280" height="188" rx="16"/></clipPath>
+<g clip-path="url(#cc0)"><rect width="280" height="188" fill="#F5F3FB"/><rect width="280" height="188" fill="url(#pt0)"/>
+<rect x="14" y="14" width="252" height="74" rx="12" fill="#FFFFFF" stroke="#E2DEF0"/>
+<rect x="26" y="28" width="86" height="9" rx="4.5" fill="#16133A"/>
+<rect x="26" y="46" width="130" height="7" rx="3.5" fill="#423F68" opacity=".7"/>
+<rect x="26" y="60" width="100" height="7" rx="3.5" fill="#423F68" opacity=".45"/>
+<rect x="182" y="40" width="72" height="30" rx="15" fill="#4A3FDB"/>
+<rect x="196" y="52" width="44" height="6" rx="3" fill="#FFFFFF" opacity=".9"/>
+<rect x="16" y="146" width="24" height="24" rx="7" fill="#4A3FDB" stroke="#E2DEF0"/><rect x="46" y="146" width="24" height="24" rx="7" fill="#E4E1FA" stroke="#E2DEF0"/><rect x="76" y="146" width="24" height="24" rx="7" fill="#1E8E5A" stroke="#E2DEF0"/><rect x="106" y="146" width="24" height="24" rx="7" fill="#D98E04" stroke="#E2DEF0"/><rect x="136" y="146" width="24" height="24" rx="7" fill="#C0392B" stroke="#E2DEF0"/><rect x="166" y="146" width="24" height="24" rx="7" fill="#4A3FDB" stroke="#E2DEF0"/></g>
+<rect width="280" height="188" rx="16" fill="none" stroke="#E2DEF0" stroke-width="1.5"/>
+<text x="16" y="132" font-size="15" font-weight="700" fill="#16133A">Premisave</text>
+<text x="264" y="132" text-anchor="end" font-size="10.5" font-weight="600" fill="#423F68">LIGHT / DOTS</text>
+</g><g class="card" style="animation-delay:0.07s" transform="translate(320 76)">
+<clipPath id="cc1"><rect width="280" height="188" rx="16"/></clipPath>
+<g clip-path="url(#cc1)"><rect width="280" height="188" fill="#0E0C24"/><rect width="280" height="188" fill="url(#pt1)"/>
+<rect x="14" y="14" width="252" height="74" rx="12" fill="#18153A" stroke="#2A2658"/>
+<rect x="26" y="28" width="86" height="9" rx="4.5" fill="#F4F2FF"/>
+<rect x="26" y="46" width="130" height="7" rx="3.5" fill="#D0CCEE" opacity=".7"/>
+<rect x="26" y="60" width="100" height="7" rx="3.5" fill="#D0CCEE" opacity=".45"/>
+<rect x="182" y="40" width="72" height="30" rx="15" fill="#F2B544"/>
+<rect x="196" y="52" width="44" height="6" rx="3" fill="#16133A" opacity=".9"/>
+<rect x="16" y="146" width="24" height="24" rx="7" fill="#F2B544" stroke="#2A2658"/><rect x="46" y="146" width="24" height="24" rx="7" fill="#2D2766" stroke="#2A2658"/><rect x="76" y="146" width="24" height="24" rx="7" fill="#3FBF86" stroke="#2A2658"/><rect x="106" y="146" width="24" height="24" rx="7" fill="#E9A92F" stroke="#2A2658"/><rect x="136" y="146" width="24" height="24" rx="7" fill="#E8685A" stroke="#2A2658"/><rect x="166" y="146" width="24" height="24" rx="7" fill="#3A31B5" stroke="#2A2658"/></g>
+<rect width="280" height="188" rx="16" fill="none" stroke="#2A2658" stroke-width="1.5"/>
+<text x="16" y="132" font-size="15" font-weight="700" fill="#F4F2FF">Premisave Night</text>
+<text x="264" y="132" text-anchor="end" font-size="10.5" font-weight="600" fill="#D0CCEE">DARK / DOTS</text>
+</g><g class="card" style="animation-delay:0.14s" transform="translate(620 76)">
+<clipPath id="cc2"><rect width="280" height="188" rx="16"/></clipPath>
+<g clip-path="url(#cc2)"><rect width="280" height="188" fill="#E9E9E2"/><rect width="280" height="188" fill="url(#pt2)"/>
+<rect x="14" y="14" width="252" height="74" rx="12" fill="#FCFCF9" stroke="#D6D7CD"/>
+<rect x="26" y="28" width="86" height="9" rx="4.5" fill="#1C211E"/>
+<rect x="26" y="46" width="130" height="7" rx="3.5" fill="#4B564F" opacity=".7"/>
+<rect x="26" y="60" width="100" height="7" rx="3.5" fill="#4B564F" opacity=".45"/>
+<rect x="182" y="40" width="72" height="30" rx="15" fill="#0B7A43"/>
+<rect x="196" y="52" width="44" height="6" rx="3" fill="#FFFFFF" opacity=".9"/>
+<rect x="16" y="146" width="24" height="24" rx="7" fill="#0B7A43" stroke="#D6D7CD"/><rect x="46" y="146" width="24" height="24" rx="7" fill="#DBEADF" stroke="#D6D7CD"/><rect x="76" y="146" width="24" height="24" rx="7" fill="#0B7A43" stroke="#D6D7CD"/><rect x="106" y="146" width="24" height="24" rx="7" fill="#8A5A00" stroke="#D6D7CD"/><rect x="136" y="146" width="24" height="24" rx="7" fill="#B3261E" stroke="#D6D7CD"/><rect x="166" y="146" width="24" height="24" rx="7" fill="#0B7A43" stroke="#D6D7CD"/></g>
+<rect width="280" height="188" rx="16" fill="none" stroke="#D6D7CD" stroke-width="1.5"/>
+<text x="16" y="132" font-size="15" font-weight="700" fill="#1C211E">Daylight</text>
+<text x="264" y="132" text-anchor="end" font-size="10.5" font-weight="600" fill="#4B564F">LIGHT / GRID</text>
+</g><g class="card" style="animation-delay:0.21s" transform="translate(920 76)">
+<clipPath id="cc3"><rect width="280" height="188" rx="16"/></clipPath>
+<g clip-path="url(#cc3)"><rect width="280" height="188" fill="#0C0E11"/><rect width="280" height="188" fill="url(#pt3)"/>
+<rect x="14" y="14" width="252" height="74" rx="12" fill="#14171C" stroke="#272C34"/>
+<rect x="26" y="28" width="86" height="9" rx="4.5" fill="#E7E9EC"/>
+<rect x="26" y="46" width="130" height="7" rx="3.5" fill="#A6ADB6" opacity=".7"/>
+<rect x="26" y="60" width="100" height="7" rx="3.5" fill="#A6ADB6" opacity=".45"/>
+<rect x="182" y="40" width="72" height="30" rx="15" fill="#52C98F"/>
+<rect x="196" y="52" width="44" height="6" rx="3" fill="#04150C" opacity=".9"/>
+<rect x="16" y="146" width="24" height="24" rx="7" fill="#52C98F" stroke="#272C34"/><rect x="46" y="146" width="24" height="24" rx="7" fill="#17352A" stroke="#272C34"/><rect x="76" y="146" width="24" height="24" rx="7" fill="#52C98F" stroke="#272C34"/><rect x="106" y="146" width="24" height="24" rx="7" fill="#E3B25A" stroke="#272C34"/><rect x="136" y="146" width="24" height="24" rx="7" fill="#FF7D73" stroke="#272C34"/><rect x="166" y="146" width="24" height="24" rx="7" fill="#17352A" stroke="#272C34"/></g>
+<rect width="280" height="188" rx="16" fill="none" stroke="#272C34" stroke-width="1.5"/>
+<text x="16" y="132" font-size="15" font-weight="700" fill="#E7E9EC">Midnight</text>
+<text x="264" y="132" text-anchor="end" font-size="10.5" font-weight="600" fill="#A6ADB6">DARK / DOTS</text>
+</g><g class="card" style="animation-delay:0.28s" transform="translate(20 284)">
+<clipPath id="cc4"><rect width="280" height="188" rx="16"/></clipPath>
+<g clip-path="url(#cc4)"><rect width="280" height="188" fill="#0E2A1E"/><rect width="280" height="188" fill="url(#pt4)"/>
+<rect x="14" y="14" width="252" height="74" rx="12" fill="#143628" stroke="#27513F"/>
+<rect x="26" y="28" width="86" height="9" rx="4.5" fill="#E9F2EC"/>
+<rect x="26" y="46" width="130" height="7" rx="3.5" fill="#B0CBB9" opacity=".7"/>
+<rect x="26" y="60" width="100" height="7" rx="3.5" fill="#B0CBB9" opacity=".45"/>
+<rect x="182" y="40" width="72" height="30" rx="15" fill="#E3BB4F"/>
+<rect x="196" y="52" width="44" height="6" rx="3" fill="#1D1602" opacity=".9"/>
+<rect x="16" y="146" width="24" height="24" rx="7" fill="#E3BB4F" stroke="#27513F"/><rect x="46" y="146" width="24" height="24" rx="7" fill="#3B4A2E" stroke="#27513F"/><rect x="76" y="146" width="24" height="24" rx="7" fill="#7DDCA6" stroke="#27513F"/><rect x="106" y="146" width="24" height="24" rx="7" fill="#E3BB4F" stroke="#27513F"/><rect x="136" y="146" width="24" height="24" rx="7" fill="#FF9582" stroke="#27513F"/><rect x="166" y="146" width="24" height="24" rx="7" fill="#3B4A2E" stroke="#27513F"/></g>
+<rect width="280" height="188" rx="16" fill="none" stroke="#27513F" stroke-width="1.5"/>
+<text x="16" y="132" font-size="15" font-weight="700" fill="#E9F2EC">Forest</text>
+<text x="264" y="132" text-anchor="end" font-size="10.5" font-weight="600" fill="#B0CBB9">DARK / WAVES</text>
+</g><g class="card" style="animation-delay:0.35s" transform="translate(320 284)">
+<clipPath id="cc5"><rect width="280" height="188" rx="16"/></clipPath>
+<g clip-path="url(#cc5)"><rect width="280" height="188" fill="#EADFCA"/><rect width="280" height="188" fill="url(#pt5)"/>
+<rect x="14" y="14" width="252" height="74" rx="12" fill="#FBF6EB" stroke="#D9CCB2"/>
+<rect x="26" y="28" width="86" height="9" rx="4.5" fill="#2A2018"/>
+<rect x="26" y="46" width="130" height="7" rx="3.5" fill="#62503F" opacity=".7"/>
+<rect x="26" y="60" width="100" height="7" rx="3.5" fill="#62503F" opacity=".45"/>
+<rect x="182" y="40" width="72" height="30" rx="15" fill="#A93C18"/>
+<rect x="196" y="52" width="44" height="6" rx="3" fill="#FFFFFF" opacity=".9"/>
+<rect x="16" y="146" width="24" height="24" rx="7" fill="#A93C18" stroke="#D9CCB2"/><rect x="46" y="146" width="24" height="24" rx="7" fill="#F1D9C9" stroke="#D9CCB2"/><rect x="76" y="146" width="24" height="24" rx="7" fill="#2E6A3A" stroke="#D9CCB2"/><rect x="106" y="146" width="24" height="24" rx="7" fill="#85580A" stroke="#D9CCB2"/><rect x="136" y="146" width="24" height="24" rx="7" fill="#A3231A" stroke="#D9CCB2"/><rect x="166" y="146" width="24" height="24" rx="7" fill="#A93C18" stroke="#D9CCB2"/></g>
+<rect width="280" height="188" rx="16" fill="none" stroke="#D9CCB2" stroke-width="1.5"/>
+<text x="16" y="132" font-size="15" font-weight="700" fill="#2A2018">Savanna</text>
+<text x="264" y="132" text-anchor="end" font-size="10.5" font-weight="600" fill="#62503F">LIGHT / HATCH</text>
+</g><g class="card" style="animation-delay:0.42s" transform="translate(620 284)">
+<clipPath id="cc6"><rect width="280" height="188" rx="16"/></clipPath>
+<g clip-path="url(#cc6)"><rect width="280" height="188" fill="#12395F"/><rect width="280" height="188" fill="url(#pt6)"/>
+<rect x="14" y="14" width="252" height="74" rx="12" fill="#0E2F52" stroke="#285A8C"/>
+<rect x="26" y="28" width="86" height="9" rx="4.5" fill="#E9F2FC"/>
+<rect x="26" y="46" width="130" height="7" rx="3.5" fill="#B5CDE8" opacity=".7"/>
+<rect x="26" y="60" width="100" height="7" rx="3.5" fill="#B5CDE8" opacity=".45"/>
+<rect x="182" y="40" width="72" height="30" rx="15" fill="#FFD24D"/>
+<rect x="196" y="52" width="44" height="6" rx="3" fill="#1A1400" opacity=".9"/>
+<rect x="16" y="146" width="24" height="24" rx="7" fill="#FFD24D" stroke="#285A8C"/><rect x="46" y="146" width="24" height="24" rx="7" fill="#2C4A73" stroke="#285A8C"/><rect x="76" y="146" width="24" height="24" rx="7" fill="#86E3AD" stroke="#285A8C"/><rect x="106" y="146" width="24" height="24" rx="7" fill="#FFD24D" stroke="#285A8C"/><rect x="136" y="146" width="24" height="24" rx="7" fill="#FF9D8E" stroke="#285A8C"/><rect x="166" y="146" width="24" height="24" rx="7" fill="#2C4A73" stroke="#285A8C"/></g>
+<rect width="280" height="188" rx="16" fill="none" stroke="#285A8C" stroke-width="1.5"/>
+<text x="16" y="132" font-size="15" font-weight="700" fill="#E9F2FC">Blueprint</text>
+<text x="264" y="132" text-anchor="end" font-size="10.5" font-weight="600" fill="#B5CDE8">DARK / BLUEPRINT</text>
+</g><g class="card" style="animation-delay:0.49s" transform="translate(920 284)">
+<clipPath id="cc7"><rect width="280" height="188" rx="16"/></clipPath>
+<g clip-path="url(#cc7)"><rect width="280" height="188" fill="#E4E6EA"/><rect width="280" height="188" fill="url(#pt7)"/>
+<rect x="14" y="14" width="252" height="74" rx="12" fill="#FBFBFC" stroke="#D3D6DD"/>
+<rect x="26" y="28" width="86" height="9" rx="4.5" fill="#1A1D24"/>
+<rect x="26" y="46" width="130" height="7" rx="3.5" fill="#474D59" opacity=".7"/>
+<rect x="26" y="60" width="100" height="7" rx="3.5" fill="#474D59" opacity=".45"/>
+<rect x="182" y="40" width="72" height="30" rx="15" fill="#3B4CCA"/>
+<rect x="196" y="52" width="44" height="6" rx="3" fill="#FFFFFF" opacity=".9"/>
+<rect x="16" y="146" width="24" height="24" rx="7" fill="#3B4CCA" stroke="#D3D6DD"/><rect x="46" y="146" width="24" height="24" rx="7" fill="#DFE2F7" stroke="#D3D6DD"/><rect x="76" y="146" width="24" height="24" rx="7" fill="#1B7A4B" stroke="#D3D6DD"/><rect x="106" y="146" width="24" height="24" rx="7" fill="#8A5A00" stroke="#D3D6DD"/><rect x="136" y="146" width="24" height="24" rx="7" fill="#B3261E" stroke="#D3D6DD"/><rect x="166" y="146" width="24" height="24" rx="7" fill="#3B4CCA" stroke="#D3D6DD"/></g>
+<rect width="280" height="188" rx="16" fill="none" stroke="#D3D6DD" stroke-width="1.5"/>
+<text x="16" y="132" font-size="15" font-weight="700" fill="#1A1D24">Graphite</text>
+<text x="264" y="132" text-anchor="end" font-size="10.5" font-weight="600" fill="#474D59">LIGHT / RULES</text>
+</g><g class="card" style="animation-delay:0.56s" transform="translate(20 492)">
+<clipPath id="cc8"><rect width="280" height="188" rx="16"/></clipPath>
+<g clip-path="url(#cc8)"><rect width="280" height="188" fill="#D7EBE8"/><rect width="280" height="188" fill="url(#pt8)"/>
+<rect x="14" y="14" width="252" height="74" rx="12" fill="#F7FCFB" stroke="#C0DAD6"/>
+<rect x="26" y="28" width="86" height="9" rx="4.5" fill="#10272A"/>
+<rect x="26" y="46" width="130" height="7" rx="3.5" fill="#3B5659" opacity=".7"/>
+<rect x="26" y="60" width="100" height="7" rx="3.5" fill="#3B5659" opacity=".45"/>
+<rect x="182" y="40" width="72" height="30" rx="15" fill="#08717A"/>
+<rect x="196" y="52" width="44" height="6" rx="3" fill="#FFFFFF" opacity=".9"/>
+<rect x="16" y="146" width="24" height="24" rx="7" fill="#08717A" stroke="#C0DAD6"/><rect x="46" y="146" width="24" height="24" rx="7" fill="#CDE7E5" stroke="#C0DAD6"/><rect x="76" y="146" width="24" height="24" rx="7" fill="#12703D" stroke="#C0DAD6"/><rect x="106" y="146" width="24" height="24" rx="7" fill="#85580A" stroke="#C0DAD6"/><rect x="136" y="146" width="24" height="24" rx="7" fill="#AD2A1F" stroke="#C0DAD6"/><rect x="166" y="146" width="24" height="24" rx="7" fill="#08717A" stroke="#C0DAD6"/></g>
+<rect width="280" height="188" rx="16" fill="none" stroke="#C0DAD6" stroke-width="1.5"/>
+<text x="16" y="132" font-size="15" font-weight="700" fill="#10272A">Lagoon</text>
+<text x="264" y="132" text-anchor="end" font-size="10.5" font-weight="600" fill="#3B5659">LIGHT / RINGS</text>
+</g><g class="card" style="animation-delay:0.63s" transform="translate(320 492)">
+<clipPath id="cc9"><rect width="280" height="188" rx="16"/></clipPath>
+<g clip-path="url(#cc9)"><rect width="280" height="188" fill="#15101F"/><rect width="280" height="188" fill="url(#pt9)"/>
+<rect x="14" y="14" width="252" height="74" rx="12" fill="#1D1730" stroke="#35294F"/>
+<rect x="26" y="28" width="86" height="9" rx="4.5" fill="#ECE8F7"/>
+<rect x="26" y="46" width="130" height="7" rx="3.5" fill="#B5ACD0" opacity=".7"/>
+<rect x="26" y="60" width="100" height="7" rx="3.5" fill="#B5ACD0" opacity=".45"/>
+<rect x="182" y="40" width="72" height="30" rx="15" fill="#C690FF"/>
+<rect x="196" y="52" width="44" height="6" rx="3" fill="#1A0B2E" opacity=".9"/>
+<rect x="16" y="146" width="24" height="24" rx="7" fill="#C690FF" stroke="#35294F"/><rect x="46" y="146" width="24" height="24" rx="7" fill="#3A2A5C" stroke="#35294F"/><rect x="76" y="146" width="24" height="24" rx="7" fill="#6FE0A6" stroke="#35294F"/><rect x="106" y="146" width="24" height="24" rx="7" fill="#F0C05A" stroke="#35294F"/><rect x="136" y="146" width="24" height="24" rx="7" fill="#FF8A9A" stroke="#35294F"/><rect x="166" y="146" width="24" height="24" rx="7" fill="#3A2A5C" stroke="#35294F"/></g>
+<rect width="280" height="188" rx="16" fill="none" stroke="#35294F" stroke-width="1.5"/>
+<text x="16" y="132" font-size="15" font-weight="700" fill="#ECE8F7">Orchid</text>
+<text x="264" y="132" text-anchor="end" font-size="10.5" font-weight="600" fill="#B5ACD0">DARK / LATTICE</text>
+</g><g class="card" style="animation-delay:0.70s" transform="translate(620 492)">
+<clipPath id="cc10"><rect width="280" height="188" rx="16"/></clipPath>
+<g clip-path="url(#cc10)"><rect width="280" height="188" fill="#1A1411"/><rect width="280" height="188" fill="url(#pt10)"/>
+<rect x="14" y="14" width="252" height="74" rx="12" fill="#231B17" stroke="#3B2E27"/>
+<rect x="26" y="28" width="86" height="9" rx="4.5" fill="#F3EBE5"/>
+<rect x="26" y="46" width="130" height="7" rx="3.5" fill="#C4B4A8" opacity=".7"/>
+<rect x="26" y="60" width="100" height="7" rx="3.5" fill="#C4B4A8" opacity=".45"/>
+<rect x="182" y="40" width="72" height="30" rx="15" fill="#FF8A3D"/>
+<rect x="196" y="52" width="44" height="6" rx="3" fill="#1F0E02" opacity=".9"/>
+<rect x="16" y="146" width="24" height="24" rx="7" fill="#FF8A3D" stroke="#3B2E27"/><rect x="46" y="146" width="24" height="24" rx="7" fill="#4A2C19" stroke="#3B2E27"/><rect x="76" y="146" width="24" height="24" rx="7" fill="#7BD88F" stroke="#3B2E27"/><rect x="106" y="146" width="24" height="24" rx="7" fill="#F2C14E" stroke="#3B2E27"/><rect x="136" y="146" width="24" height="24" rx="7" fill="#FF8577" stroke="#3B2E27"/><rect x="166" y="146" width="24" height="24" rx="7" fill="#4A2C19" stroke="#3B2E27"/></g>
+<rect width="280" height="188" rx="16" fill="none" stroke="#3B2E27" stroke-width="1.5"/>
+<text x="16" y="132" font-size="15" font-weight="700" fill="#F3EBE5">Ember</text>
+<text x="264" y="132" text-anchor="end" font-size="10.5" font-weight="600" fill="#C4B4A8">DARK / PLUS</text>
+</g><g class="card" style="animation-delay:0.77s" transform="translate(920 492)">
+<clipPath id="cc11"><rect width="280" height="188" rx="16"/></clipPath>
+<g clip-path="url(#cc11)"><rect width="280" height="188" fill="#050805"/><rect width="280" height="188" fill="url(#pt11)"/>
+<rect x="14" y="14" width="252" height="74" rx="12" fill="#0B110B" stroke="#1B2E1B"/>
+<rect x="26" y="28" width="86" height="9" rx="4.5" fill="#CFECCF"/>
+<rect x="26" y="46" width="130" height="7" rx="3.5" fill="#8FC48F" opacity=".7"/>
+<rect x="26" y="60" width="100" height="7" rx="3.5" fill="#8FC48F" opacity=".45"/>
+<rect x="182" y="40" width="72" height="30" rx="15" fill="#39FF7A"/>
+<rect x="196" y="52" width="44" height="6" rx="3" fill="#021A0A" opacity=".9"/>
+<rect x="16" y="146" width="24" height="24" rx="7" fill="#39FF7A" stroke="#1B2E1B"/><rect x="46" y="146" width="24" height="24" rx="7" fill="#11351C" stroke="#1B2E1B"/><rect x="76" y="146" width="24" height="24" rx="7" fill="#39FF7A" stroke="#1B2E1B"/><rect x="106" y="146" width="24" height="24" rx="7" fill="#FFD24D" stroke="#1B2E1B"/><rect x="136" y="146" width="24" height="24" rx="7" fill="#FF6B6B" stroke="#1B2E1B"/><rect x="166" y="146" width="24" height="24" rx="7" fill="#11351C" stroke="#1B2E1B"/></g>
+<rect width="280" height="188" rx="16" fill="none" stroke="#1B2E1B" stroke-width="1.5"/>
+<text x="16" y="132" font-size="15" font-weight="700" fill="#CFECCF">Terminal</text>
+<text x="264" y="132" text-anchor="end" font-size="10.5" font-weight="600" fill="#8FC48F">DARK / SCANLINES</text>
+</g><g class="card" style="animation-delay:0.84s" transform="translate(20 700)">
+<clipPath id="cc12"><rect width="280" height="188" rx="16"/></clipPath>
+<g clip-path="url(#cc12)"><rect width="280" height="188" fill="#F0E1E5"/><rect width="280" height="188" fill="url(#pt12)"/>
+<rect x="14" y="14" width="252" height="74" rx="12" fill="#FFFAFB" stroke="#E5CDD3"/>
+<rect x="26" y="28" width="86" height="9" rx="4.5" fill="#2A1A22"/>
+<rect x="26" y="46" width="130" height="7" rx="3.5" fill="#5C424E" opacity=".7"/>
+<rect x="26" y="60" width="100" height="7" rx="3.5" fill="#5C424E" opacity=".45"/>
+<rect x="182" y="40" width="72" height="30" rx="15" fill="#A02B5F"/>
+<rect x="196" y="52" width="44" height="6" rx="3" fill="#FFFFFF" opacity=".9"/>
+<rect x="16" y="146" width="24" height="24" rx="7" fill="#A02B5F" stroke="#E5CDD3"/><rect x="46" y="146" width="24" height="24" rx="7" fill="#F4D6E1" stroke="#E5CDD3"/><rect x="76" y="146" width="24" height="24" rx="7" fill="#226B3B" stroke="#E5CDD3"/><rect x="106" y="146" width="24" height="24" rx="7" fill="#84560A" stroke="#E5CDD3"/><rect x="136" y="146" width="24" height="24" rx="7" fill="#A8201A" stroke="#E5CDD3"/><rect x="166" y="146" width="24" height="24" rx="7" fill="#A02B5F" stroke="#E5CDD3"/></g>
+<rect width="280" height="188" rx="16" fill="none" stroke="#E5CDD3" stroke-width="1.5"/>
+<text x="16" y="132" font-size="15" font-weight="700" fill="#2A1A22">Sakura</text>
+<text x="264" y="132" text-anchor="end" font-size="10.5" font-weight="600" fill="#5C424E">LIGHT / BLOSSOMS</text>
+</g><g class="card" style="animation-delay:0.91s" transform="translate(320 700)">
+<clipPath id="cc13"><rect width="280" height="188" rx="16"/></clipPath>
+<g clip-path="url(#cc13)"><rect width="280" height="188" fill="#000000"/>
+<rect x="14" y="14" width="252" height="74" rx="12" fill="#0A0A0A" stroke="#8C8C8C"/>
+<rect x="26" y="28" width="86" height="9" rx="4.5" fill="#FFFFFF"/>
+<rect x="26" y="46" width="130" height="7" rx="3.5" fill="#EBEBEB" opacity=".7"/>
+<rect x="26" y="60" width="100" height="7" rx="3.5" fill="#EBEBEB" opacity=".45"/>
+<rect x="182" y="40" width="72" height="30" rx="15" fill="#FFE14D"/>
+<rect x="196" y="52" width="44" height="6" rx="3" fill="#000000" opacity=".9"/>
+<rect x="16" y="146" width="24" height="24" rx="7" fill="#FFE14D" stroke="#8C8C8C"/><rect x="46" y="146" width="24" height="24" rx="7" fill="#3D3600" stroke="#8C8C8C"/><rect x="76" y="146" width="24" height="24" rx="7" fill="#5DFF9B" stroke="#8C8C8C"/><rect x="106" y="146" width="24" height="24" rx="7" fill="#FFD24D" stroke="#8C8C8C"/><rect x="136" y="146" width="24" height="24" rx="7" fill="#FF8A80" stroke="#8C8C8C"/><rect x="166" y="146" width="24" height="24" rx="7" fill="#3D3600" stroke="#8C8C8C"/></g>
+<rect width="280" height="188" rx="16" fill="none" stroke="#8C8C8C" stroke-width="1.5"/>
+<text x="16" y="132" font-size="15" font-weight="700" fill="#FFFFFF">High contrast</text>
+<text x="264" y="132" text-anchor="end" font-size="10.5" font-weight="600" fill="#EBEBEB">DARK</text>
+</g></svg>

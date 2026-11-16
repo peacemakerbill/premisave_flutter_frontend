@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" width="1200" height="640" role="img" aria-labelledby="t d"><title id="t">Token refresh flow</title><desc id="d">How ApiClient refreshes the access token before it expires and retries the original request.</desc><defs></defs><style>
+text { font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+.s0 { animation: step0 14.0s infinite; }
+@keyframes step0 { 0%,0.0% { opacity:0; } 4.0%,92% { opacity:1; } 98%,100% { opacity:0; } }
+.s2 { animation: step2 14.0s infinite; }
+@keyframes step2 { 0%,28.6% { opacity:0; } 32.6%,92% { opacity:1; } 98%,100% { opacity:0; } }
+.s3 { animation: step3 14.0s infinite; }
+@keyframes step3 { 0%,42.9% { opacity:0; } 46.9%,92% { opacity:1; } 98%,100% { opacity:0; } }
+.s4 { animation: step4 14.0s infinite; }
+@keyframes step4 { 0%,57.1% { opacity:0; } 61.1%,92% { opacity:1; } 98%,100% { opacity:0; } }
+.s5 { animation: step5 14.0s infinite; }
+@keyframes step5 { 0%,71.4% { opacity:0; } 75.4%,92% { opacity:1; } 98%,100% { opacity:0; } }
+.s1 { animation: step1 14.0s infinite; }
+@keyframes step1 { 0%,14.3% { opacity:0; } 18.3%,92% { opacity:1; } 98%,100% { opacity:0; } }
+</style><rect width="1200" height="640" rx="22" fill="#0E3B2F"/><text x="24" y="40" font-size="22" font-weight="800" fill="#F6F1E7">Token refresh, step by step</text><rect x="80" y="60" width="180" height="40" rx="20" fill="#14493B" stroke="#E3A72F" stroke-opacity=".5"/><text x="170" y="86" text-anchor="middle" font-size="16" font-weight="700" fill="#F6F1E7">App</text><line x1="170" y1="100" x2="170" y2="550" stroke="#7DC9AC" stroke-opacity=".35" stroke-dasharray="4 6"/><rect x="510" y="60" width="180" height="40" rx="20" fill="#14493B" stroke="#E3A72F" stroke-opacity=".5"/><text x="600" y="86" text-anchor="middle" font-size="16" font-weight="700" fill="#F6F1E7">ApiClient</text><line x1="600" y1="100" x2="600" y2="550" stroke="#7DC9AC" stroke-opacity=".35" stroke-dasharray="4 6"/><rect x="940" y="60" width="180" height="40" rx="20" fill="#14493B" stroke="#E3A72F" stroke-opacity=".5"/><text x="1030" y="86" text-anchor="middle" font-size="16" font-weight="700" fill="#F6F1E7">auth-service</text><line x1="1030" y1="100" x2="1030" y2="550" stroke="#7DC9AC" stroke-opacity=".35" stroke-dasharray="4 6"/><g class="s s0">
+<line x1="176" y1="150" x2="590" y2="150" stroke="#E3A72F" stroke-width="2.5"/>
+<path d="M588 143L598 150L588 157Z" fill="#E3A72F"/>
+<text x="385.0" y="140" text-anchor="middle" font-size="15" font-weight="700" fill="#F6F1E7" class="mono">GET /profile/me</text>
+<text x="385.0" y="172" text-anchor="middle" font-size="12.5" fill="#A9C4B8">a screen asks a repository, the repository calls ApiClient</text></g><g class="s s1"><rect x="450" y="198" width="300" height="44" rx="12" fill="#14493B" stroke="#7DC9AC"/><text x="600" y="218" text-anchor="middle" font-size="14" font-weight="700" fill="#F6F1E7" class="mono">expires within 45 s?</text><text x="600" y="236" text-anchor="middle" font-size="12.5" fill="#A9C4B8">checked before every protected request</text></g><g class="s s2">
+<line x1="606" y1="294" x2="1020" y2="294" stroke="#E3A72F" stroke-width="2.5"/>
+<path d="M1018 287L1028 294L1018 301Z" fill="#E3A72F"/>
+<text x="815.0" y="284" text-anchor="middle" font-size="15" font-weight="700" fill="#F6F1E7" class="mono">POST /auth/refresh</text>
+<text x="815.0" y="316" text-anchor="middle" font-size="12.5" fill="#A9C4B8">one refresh at a time, sent without a bearer token</text></g><g class="s s3">
+<line x1="1024" y1="366" x2="610" y2="366" stroke="#F6F1E7" stroke-width="2.5"/>
+<path d="M612 359L602 366L612 373Z" fill="#F6F1E7"/>
+<text x="815.0" y="356" text-anchor="middle" font-size="15" font-weight="700" fill="#F6F1E7" class="mono">new access + refresh token</text>
+<text x="815.0" y="388" text-anchor="middle" font-size="12.5" fill="#A9C4B8">the old refresh token is spent, the response carries the next</text></g><g class="s s4">
+<line x1="606" y1="438" x2="1020" y2="438" stroke="#E3A72F" stroke-width="2.5"/>
+<path d="M1018 431L1028 438L1018 445Z" fill="#E3A72F"/>
+<text x="815.0" y="428" text-anchor="middle" font-size="15" font-weight="700" fill="#F6F1E7" class="mono">GET /profile/me + Bearer</text>
+<text x="815.0" y="460" text-anchor="middle" font-size="12.5" fill="#A9C4B8">the original request goes out with the fresh token</text></g><g class="s s5">
+<line x1="1024" y1="510" x2="180" y2="510" stroke="#F6F1E7" stroke-width="2.5"/>
+<path d="M182 503L172 510L182 517Z" fill="#F6F1E7"/>
+<text x="600.0" y="500" text-anchor="middle" font-size="15" font-weight="700" fill="#F6F1E7" class="mono">200 JSON</text>
+<text x="600.0" y="532" text-anchor="middle" font-size="12.5" fill="#A9C4B8">the answer reaches the screen, which never saw any of this</text></g><rect x="24" y="570" width="1152" height="46" rx="14" fill="#0B2F25" stroke="#E3A72F" stroke-opacity=".5"/><text x="44" y="598" font-size="14" fill="#F6F1E7">If the server still answers 401, the client refreshes once and retries. If the refresh token is rejected, the session ends and the app returns to sign in.</text></svg>

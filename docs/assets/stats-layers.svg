@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 430" width="900" height="430" role="img" aria-labelledby="t d"><title id="t">Lines of code per layer</title><desc id="d">Donut chart of the lines of Dart code in each layer of the app.</desc><defs></defs><style>
+text { font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+
+.arc { animation: fade .8s both; }
+@keyframes fade { from { opacity:0; } to { opacity:1; } }
+.row { animation: fade .6s both; }
+</style><rect width="900" height="430" rx="22" fill="#0E3B2F"/><text x="28" y="40" font-size="22" font-weight="800" fill="#F6F1E7">Code by layer</text><path class="arc" style="animation-delay:0.00s" d="M230.0 65.0A150 150 0 1 1 99.3 288.6L149.8 260.1A92 92 0 1 0 230.0 123.0Z" fill="#E3A72F" stroke="#0E3B2F" stroke-width="3"/><path class="arc" style="animation-delay:0.15s" d="M99.3 288.6A150 150 0 0 1 114.9 118.9L159.4 156.0A92 92 0 0 0 149.8 260.1Z" fill="#7DC9AC" stroke="#0E3B2F" stroke-width="3"/><path class="arc" style="animation-delay:0.30s" d="M114.9 118.9A150 150 0 0 1 191.6 70.0L206.5 126.1A92 92 0 0 0 159.4 156.0Z" fill="#4FA58A" stroke="#0E3B2F" stroke-width="3"/><path class="arc" style="animation-delay:0.45s" d="M191.6 70.0A150 150 0 0 1 209.8 66.4L217.6 123.8A92 92 0 0 0 206.5 126.1Z" fill="#C9A24A" stroke="#0E3B2F" stroke-width="3"/><path class="arc" style="animation-delay:0.60s" d="M209.8 66.4A150 150 0 0 1 221.4 65.2L224.7 123.2A92 92 0 0 0 217.6 123.8Z" fill="#8DB8A8" stroke="#0E3B2F" stroke-width="3"/><path class="arc" style="animation-delay:0.75s" d="M221.4 65.2A150 150 0 0 1 226.8 65.0L228.0 123.0A92 92 0 0 0 224.7 123.2Z" fill="#E8C77A" stroke="#0E3B2F" stroke-width="3"/><path class="arc" style="animation-delay:0.90s" d="M226.8 65.0A150 150 0 0 1 230.0 65.0L230.0 123.0A92 92 0 0 0 228.0 123.0Z" fill="#5F8F7F" stroke="#0E3B2F" stroke-width="3"/><text x="230" y="213" text-anchor="middle" font-size="40" font-weight="800" fill="#F6F1E7">22.4k</text><text x="230" y="239" text-anchor="middle" font-size="13" fill="#A9C4B8">lines of Dart</text><g class="row" style="animation-delay:0.4s"><rect x="480" y="87" width="16" height="16" rx="5" fill="#E3A72F"/>
+<text x="508" y="100" font-size="15" fill="#F6F1E7">Features (screens)</text>
+<text x="800" y="100" text-anchor="end" font-size="14" font-weight="700" fill="#E3A72F">14,985</text>
+<text x="860" y="100" text-anchor="end" font-size="13" fill="#A9C4B8">66.8%</text></g><g class="row" style="animation-delay:0.5s"><rect x="480" y="125" width="16" height="16" rx="5" fill="#7DC9AC"/>
+<text x="508" y="138" font-size="15" fill="#F6F1E7">Core (theme, widgets, network)</text>
+<text x="800" y="138" text-anchor="end" font-size="14" font-weight="700" fill="#E3A72F">4,311</text>
+<text x="860" y="138" text-anchor="end" font-size="13" fill="#A9C4B8">19.2%</text></g><g class="row" style="animation-delay:0.6s"><rect x="480" y="163" width="16" height="16" rx="5" fill="#4FA58A"/>
+<text x="508" y="176" font-size="15" fill="#F6F1E7">Data (models, repositories)</text>
+<text x="800" y="176" text-anchor="end" font-size="14" font-weight="700" fill="#E3A72F">2,199</text>
+<text x="860" y="176" text-anchor="end" font-size="13" fill="#A9C4B8">9.8%</text></g><g class="row" style="animation-delay:0.7s"><rect x="480" y="201" width="16" height="16" rx="5" fill="#C9A24A"/>
+<text x="508" y="214" font-size="15" fill="#F6F1E7">State (Riverpod)</text>
+<text x="800" y="214" text-anchor="end" font-size="14" font-weight="700" fill="#E3A72F">441</text>
+<text x="860" y="214" text-anchor="end" font-size="13" fill="#A9C4B8">2.0%</text></g><g class="row" style="animation-delay:0.8s"><rect x="480" y="239" width="16" height="16" rx="5" fill="#8DB8A8"/>
+<text x="508" y="252" font-size="15" fill="#F6F1E7">Router</text>
+<text x="800" y="252" text-anchor="end" font-size="14" font-weight="700" fill="#E3A72F">278</text>
+<text x="860" y="252" text-anchor="end" font-size="13" fill="#A9C4B8">1.2%</text></g><g class="row" style="animation-delay:0.9s"><rect x="480" y="277" width="16" height="16" rx="5" fill="#E8C77A"/>
+<text x="508" y="290" font-size="15" fill="#F6F1E7">Roles</text>
+<text x="800" y="290" text-anchor="end" font-size="14" font-weight="700" fill="#E3A72F">128</text>
+<text x="860" y="290" text-anchor="end" font-size="13" fill="#A9C4B8">0.6%</text></g><g class="row" style="animation-delay:1.0s"><rect x="480" y="315" width="16" height="16" rx="5" fill="#5F8F7F"/>
+<text x="508" y="328" font-size="15" fill="#F6F1E7">App entry</text>
+<text x="800" y="328" text-anchor="end" font-size="14" font-weight="700" fill="#E3A72F">76</text>
+<text x="860" y="328" text-anchor="end" font-size="13" fill="#A9C4B8">0.3%</text></g></svg>
