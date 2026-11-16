@@ -40,6 +40,7 @@ import '../features/shell/app_shell.dart';
 import '../features/staff/staff_detail_screen.dart';
 import '../features/staff/staff_queue_screen.dart';
 import '../state/session_controller.dart';
+import 'transitions.dart';
 
 /// Pages anyone can open, signed in or not (links from emails land here).
 const Set<String> _alwaysOpen = <String>{
@@ -104,95 +105,94 @@ final routerProvider = Provider<GoRouter>((ref) {
     ),
     routes: <RouteBase>[
       GoRoute(path: '/', redirect: (_, __) => '/home'),
-      GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
-      GoRoute(path: '/welcome', builder: (_, __) => const WelcomeScreen()),
-      GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
-      GoRoute(path: '/signup', builder: (_, __) => const SignupScreen()),
-      GoRoute(path: '/forgot-password', builder: (_, __) => const ForgotPasswordScreen()),
+      GoRoute(path: '/splash', pageBuilder: (_, s) => fadePage(s, const SplashScreen())),
+      GoRoute(path: '/welcome', pageBuilder: (_, s) => fadePage(s, const WelcomeScreen())),
+      GoRoute(path: '/login', pageBuilder: (_, s) => fadePage(s, const LoginScreen())),
+      GoRoute(path: '/signup', pageBuilder: (_, s) => fadePage(s, const SignupScreen())),
+      GoRoute(path: '/forgot-password', pageBuilder: (_, s) => fadePage(s, const ForgotPasswordScreen())),
       GoRoute(
         path: '/reset-password',
-        builder: (_, s) => TokenPasswordScreen(mode: TokenPasswordMode.reset, token: s.uri.queryParameters['token']),
+        pageBuilder: (_, s) => fadePage(s, TokenPasswordScreen(mode: TokenPasswordMode.reset, token: s.uri.queryParameters['token'])),
       ),
       GoRoute(
         path: '/admin-invitation',
-        builder: (_, s) =>
-            TokenPasswordScreen(mode: TokenPasswordMode.adminInvitation, token: s.uri.queryParameters['token']),
+        pageBuilder: (_, s) => fadePage(s, TokenPasswordScreen(mode: TokenPasswordMode.adminInvitation, token: s.uri.queryParameters['token'])),
       ),
-      GoRoute(path: '/verify', builder: (_, s) => VerifyScreen(token: s.uri.queryParameters['token'])),
-      GoRoute(path: '/verify/:token', builder: (_, s) => VerifyScreen(token: s.pathParameters['token'])),
-      GoRoute(path: '/resend-activation', builder: (_, s) => ResendActivationScreen(email: s.uri.queryParameters['email'])),
-      GoRoute(path: '/security-report', builder: (_, s) => SecurityReportScreen(token: s.uri.queryParameters['token'])),
+      GoRoute(path: '/verify', pageBuilder: (_, s) => fadePage(s, VerifyScreen(token: s.uri.queryParameters['token']))),
+      GoRoute(path: '/verify/:token', pageBuilder: (_, s) => fadePage(s, VerifyScreen(token: s.pathParameters['token']))),
+      GoRoute(path: '/resend-activation', pageBuilder: (_, s) => fadePage(s, ResendActivationScreen(email: s.uri.queryParameters['email']))),
+      GoRoute(path: '/security-report', pageBuilder: (_, s) => fadePage(s, SecurityReportScreen(token: s.uri.queryParameters['token']))),
       ShellRoute(
         builder: (context, state, child) => AppShell(location: state.uri.path, child: child),
         routes: <RouteBase>[
           GoRoute(
             path: '/home',
-            builder: (_, __) => const HomeScreen(),
+            pageBuilder: (_, s) => tabPage(s, const HomeScreen()),
             routes: <RouteBase>[
-              GoRoute(path: 'overview', builder: (_, __) => const RoleOverviewPage()),
-              GoRoute(path: 'bookings', builder: (_, __) => const ModulePage(module: AppModule.bookings)),
-              GoRoute(path: 'payments', builder: (_, __) => const ModulePage(module: AppModule.payments)),
-              GoRoute(path: 'transactions', builder: (_, __) => const ModulePage(module: AppModule.transactions)),
-              GoRoute(path: 'wishlists', builder: (_, __) => const ModulePage(module: AppModule.wishlists)),
-              GoRoute(path: 'messages', builder: (_, __) => const ModulePage(module: AppModule.messages)),
-              GoRoute(path: 'about', builder: (_, __) => const ModulePage(module: AppModule.about)),
-              GoRoute(path: 'contact', builder: (_, __) => const ModulePage(module: AppModule.contact)),
+              GoRoute(path: 'overview', pageBuilder: (_, s) => detailPage(s, const RoleOverviewPage())),
+              GoRoute(path: 'bookings', pageBuilder: (_, s) => detailPage(s, const ModulePage(module: AppModule.bookings))),
+              GoRoute(path: 'payments', pageBuilder: (_, s) => detailPage(s, const ModulePage(module: AppModule.payments))),
+              GoRoute(path: 'transactions', pageBuilder: (_, s) => detailPage(s, const ModulePage(module: AppModule.transactions))),
+              GoRoute(path: 'wishlists', pageBuilder: (_, s) => detailPage(s, const ModulePage(module: AppModule.wishlists))),
+              GoRoute(path: 'messages', pageBuilder: (_, s) => detailPage(s, const ModulePage(module: AppModule.messages))),
+              GoRoute(path: 'about', pageBuilder: (_, s) => detailPage(s, const ModulePage(module: AppModule.about))),
+              GoRoute(path: 'contact', pageBuilder: (_, s) => detailPage(s, const ModulePage(module: AppModule.contact))),
             ],
           ),
-          GoRoute(path: '/explore', builder: (_, __) => const ClientExploreContent()),
+          GoRoute(path: '/explore', pageBuilder: (_, s) => tabPage(s, const ClientExploreContent())),
           GoRoute(
             path: '/application',
-            builder: (_, __) => const ApplicationHubScreen(),
+            pageBuilder: (_, s) => tabPage(s, const ApplicationHubScreen()),
             routes: <RouteBase>[
-              GoRoute(path: ':id', builder: (_, s) => ApplicationWizardScreen(applicationId: s.pathParameters['id']!)),
+              GoRoute(path: ':id', pageBuilder: (_, s) => detailPage(s, ApplicationWizardScreen(applicationId: s.pathParameters['id']!))),
             ],
           ),
           GoRoute(
             path: '/people',
-            builder: (_, __) => const PeopleScreen(),
+            pageBuilder: (_, s) => tabPage(s, const PeopleScreen()),
             routes: <RouteBase>[
-              GoRoute(path: ':id', builder: (_, s) => PublicProfileScreen(userId: s.pathParameters['id']!)),
+              GoRoute(path: ':id', pageBuilder: (_, s) => detailPage(s, PublicProfileScreen(userId: s.pathParameters['id']!))),
             ],
           ),
           GoRoute(
             path: '/account',
-            builder: (_, __) => const AccountScreen(),
+            pageBuilder: (_, s) => tabPage(s, const AccountScreen()),
             routes: <RouteBase>[
-              GoRoute(path: 'profile', builder: (_, __) => const ProfileScreen()),
-              GoRoute(path: 'profile/edit', builder: (_, __) => const EditProfileScreen()),
-              GoRoute(path: 'password', builder: (_, __) => const ChangePasswordScreen()),
-              GoRoute(path: 'location', builder: (_, __) => const LocationScreen()),
-              GoRoute(path: 'settings', builder: (_, __) => const SettingsScreen()),
-              GoRoute(path: 'views', builder: (_, __) => const ProfileViewsScreen()),
+              GoRoute(path: 'profile', pageBuilder: (_, s) => detailPage(s, const ProfileScreen())),
+              GoRoute(path: 'profile/edit', pageBuilder: (_, s) => detailPage(s, const EditProfileScreen())),
+              GoRoute(path: 'password', pageBuilder: (_, s) => detailPage(s, const ChangePasswordScreen())),
+              GoRoute(path: 'location', pageBuilder: (_, s) => detailPage(s, const LocationScreen())),
+              GoRoute(path: 'settings', pageBuilder: (_, s) => detailPage(s, const SettingsScreen())),
+              GoRoute(path: 'views', pageBuilder: (_, s) => detailPage(s, const ProfileViewsScreen())),
               GoRoute(
                 path: 'security',
-                builder: (_, __) => const SecurityCenterScreen(),
+                pageBuilder: (_, s) => detailPage(s, const SecurityCenterScreen()),
                 routes: <RouteBase>[
-                  GoRoute(path: 'sessions', builder: (_, __) => const SessionsScreen()),
-                  GoRoute(path: 'devices', builder: (_, __) => const DevicesScreen()),
-                  GoRoute(path: 'devices/:id', builder: (_, s) => DeviceDetailScreen(deviceId: s.pathParameters['id']!)),
-                  GoRoute(path: 'history', builder: (_, __) => const SignInHistoryScreen()),
-                  GoRoute(path: 'events', builder: (_, __) => const SecurityEventsScreen()),
+                  GoRoute(path: 'sessions', pageBuilder: (_, s) => detailPage(s, const SessionsScreen())),
+                  GoRoute(path: 'devices', pageBuilder: (_, s) => detailPage(s, const DevicesScreen())),
+                  GoRoute(path: 'devices/:id', pageBuilder: (_, s) => detailPage(s, DeviceDetailScreen(deviceId: s.pathParameters['id']!))),
+                  GoRoute(path: 'history', pageBuilder: (_, s) => detailPage(s, const SignInHistoryScreen())),
+                  GoRoute(path: 'events', pageBuilder: (_, s) => detailPage(s, const SecurityEventsScreen())),
                 ],
               ),
             ],
           ),
           GoRoute(
             path: '/staff',
-            builder: (_, __) => const StaffQueueScreen(),
+            pageBuilder: (_, s) => tabPage(s, const StaffQueueScreen()),
             routes: <RouteBase>[
-              GoRoute(path: ':id', builder: (_, s) => StaffDetailScreen(applicationId: s.pathParameters['id']!)),
+              GoRoute(path: ':id', pageBuilder: (_, s) => detailPage(s, StaffDetailScreen(applicationId: s.pathParameters['id']!))),
             ],
           ),
           GoRoute(path: '/admin', redirect: (_, __) => '/admin/users'),
           GoRoute(
             path: '/admin/users',
-            builder: (_, __) => const AdminUsersScreen(),
+            pageBuilder: (_, s) => tabPage(s, const AdminUsersScreen()),
             routes: <RouteBase>[
-              GoRoute(path: ':id', builder: (_, s) => AdminUserDetailScreen(userId: s.pathParameters['id']!)),
+              GoRoute(path: ':id', pageBuilder: (_, s) => detailPage(s, AdminUserDetailScreen(userId: s.pathParameters['id']!))),
             ],
           ),
-          GoRoute(path: '/admin/audit', builder: (_, s) => AuditScreen(userId: s.uri.queryParameters['userId'])),
+          GoRoute(path: '/admin/audit', pageBuilder: (_, s) => tabPage(s, AuditScreen(userId: s.uri.queryParameters['userId']))),
         ],
       ),
     ],
