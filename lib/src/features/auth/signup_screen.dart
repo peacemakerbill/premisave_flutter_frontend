@@ -10,6 +10,7 @@ import '../../state/session_controller.dart';
 import 'auth_scaffold.dart';
 import 'resend_activation_button.dart';
 import 'password_strength_meter.dart';
+import '../places/country_field.dart';
 import 'social_buttons.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
@@ -184,14 +185,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 helper: 'Include your country code.',
               ),
               const SizedBox(height: 16),
-              PTextField(
-                label: 'Country',
-                controller: _country,
-                optional: true,
-                textCapitalization: TextCapitalization.words,
-                textInputAction: TextInputAction.next,
-                prefixIcon: Icons.public_rounded,
-              ),
+              CountryField(controller: _country, optional: true),
               const SizedBox(height: 16),
               PTextField(
                 label: 'Username',

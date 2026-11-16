@@ -10,8 +10,10 @@ import '../../core/theme/brand.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/widgets.dart';
 import '../../data/models/application_models.dart';
+import '../../data/models/place.dart';
 import '../../state/data_providers.dart';
 import '../../state/providers.dart';
+import '../places/address_search_field.dart';
 import 'application_widgets.dart';
 
 class ApplicationWizardScreen extends ConsumerWidget {
@@ -321,6 +323,44 @@ class _WizardBodyState extends ConsumerState<_WizardBody> {
     );
   }
 
+  /// An address box with search. Choosing a result fills the text and calls [onPlace].
+  Widget _address(
+    String key,
+    String label, {
+    String? hint,
+    IconData icon = Icons.home_outlined,
+    AddressFill fill = AddressFill.street,
+    ValueChanged<Place>? onPlace,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: AddressSearchField(
+        label: label,
+        hint: hint ?? 'Start typing a street, building or area',
+        prefixIcon: icon,
+        fill: fill,
+        controller: _c[key]!,
+        errorText: _err(key),
+        countryCode: _v['country'] as String?,
+        onPlace: onPlace ?? (_) {},
+      ),
+    );
+  }
+
+  /// Fills the region, town, postcode and country from a chosen address. All of them stay editable.
+  void _fillFromPlace(Place p) {
+    final region = p.state;
+    if (region != null) _c['region']!.text = region;
+    final town = p.city ?? p.district;
+    if (town != null) _c['city']!.text = town;
+    final post = p.postcode;
+    if (post != null) _c['postalAddress']!.text = post;
+    final code = p.countryCode;
+    setState(() {
+      if (code != null && _meta.countries.any((o) => o.value == code)) _v['country'] = code;
+    });
+  }
+
   Widget _select(String key, String label, List<Option> options, {bool optional = false, bool searchable = false}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -397,9 +437,9 @@ class _WizardBodyState extends ConsumerState<_WizardBody> {
         _text('phoneNumber', 'Phone number', keyboard: TextInputType.phone, hint: '+1 555 123 4567', helper: 'Include the country code.'),
         _text('alternatePhoneNumber', 'Alternate phone', keyboard: TextInputType.phone, optional: true),
         _select('country', 'Country', _meta.countries, searchable: true),
+        _address('physicalAddress', 'Street address', onPlace: _fillFromPlace),
         _text('region', 'Region, state or county', caps: TextCapitalization.words),
         _text('city', 'City or town', caps: TextCapitalization.words),
-        _text('physicalAddress', 'Street address', caps: TextCapitalization.words),
         _text('postalAddress', 'Postal address or ZIP code', optional: true),
       ];
 
@@ -439,7 +479,8 @@ class _WizardBodyState extends ConsumerState<_WizardBody> {
           ],
         ),
       ),
-      _text('primaryPropertyLocation', 'Main property location', hint: 'Neighbourhood and city'),
+      _address('primaryPropertyLocation', 'Main property location',
+          hint: 'Neighbourhood and city', icon: Icons.location_on_outlined, fill: AddressFill.summary),
       _text('propertyDescription', 'Describe your properties', maxLines: 4, maxLength: 600, optional: true),
       _select('managementPreference', 'How will you manage them?', _meta.managementPreferences),
       _text('yearsAsLandlord', 'Years as a landlord', keyboard: TextInputType.number, optional: true),

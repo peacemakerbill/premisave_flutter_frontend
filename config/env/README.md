@@ -22,6 +22,8 @@ Keys:
 * `GITHUB_CLIENT_ID`, `GITHUB_REDIRECT_URI`: GitHub sign in. The redirect must equal the callback URL of the GitHub OAuth app. Leave it empty to hide the button.
 * `FACEBOOK_APP_ID`: Facebook app ID, needed on web and desktop.
 * `SUPPORT_EMAIL`: shown on help screens.
+* `GEOCODER_URL` (optional): address search server. Defaults to the free public Photon server `https://photon.komoot.io`, which is meant for modest traffic. For a large launch run your own Photon server or use a compatible provider.
+* `MAP_TILE_URL` (optional): map tile template such as `https://tiles.example.com/{z}/{x}/{y}.png`. Defaults to the free OpenStreetMap server, which has a fair use policy. For a large launch use a tile provider with an account.
 
 A Flutter app ships inside the download, so anything in these files can be read by users.
 Only put public values here (URLs, client IDs). Never put passwords, API secrets or private keys.

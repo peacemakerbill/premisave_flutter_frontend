@@ -7,8 +7,12 @@ import '../../core/network/api_exception.dart';
 import '../../core/theme/brand.dart';
 import '../../core/utils/validators.dart';
 import '../../core/widgets/widgets.dart';
+import '../../data/models/country.dart';
+import '../../data/models/place.dart';
 import '../../state/providers.dart';
 import '../../state/session_controller.dart';
+import '../places/address_search_field.dart';
+import '../places/country_field.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});
@@ -28,6 +32,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late final TextEditingController _address2;
   late final TextEditingController _country;
 
+  String? _countryCode;
   bool _saving = false;
   bool _uploading = false;
   String? _error;
@@ -45,6 +50,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _address1 = TextEditingController(text: u?.address1);
     _address2 = TextEditingController(text: u?.address2);
     _country = TextEditingController(text: u?.country);
+    _countryCode = Country.byName(u?.country)?.code;
+  }
+
+  /// A chosen address fills the lines below it and the country.
+  void _usePlace(Place p) {
+    if (p.localityLine.isNotEmpty) _address2.text = p.localityLine;
+    final country = p.country;
+    if (country != null && country.isNotEmpty) _country.text = country;
+    setState(() => _countryCode = p.countryCode ?? _countryCode);
   }
 
   @override
@@ -203,11 +217,22 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         errorText: _fieldErrors['phoneNumber'],
                       ),
                       const SizedBox(height: 16),
-                      PTextField(label: 'Address line 1', controller: _address1, optional: true, prefixIcon: Icons.home_outlined),
+                      CountryField(
+                        controller: _country,
+                        optional: true,
+                        onCountry: (c) => setState(() => _countryCode = c?.code),
+                      ),
                       const SizedBox(height: 16),
-                      PTextField(label: 'Address line 2', controller: _address2, optional: true),
+                      AddressSearchField(
+                        label: 'Address line 1',
+                        controller: _address1,
+                        optional: true,
+                        countryCode: _countryCode,
+                        mapTitle: 'Choose your address',
+                        onPlace: _usePlace,
+                      ),
                       const SizedBox(height: 16),
-                      PTextField(label: 'Country', controller: _country, optional: true, prefixIcon: Icons.public_rounded, textCapitalization: TextCapitalization.words),
+                      PTextField(label: 'Address line 2', controller: _address2, optional: true, hint: 'Town, region and postcode'),
                       const SizedBox(height: 14),
                       InfoRow('Email', user.email, icon: Icons.lock_outline_rounded),
                       Text('Your email cannot be changed here.', style: TextStyle(fontSize: 12, color: context.mutedColor)),

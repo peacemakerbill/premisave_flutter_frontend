@@ -14,6 +14,19 @@ class AppConfig {
   );
 
   static const String _envBaseUrl = String.fromEnvironment('BASE_URL');
+  static const String _envGeocoderUrl = String.fromEnvironment('GEOCODER_URL');
+  static const String _envMapTileUrl = String.fromEnvironment('MAP_TILE_URL');
+
+  /// Address search server. The default is the free public Photon server, which is meant for modest traffic.
+  /// For a large launch run your own Photon server or use a paid provider and set GEOCODER_URL.
+  static String get geocoderUrl {
+    final u = _envGeocoderUrl.isEmpty ? 'https://photon.komoot.io' : _envGeocoderUrl;
+    return u.endsWith('/') ? u.substring(0, u.length - 1) : u;
+  }
+
+  /// Map tile template. The default is the free OpenStreetMap server, which has a fair use policy.
+  /// For a large launch use a tile provider with an account and set MAP_TILE_URL.
+  static String get mapTileUrl => _envMapTileUrl.isEmpty ? 'https://tile.openstreetmap.org/{z}/{x}/{y}.png' : _envMapTileUrl;
 
   /// Auth-service base URL without a trailing slash.
   ///

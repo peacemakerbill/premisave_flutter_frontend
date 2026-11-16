@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:geolocator/geolocator.dart';
 
 import '../../core/network/api_exception.dart';
 import '../../core/theme/brand.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/widgets.dart';
+import '../../data/models/place.dart';
 import '../../state/data_providers.dart';
 import '../../state/providers.dart';
+import '../places/address_search_field.dart';
+import '../places/country_field.dart';
+import '../places/device_position.dart';
+import '../places/map_picker_screen.dart';
+import '../places/place_map_preview.dart';
 
-/// Save where you are. Position comes from the device; the place name is optional.
+/// Save where you are. Use the device position, search for an address, or pick a spot on the map.
+/// The place name is optional.
 class LocationScreen extends ConsumerStatefulWidget {
   const LocationScreen({super.key});
 
@@ -25,6 +31,8 @@ class _LocationScreenState extends ConsumerState<LocationScreen> {
 
   double? _lat;
   double? _lng;
+  Place? _place;
+  String? _countryCode;
   bool _locating = false;
   bool _saving = false;
 
@@ -36,31 +44,55 @@ class _LocationScreenState extends ConsumerState<LocationScreen> {
     super.dispose();
   }
 
+  /// Sets the point and the town and country boxes from a place. The address box is written only when asked,
+  /// because the address search box writes its own text when a suggestion is chosen.
+  void _applyPlace(Place p, {required bool writeAddress}) {
+    // Texts first: changing them can call back into this screen, which must not happen inside setState.
+    if (writeAddress) {
+      final line = p.streetLine.isNotEmpty ? p.streetLine : (p.isBare ? '' : p.title);
+      if (line.isNotEmpty) _address.text = line;
+    }
+    final town = p.city ?? p.district;
+    if (town != null) _city.text = town;
+    final country = p.country;
+    if (country != null) _country.text = country;
+    setState(() {
+      _place = p;
+      _lat = p.latitude;
+      _lng = p.longitude;
+      _countryCode = p.countryCode ?? _countryCode;
+    });
+  }
+
   Future<void> _detect() async {
     setState(() => _locating = true);
     try {
-      if (!await Geolocator.isLocationServiceEnabled()) {
-        throw ApiException('Location is turned off on this device.');
-      }
-      var permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
-      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
-        throw ApiException('Location permission was not granted. You can allow it in the device settings.');
-      }
-      final pos = await Geolocator.getCurrentPosition().timeout(const Duration(seconds: 20));
-      if (mounted) {
-        setState(() {
-          _lat = pos.latitude;
-          _lng = pos.longitude;
-        });
+      final pos = await readDevicePosition();
+      if (!mounted) return;
+      _applyPlace(Place.point(pos.latitude, pos.longitude), writeAddress: false);
+      try {
+        final found = await ref.read(placeRepositoryProvider).reverse(pos.latitude, pos.longitude);
+        if (mounted) _applyPlace(found, writeAddress: true);
+      } catch (_) {
+        // The point is enough. The address boxes stay empty for the user to fill in.
       }
     } catch (e) {
       if (mounted) showToast(context, e is ApiException ? e.message : 'Could not read your position. Try again.', error: true);
     } finally {
       if (mounted) setState(() => _locating = false);
     }
+  }
+
+  Future<void> _chooseOnMap() async {
+    final typedCountry = _country.text.trim();
+    final place = await showMapPicker(
+      context,
+      title: 'Choose your location',
+      initial: _place,
+      centerOn: typedCountry.isEmpty ? null : typedCountry,
+      countryCode: _countryCode,
+    );
+    if (place != null && mounted) _applyPlace(place, writeAddress: true);
   }
 
   Future<void> _save() async {
@@ -79,9 +111,14 @@ class _LocationScreenState extends ConsumerState<LocationScreen> {
       ref.invalidate(locationHistoryProvider);
       if (mounted) {
         showToast(context, 'Location saved');
+        for (final c in <TextEditingController>[_name, _address, _city, _country]) {
+          c.clear();
+        }
         setState(() {
           _lat = null;
           _lng = null;
+          _place = null;
+          _countryCode = null;
         });
       }
     } catch (e) {
@@ -137,15 +174,30 @@ class _LocationScreenState extends ConsumerState<LocationScreen> {
             ),
           ),
           const SectionHeader('Update my location'),
+          Text(
+            'Use this device, search for an address, or place a pin on the map.',
+            style: TextStyle(fontSize: 13, height: 1.4, color: context.mutedColor),
+          ),
+          const SizedBox(height: 12),
           PButton(
-            label: _lat == null ? 'Use my current position' : 'Position found',
-            icon: _lat == null ? Icons.my_location_rounded : Icons.check_circle_outline_rounded,
+            label: _lat == null ? 'Use my current position' : 'Use my current position again',
+            icon: Icons.my_location_rounded,
             kind: PButtonKind.outline,
             expand: true,
             loading: _locating,
             onPressed: _locating ? null : _detect,
           ),
+          const SizedBox(height: 10),
+          PButton(
+            label: _lat == null ? 'Search or choose on the map' : 'Adjust on the map',
+            icon: Icons.map_outlined,
+            kind: PButtonKind.outline,
+            expand: true,
+            onPressed: _chooseOnMap,
+          ),
           if (_lat != null && _lng != null) ...<Widget>[
+            const SizedBox(height: 16),
+            PlaceMapPreview(latitude: _lat!, longitude: _lng!, onTap: _chooseOnMap),
             const SizedBox(height: 8),
             Text(
               '${_lat!.toStringAsFixed(5)}, ${_lng!.toStringAsFixed(5)}',
@@ -154,15 +206,22 @@ class _LocationScreenState extends ConsumerState<LocationScreen> {
             const SizedBox(height: 16),
             PTextField(label: 'Place name', controller: _name, optional: true, hint: 'Home, Office, Downtown'),
             const SizedBox(height: 14),
-            PTextField(label: 'Address', controller: _address, optional: true),
+            AddressSearchField(
+              label: 'Address',
+              controller: _address,
+              optional: true,
+              countryCode: _countryCode,
+              mapTitle: 'Choose your location',
+              onPlace: (p) => _applyPlace(p, writeAddress: false),
+            ),
             const SizedBox(height: 14),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Expanded(child: PTextField(label: 'City', controller: _city, optional: true)),
-                const SizedBox(width: 12),
-                Expanded(child: PTextField(label: 'Country', controller: _country, optional: true)),
-              ],
+            PTextField(label: 'City', controller: _city, optional: true, textCapitalization: TextCapitalization.words),
+            const SizedBox(height: 14),
+            CountryField(
+              controller: _country,
+              optional: true,
+              textInputAction: TextInputAction.done,
+              onCountry: (c) => setState(() => _countryCode = c?.code),
             ),
             const SizedBox(height: 18),
             PButton(label: 'Save location', expand: true, loading: _saving, onPressed: _saving ? null : _save),

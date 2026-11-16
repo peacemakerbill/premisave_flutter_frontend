@@ -6,6 +6,7 @@ import '../data/repositories/admin_repository.dart';
 import '../data/repositories/application_repository.dart';
 import '../data/repositories/auth_repository.dart';
 import '../data/repositories/contact_repository.dart';
+import '../data/repositories/place_repository.dart';
 import '../data/repositories/profile_repository.dart';
 import '../data/repositories/security_repository.dart';
 import '../data/repositories/social_repository.dart';
@@ -20,6 +21,8 @@ final contactRepositoryProvider = Provider<ContactRepository>((ref) => ContactRe
 
 final profileRepositoryProvider =
     Provider<ProfileRepository>((ref) => ProfileRepository(ref.watch(apiClientProvider)));
+
+final placeRepositoryProvider = Provider<PlaceRepository>((ref) => PlaceRepository());
 
 final socialRepositoryProvider = Provider<SocialRepository>((ref) => SocialRepository(ref.watch(apiClientProvider)));
 
