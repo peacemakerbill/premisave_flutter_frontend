@@ -1,11 +1,11 @@
 {
-    "name": "premisave_frontend",
-    "short_name": "premisave_frontend",
+    "name": "Premisave",
+    "short_name": "Premisave",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A Modern Real Estate Application",
+    "background_color": "#0E3B2F",
+    "theme_color": "#0E3B2F",
+    "description": "Premisave real estate: apply, manage and stay secure.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

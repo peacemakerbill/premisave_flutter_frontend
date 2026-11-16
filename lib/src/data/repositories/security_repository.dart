@@ -1,0 +1,58 @@
+import '../../core/network/api_client.dart';
+import '../models/json_utils.dart';
+import '../models/security_models.dart';
+
+/// /security endpoints: sessions, devices, sign-in history and events.
+class SecurityRepository {
+  SecurityRepository(this._api);
+
+  final ApiClient _api;
+
+  String _id(String s) => Uri.encodeComponent(s);
+
+  Future<List<SessionView>> sessions() async =>
+      mapList(await _api.get('/security/sessions')).map(SessionView.new).toList();
+
+  Future<CountResult> endSession(String id) async =>
+      CountResult(asMap(await _api.delete('/security/sessions/${_id(id)}')));
+
+  Future<CountResult> endOtherSessions() async =>
+      CountResult(asMap(await _api.post('/security/sessions/revoke-others')));
+
+  Future<List<DeviceView>> devices() async =>
+      mapList(await _api.get('/security/devices')).map(DeviceView.new).toList();
+
+  Future<DeviceDetail> device(String id) async =>
+      DeviceDetail(asMap(await _api.get('/security/devices/${_id(id)}')));
+
+  /// Trusting a device needs the account password again.
+  Future<DeviceView> trustDevice(String id, String currentPassword) async => DeviceView(
+        asMap(await _api.post('/security/devices/${_id(id)}/trust', body: {'currentPassword': currentPassword})),
+      );
+
+  Future<DeviceView> revokeTrust(String id) async =>
+      DeviceView(asMap(await _api.delete('/security/devices/${_id(id)}/trust')));
+
+  Future<DeviceView> revokeCredential(String id) async =>
+      DeviceView(asMap(await _api.post('/security/devices/${_id(id)}/revoke-credential')));
+
+  Future<CountResult> removeDevice(String id) async =>
+      CountResult(asMap(await _api.delete('/security/devices/${_id(id)}')));
+
+  Future<List<SignInView>> signIns() async =>
+      mapList(await _api.get('/security/sign-ins')).map(SignInView.new).toList();
+
+  Future<List<SecurityEventView>> events() async =>
+      mapList(await _api.get('/security/events')).map(SecurityEventView.new).toList();
+
+  /// Administrator audit trail.
+  Future<List<SecurityEventView>> adminEvents({String? userId, String? type, int page = 0, int size = 50}) async {
+    final res = await _api.get('/admin/security/events', query: {
+      if (userId != null && userId.isNotEmpty) 'userId': userId,
+      if (type != null && type.isNotEmpty) 'type': type,
+      'page': page,
+      'size': size,
+    });
+    return mapList(res).map(SecurityEventView.new).toList();
+  }
+}

@@ -26,6 +26,13 @@
 	<true/>
 
 	<!-- Camera and Photo Library Permissions -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Premisave uses your location only when you choose to set it on your profile.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>This app needs access to the camera to take profile pictures</string>
 	<key>NSPhotoLibraryUsageDescription</key>
@@ -55,4 +62,4 @@
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 </dict>
-</plist>
+</plist>

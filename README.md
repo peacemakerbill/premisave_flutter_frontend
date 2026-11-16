@@ -1,16 +1,55 @@
-# premisave_frontend
+# Premisave
 
-A Modern Real Estate Application
+Flutter app for the Premisave real estate platform. It talks to the auth-service
+(Spring Boot) and runs on Android, iOS, web and desktop.
 
-## Getting Started
+## Run it
 
-This project is a starting point for a Flutter application.
+```bash
+flutter pub get
+dart run flutter_launcher_icons      # once, writes the launcher icons
+flutter run -d chrome --web-port=3000
+```
 
-A few resources to get you started if this is your first Flutter project:
+Point the app at your backend with `--dart-define`:
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+| Define | Default | Purpose |
+| --- | --- | --- |
+| `BASE_URL` | `http://localhost:8080` (web, desktop, iOS) or `http://10.0.2.2:8080` (Android emulator) | auth-service address |
+| `GOOGLE_SERVER_CLIENT_ID` | empty | web client ID used to get a Google ID token |
+| `GOOGLE_CLIENT_ID` | empty | iOS or web Google client ID |
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+flutter run --dart-define=BASE_URL=https://api.example.com
+```
+
+On a physical phone use your computer's LAN address, for example
+`--dart-define=BASE_URL=http://192.168.1.20:8080`.
+
+## What is connected
+
+* Sign in, sign up, email verification, resend activation, forgot and reset password
+* Google and Facebook sign in
+* Rotating refresh tokens, remembered device, session expiry handling
+* Profile, photo upload, change password, location, who viewed you
+* Security center: sessions, devices, sign-in history, security events, security reports
+* People: directory, follow, like, reviews, public profiles
+* Home owner application: guided form, document upload, status, withdraw, reapply
+* Staff review queue and decisions, administrator approval
+* Administrator user management and audit trail
+
+The finance, operations, support and booking modules still show sample data until
+their services exist. The Home screen says so.
+
+## Layout
+
+```
+lib/
+  main.dart
+  src/
+    core/        theme, branding, config, network, storage, shared widgets
+    data/        models, repositories, social sign in
+    state/       Riverpod providers and the session controller
+    router/      go_router with role guards
+    features/    auth, home, account, security, people, application, staff, admin, modules
+```
