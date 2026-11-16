@@ -1,19 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/config/app_config.dart';
+import '../../../core/network/api_exception.dart';
 import '../../../core/theme/brand.dart';
 import '../../../core/theme/palette.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/widgets.dart';
+import '../../../data/repositories/contact_repository.dart';
+import '../../../state/providers.dart';
 import '../../../state/session_controller.dart';
 import 'info_parts.dart';
 
-/// How to reach the Premisave team. The form opens the person's email app with the message ready to send,
-/// because there is no server side inbox for contact messages yet.
-class ContactContent extends StatelessWidget {
+/// How to reach the Premisave team. The form sends the message to the server, which emails the team
+/// and confirms to the sender. If the server cannot be reached, the person can still email us instead.
+class ContactContent extends StatefulWidget {
   const ContactContent({super.key});
+
+  @override
+  State<ContactContent> createState() => _ContactContentState();
+}
+
+class _ContactContentState extends State<ContactContent> {
+  final GlobalKey _formAnchor = GlobalKey();
+
+  void _scrollToForm() {
+    final target = _formAnchor.currentContext;
+    if (target == null) return;
+    Scrollable.ensureVisible(
+      target,
+      duration: const Duration(milliseconds: 450),
+      curve: Curves.easeOutCubic,
+      alignment: 0.02,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,12 +49,12 @@ class ContactContent extends StatelessWidget {
               'Premisave team will reply by email.',
           actions: <Widget>[
             HeroAction(
-              label: 'Email support',
-              icon: Icons.mail_outline_rounded,
-              onPressed: () => composeSupportEmail(context, subject: 'Premisave support'),
+              label: 'Write to us',
+              icon: Icons.edit_outlined,
+              onPressed: _scrollToForm,
             ),
             HeroAction(
-              label: 'Copy address',
+              label: 'Copy email address',
               icon: Icons.content_copy_rounded,
               filled: false,
               onPressed: () => copySupportEmail(context),
@@ -42,6 +64,7 @@ class ContactContent extends StatelessWidget {
         const SizedBox(height: 20),
         const _Channels(),
         InfoSection(
+          key: _formAnchor,
           title: 'Send us a message',
           subtitle: 'Tell us a little about what you need and we will point you the right way.',
           child: LayoutBuilder(
@@ -83,7 +106,7 @@ class _Channels extends StatelessWidget {
           icon: Icons.mail_outline_rounded,
           title: 'Email us',
           highlight: AppConfig.supportEmail,
-          text: 'For questions about your account, applications and anything else.',
+          text: 'Prefer your own email app? Tap here. If none opens, we copy the address for you.',
           onTap: () => composeSupportEmail(context, subject: 'Premisave support'),
         ),
         _ChannelCard(
@@ -161,13 +184,14 @@ class _MessageForm extends ConsumerStatefulWidget {
 }
 
 class _MessageFormState extends ConsumerState<_MessageForm> {
+  /// The value is the code the server expects; the label is what people read.
   static const List<PChoice<String>> _topics = <PChoice<String>>[
-    PChoice<String>('General question', 'General question'),
-    PChoice<String>('Account and sign in', 'Account and sign in'),
-    PChoice<String>('Home owner application', 'Home owner application'),
-    PChoice<String>('Bookings and payments', 'Bookings and payments'),
-    PChoice<String>('Security concern', 'Security concern'),
-    PChoice<String>('Feedback or an idea', 'Feedback or an idea'),
+    PChoice<String>('GENERAL', 'General question'),
+    PChoice<String>('ACCOUNT', 'Account and sign in'),
+    PChoice<String>('APPLICATION', 'Home owner application'),
+    PChoice<String>('PAYMENTS', 'Bookings and payments'),
+    PChoice<String>('SECURITY', 'Security concern'),
+    PChoice<String>('FEEDBACK', 'Feedback or an idea'),
   ];
 
   final _formKey = GlobalKey<FormState>();
@@ -176,6 +200,9 @@ class _MessageFormState extends ConsumerState<_MessageForm> {
   final _message = TextEditingController();
   String _topic = _topics.first.value;
   bool _sending = false;
+  String? _error;
+  bool _offerEmail = false;
+  ContactReceipt? _receipt;
 
   @override
   void initState() {
@@ -195,18 +222,59 @@ class _MessageFormState extends ConsumerState<_MessageForm> {
     super.dispose();
   }
 
+  String get _topicLabel => _topics.firstWhere((t) => t.value == _topic).label;
+
   Future<void> _send() async {
-    if (!(_formKey.currentState?.validate() ?? false)) return;
-    setState(() => _sending = true);
-    final body = '${_message.text.trim()}\n\n'
-        'Name: ${_name.text.trim()}\n'
-        'Email: ${_email.text.trim()}';
-    await composeSupportEmail(context, subject: '[$_topic] Premisave', body: body);
-    if (mounted) setState(() => _sending = false);
+    if (_sending || !(_formKey.currentState?.validate() ?? false)) return;
+    setState(() {
+      _sending = true;
+      _error = null;
+      _offerEmail = false;
+    });
+    try {
+      final receipt = await ref.read(contactRepositoryProvider).send(
+            name: _name.text,
+            email: _email.text,
+            topic: _topic,
+            message: _message.text,
+          );
+      if (!mounted) return;
+      setState(() {
+        _receipt = receipt;
+        _sending = false;
+      });
+    } catch (e) {
+      final err = ApiException.from(e);
+      if (!mounted) return;
+      setState(() {
+        _sending = false;
+        _error = err.message;
+        // When the server cannot be reached or is down, the person can still get through by email.
+        _offerEmail = err.isNetwork || (err.statusCode ?? 0) >= 500;
+      });
+    }
+  }
+
+  Future<void> _emailInstead() {
+    final body = '${_message.text.trim()}\n\nName: ${_name.text.trim()}\nEmail: ${_email.text.trim()}';
+    return composeSupportEmail(context, subject: '[$_topicLabel] Premisave', body: body);
+  }
+
+  void _another() {
+    setState(() {
+      _message.clear();
+      _receipt = null;
+      _error = null;
+      _offerEmail = false;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final receipt = _receipt;
+    if (receipt != null) {
+      return _SentCard(receipt: receipt, email: _email.text.trim(), onAnother: _another);
+    }
     return PCard(
       padding: EdgeInsets.all(context.isCompact ? 18 : 24),
       child: Form(
@@ -224,17 +292,25 @@ class _MessageFormState extends ConsumerState<_MessageForm> {
                   controller: _name,
                   hint: 'Jane Doe',
                   prefixIcon: Icons.person_outline_rounded,
+                  enabled: !_sending,
                   textCapitalization: TextCapitalization.words,
                   textInputAction: TextInputAction.next,
-                  validator: (v) => Validators.required(v, 'Name'),
+                  validator: (v) {
+                    final text = (v ?? '').trim();
+                    if (text.isEmpty) return 'Please enter your name';
+                    if (text.length < 2) return 'Your name looks too short';
+                    return null;
+                  },
                 ),
                 PTextField(
                   label: 'Email address',
                   controller: _email,
                   hint: 'you@example.com',
                   prefixIcon: Icons.alternate_email_rounded,
+                  enabled: !_sending,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
+                  helper: 'We reply to this address',
                   validator: Validators.email,
                 ),
               ],
@@ -244,6 +320,7 @@ class _MessageFormState extends ConsumerState<_MessageForm> {
               label: 'Topic',
               options: _topics,
               value: _topic,
+              enabled: !_sending,
               onChanged: (v) => setState(() => _topic = v ?? _topic),
             ),
             const SizedBox(height: 16),
@@ -254,17 +331,27 @@ class _MessageFormState extends ConsumerState<_MessageForm> {
               maxLines: 7,
               minLines: 5,
               maxLength: 2000,
+              enabled: !_sending,
               textCapitalization: TextCapitalization.sentences,
               validator: (v) {
                 final text = (v ?? '').trim();
-                if (text.isEmpty) return 'Message is required';
-                if (text.length < 10) return 'Please add a few more details';
+                if (text.isEmpty) return 'Please write a message';
+                if (text.length < 10) return 'Please add a few more details so we can help';
                 return null;
               },
             ),
+            if (_error != null) ...<Widget>[
+              const SizedBox(height: 16),
+              InlineMessage(
+                _error!,
+                kind: MessageKind.error,
+                actionLabel: _offerEmail ? 'Email us instead' : null,
+                onAction: _offerEmail ? _emailInstead : null,
+              ),
+            ],
             const SizedBox(height: 20),
             PButton(
-              label: 'Send message',
+              label: _sending ? 'Sending' : 'Send message',
               icon: Icons.send_rounded,
               expand: context.isCompact,
               loading: _sending,
@@ -272,11 +359,88 @@ class _MessageFormState extends ConsumerState<_MessageForm> {
             ),
             const SizedBox(height: 12),
             Text(
-              'This opens your email app with the message ready to send.',
+              'We reply to the email address above and send you a confirmation straight away.',
               style: TextStyle(fontSize: 12.5, height: 1.45, color: context.mutedColor),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Shown in place of the form once the server has the message.
+class _SentCard extends StatelessWidget {
+  const _SentCard({required this.receipt, required this.email, required this.onAnother});
+
+  final ContactReceipt receipt;
+  final String email;
+  final VoidCallback onAnother;
+
+  @override
+  Widget build(BuildContext context) {
+    final pal = context.pal;
+    return PCard(
+      padding: EdgeInsets.all(context.isCompact ? 20 : 28),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          IconBadge(Icons.check_circle_outline_rounded, size: 56, color: pal.good),
+          const SizedBox(height: 18),
+          Text('Message sent', style: context.display(size: 24, weight: FontWeight.w800, spacing: -0.6, height: 1.2)),
+          const SizedBox(height: 8),
+          Text(receipt.message, style: TextStyle(fontSize: 14.5, height: 1.55, color: context.mutedColor)),
+          if (receipt.reference.isNotEmpty) ...<Widget>[
+            const SizedBox(height: 18),
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 8, 6, 8),
+              decoration: BoxDecoration(
+                color: pal.accentSoft,
+                borderRadius: BorderRadius.circular(context.radius(Brand.radiusSmall + 2)),
+              ),
+              child: Row(
+                children: <Widget>[
+                  Icon(Icons.confirmation_number_outlined, size: 20, color: pal.accent),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text('Your reference', style: TextStyle(fontSize: 11.5, color: context.mutedColor)),
+                        SelectableText(
+                          receipt.reference,
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, letterSpacing: 1.2),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Copy reference',
+                    icon: const Icon(Icons.content_copy_rounded, size: 19),
+                    onPressed: () async {
+                      await Clipboard.setData(ClipboardData(text: receipt.reference));
+                      if (context.mounted) showToast(context, 'Reference copied');
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 16),
+          Text(
+            'We emailed a confirmation to $email. If it does not arrive within a few minutes, check your spam folder.',
+            style: TextStyle(fontSize: 13.5, height: 1.55, color: context.mutedColor),
+          ),
+          const SizedBox(height: 22),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: <Widget>[
+              PButton(label: 'Send another message', kind: PButtonKind.outline, onPressed: onAnother),
+              PButton(label: 'Back to home', kind: PButtonKind.text, onPressed: () => context.go('/home')),
+            ],
+          ),
+        ],
       ),
     );
   }

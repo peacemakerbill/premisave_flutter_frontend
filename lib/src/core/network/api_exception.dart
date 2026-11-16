@@ -77,7 +77,8 @@ class ApiException implements Exception {
 
     // A server fault carries internals (class names, stack text) that mean nothing to a person.
     // Keep them in the debug console and show a plain sentence instead.
-    if (status != null && status >= 500) {
+    // A 503 is the one exception: the backend uses it for "try again shortly" with a message written for people.
+    if (status != null && status >= 500 && status != 503) {
       if (message != null) debugPrint('Server error $status: $message');
       message = _fallbackFor(status);
     }
@@ -101,6 +102,8 @@ class ApiException implements Exception {
         return 'That file is too large.';
       case 429:
         return 'Too many attempts. Please wait a moment and try again.';
+      case 503:
+        return 'The service is temporarily unavailable. Please try again shortly.';
       default:
         if (status != null && status >= 500) {
           return 'The server ran into a problem. Please try again shortly.';

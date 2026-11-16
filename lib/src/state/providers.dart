@@ -5,6 +5,7 @@ import '../core/storage/token_store.dart';
 import '../data/repositories/admin_repository.dart';
 import '../data/repositories/application_repository.dart';
 import '../data/repositories/auth_repository.dart';
+import '../data/repositories/contact_repository.dart';
 import '../data/repositories/profile_repository.dart';
 import '../data/repositories/security_repository.dart';
 import '../data/repositories/social_repository.dart';
@@ -14,6 +15,8 @@ final tokenStoreProvider = Provider<TokenStore>((ref) => TokenStore());
 final apiClientProvider = Provider<ApiClient>((ref) => ApiClient(ref.watch(tokenStoreProvider)));
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) => AuthRepository(ref.watch(apiClientProvider)));
+
+final contactRepositoryProvider = Provider<ContactRepository>((ref) => ContactRepository(ref.watch(apiClientProvider)));
 
 final profileRepositoryProvider =
     Provider<ProfileRepository>((ref) => ProfileRepository(ref.watch(apiClientProvider)));
