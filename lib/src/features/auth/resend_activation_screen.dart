@@ -7,6 +7,7 @@ import '../../core/utils/validators.dart';
 import '../../core/widgets/widgets.dart';
 import '../../state/providers.dart';
 import 'auth_scaffold.dart';
+import 'resend_activation_button.dart';
 
 class ResendActivationScreen extends ConsumerStatefulWidget {
   const ResendActivationScreen({super.key, this.email});
@@ -55,7 +56,10 @@ class _ResendActivationScreenState extends ConsumerState<ResendActivationScreen>
           icon: Icons.mark_email_read_outlined,
           title: 'On its way',
           message: _done!,
-          actions: <Widget>[PButton(label: 'Back to sign in', expand: true, onPressed: () => context.go('/login'))],
+          actions: <Widget>[
+            PButton(label: 'Back to sign in', expand: true, onPressed: () => context.go('/login')),
+            ResendActivationButton(email: _email.text.trim(), label: 'Send it again'),
+          ],
         ),
       );
     }

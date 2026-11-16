@@ -8,6 +8,7 @@ import '../../core/utils/validators.dart';
 import '../../core/widgets/widgets.dart';
 import '../../state/session_controller.dart';
 import 'auth_scaffold.dart';
+import 'resend_activation_button.dart';
 import 'password_strength_meter.dart';
 import 'social_buttons.dart';
 
@@ -96,12 +97,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
           message: _acceptedMessage!,
           actions: <Widget>[
             PButton(label: 'Go to sign in', expand: true, onPressed: () => context.go('/login')),
-            PButton(
-              label: 'Resend the email',
-              kind: PButtonKind.outline,
-              expand: true,
-              onPressed: () => context.go('/resend-activation?email=${Uri.encodeQueryComponent(_email.text.trim())}'),
-            ),
+            ResendActivationButton(email: _email.text.trim()),
           ],
         ),
       );

@@ -123,6 +123,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               const SizedBox(height: 4),
               PButton(label: 'Sign in', expand: true, loading: _busy, onPressed: busy ? null : _signIn),
+              const SizedBox(height: 6),
+              Center(
+                child: TextButton(
+                  onPressed: busy
+                      ? null
+                      : () => context.go('/resend-activation?email=${Uri.encodeQueryComponent(_email.text.trim())}'),
+                  child: const Text(
+                    'Did not get your activation email? Resend it',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ),
               SocialAuthButtons(
                 disabled: _busy,
                 onBusyChanged: (b) {
