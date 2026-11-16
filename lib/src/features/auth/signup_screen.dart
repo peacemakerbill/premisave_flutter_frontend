@@ -9,6 +9,7 @@ import '../../core/widgets/widgets.dart';
 import '../../state/session_controller.dart';
 import 'auth_scaffold.dart';
 import 'password_strength_meter.dart';
+import 'social_buttons.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
@@ -30,6 +31,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   final _confirm = TextEditingController();
 
   bool _busy = false;
+  bool _socialBusy = false;
   bool _agreed = false;
   String? _error;
   Map<String, String> _fieldErrors = <String, String>{};
@@ -247,7 +249,16 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 ),
               ),
               const SizedBox(height: 14),
-              PButton(label: 'Create account', expand: true, loading: _busy, onPressed: _busy ? null : _submit),
+              PButton(label: 'Create account', expand: true, loading: _busy, onPressed: (_busy || _socialBusy) ? null : _submit),
+              SocialAuthButtons(
+                disabled: _busy,
+                onBusyChanged: (b) {
+                  if (mounted) setState(() => _socialBusy = b);
+                },
+                onError: (m) {
+                  if (mounted) setState(() => _error = m);
+                },
+              ),
             ],
           ),
         ),

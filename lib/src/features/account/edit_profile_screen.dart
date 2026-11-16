@@ -142,8 +142,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             child: Padding(
                               padding: const EdgeInsets.all(9),
                               child: _uploading
-                                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2.2, color: Brand.green))
-                                  : const Icon(Icons.photo_camera_outlined, size: 18, color: Brand.green),
+                                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2.2, color: Brand.ink))
+                                  : const Icon(Icons.photo_camera_outlined, size: 18, color: Brand.ink),
                             ),
                           ),
                         ),

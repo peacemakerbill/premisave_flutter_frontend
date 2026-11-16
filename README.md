@@ -18,6 +18,9 @@ Point the app at your backend with `--dart-define`:
 | `BASE_URL` | `http://localhost:8080` (web, desktop, iOS) or `http://10.0.2.2:8080` (Android emulator) | auth-service address |
 | `GOOGLE_SERVER_CLIENT_ID` | empty | web client ID used to get a Google ID token |
 | `GOOGLE_CLIENT_ID` | empty | iOS or web Google client ID |
+| `GITHUB_CLIENT_ID` | empty | GitHub OAuth app client ID (public). With the redirect below it turns on GitHub sign in |
+| `GITHUB_REDIRECT_URI` | empty | must equal the callback URL of the GitHub OAuth app, for example `http://localhost:3000/auth.html` |
+| `FACEBOOK_APP_ID` | empty | Facebook app ID (public), needed on web and desktop |
 
 ```bash
 flutter run --dart-define=BASE_URL=https://api.example.com

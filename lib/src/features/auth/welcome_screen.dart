@@ -5,6 +5,7 @@ import '../../core/branding/premisave_logo.dart';
 import '../../core/theme/brand.dart';
 import '../../core/widgets/widgets.dart';
 import '../../core/theme/palette.dart';
+import '../account/appearance_picker.dart';
 
 /// First screen for signed-out visitors.
 class WelcomeScreen extends StatelessWidget {
@@ -15,7 +16,8 @@ class WelcomeScreen extends StatelessWidget {
     final wide = context.isWide;
     return Scaffold(
       backgroundColor: context.pal.hero,
-      body: SafeArea(
+      body: Stack(children: <Widget>[
+        Positioned.fill(child: SafeArea(
         child: Center(
           child: SingleChildScrollView(
             padding: EdgeInsets.symmetric(horizontal: wide ? 48 : 24, vertical: 24),
@@ -47,7 +49,7 @@ class WelcomeScreen extends StatelessWidget {
                         foregroundColor: Brand.cream,
                         side: BorderSide(color: Brand.cream.op(0.45), width: 1.4),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                        textStyle: const TextStyle(fontFamily: Brand.fontFamily, fontWeight: FontWeight.w700, fontSize: 15),
+                        textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
                       ),
                       child: const Text('Sign in'),
                     ),
@@ -70,7 +72,13 @@ class WelcomeScreen extends StatelessWidget {
             ),
           ),
         ),
-      ),
+      )),
+        Positioned(
+          top: 0,
+          right: 0,
+          child: SafeArea(child: Padding(padding: const EdgeInsets.all(6), child: AppearanceButton(color: Brand.cream.op(0.85)))),
+        ),
+      ]),
     );
   }
 }

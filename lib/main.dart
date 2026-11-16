@@ -5,6 +5,7 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 
 import 'src/core/theme/app_theme.dart';
 import 'src/core/widgets/theme_reveal.dart';
+import 'src/data/social_auth_service.dart';
 import 'src/router/app_router.dart';
 import 'src/state/appearance_controller.dart';
 import 'src/state/session_controller.dart';
@@ -17,6 +18,7 @@ Future<void> main() async {
   // and the router starts on the right screen.
   final container = ProviderContainer();
   await container.read(appearanceProvider.notifier).load();
+  await SocialAuthService.init();
   await container.read(sessionProvider.notifier).bootstrap();
 
   runApp(

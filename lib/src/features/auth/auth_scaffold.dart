@@ -4,6 +4,7 @@ import '../../core/branding/premisave_logo.dart';
 import '../../core/theme/brand.dart';
 import '../../core/widgets/p_scaffold.dart';
 import '../../core/theme/palette.dart';
+import '../account/appearance_picker.dart';
 
 /// Shared frame for every signed-out screen. Wide screens get a brand panel beside the form.
 class AuthScaffold extends StatelessWidget {
@@ -27,25 +28,36 @@ class AuthScaffold extends StatelessWidget {
     final wide = MediaQuery.of(context).size.width >= 920;
     final form = _FormColumn(title: title, subtitle: subtitle, footer: footer, leading: leading, showLogo: !wide, child: child);
 
-    return PScaffold(
-      body: wide
-          ? Row(
-              children: <Widget>[
-                const Expanded(flex: 5, child: _BrandPanel()),
-                Expanded(
-                  flex: 6,
-                  child: SafeArea(child: Center(child: SingleChildScrollView(padding: const EdgeInsets.all(40), child: form))),
-                ),
-              ],
-            )
-          : SafeArea(
-              child: Center(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(22, 18, 22, 32),
-                  child: form,
-                ),
+    final content = wide
+        ? Row(
+            children: <Widget>[
+              const Expanded(flex: 5, child: _BrandPanel()),
+              Expanded(
+                flex: 6,
+                child: SafeArea(child: Center(child: SingleChildScrollView(padding: const EdgeInsets.all(40), child: form))),
+              ),
+            ],
+          )
+        : SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(22, 18, 22, 32),
+                child: form,
               ),
             ),
+          );
+
+    return PScaffold(
+      body: Stack(
+        children: <Widget>[
+          Positioned.fill(child: content),
+          const Positioned(
+            top: 0,
+            right: 0,
+            child: SafeArea(child: Padding(padding: EdgeInsets.all(6), child: AppearanceButton())),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -80,7 +92,7 @@ class _FormColumn extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 18),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: PremisaveLogo(width: 200, onDark: context.isDark, animate: false),
+                child: PremisaveLogo(width: 200, onDark: context.isDark, ink: context.isDark ? null : context.pal.accent, animate: false),
               ),
             ),
           if (leading != null) ...<Widget>[leading!, const SizedBox(height: 10)],

@@ -19,7 +19,7 @@ class LoadingState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          PremisaveLoader(size: 56, onDark: context.isDark),
+          PremisaveLoader(size: 56, onDark: context.isDark, ink: context.isDark ? null : context.pal.accent),
           if (label != null) ...<Widget>[
             const SizedBox(height: 14),
             Text(label!, style: TextStyle(color: context.mutedColor, fontWeight: FontWeight.w600)),

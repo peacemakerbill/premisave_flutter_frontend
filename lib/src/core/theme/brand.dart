@@ -14,16 +14,13 @@ class Brand {
   static const Color greenTonal = PremisaveColors.skyline; // 14493B
 
   // Text on light and dark surfaces.
-  static const Color ink = Color(0xFF10231D);
-  static const Color muted = Color(0xFF5E6F68);
+  static const Color ink = Color(0xFF16133A);
+  static const Color muted = Color(0xFF6B6890);
   static const Color goldDeep = Color(0xFF9A6B0E); // gold text that stays readable on cream
 
   // Surfaces and lines.
-  static const Color border = Color(0xFFE6DFD0);
+  static const Color border = Color(0xFFE2DEF0);
   static const Color surface = Color(0xFFFFFFFF);
-  static const Color darkBackground = Color(0xFF0A1C17);
-  static const Color darkSurface = Color(0xFF10302A);
-  static const Color darkBorder = Color(0xFF1E4A40);
 
   // Feedback.
   static const Color success = Color(0xFF1E8E5A);

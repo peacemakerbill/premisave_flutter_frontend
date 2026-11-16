@@ -106,6 +106,13 @@ class SessionController extends Notifier<SessionState> {
     return true;
   }
 
+  Future<bool> signInWithGithub() async {
+    final code = await SocialAuthService.githubCode();
+    if (code == null) return false;
+    await _complete(await ref.read(authRepositoryProvider).github(code));
+    return true;
+  }
+
   Future<void> signOut() async {
     try {
       await ref.read(authRepositoryProvider).logout();

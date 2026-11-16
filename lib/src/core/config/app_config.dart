@@ -49,6 +49,15 @@ class AppConfig {
   static const String googleServerClientId = String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID');
   static const String googleClientId = String.fromEnvironment('GOOGLE_CLIENT_ID');
 
+  /// GitHub OAuth app client ID (public). The sign-in button shows only when this and
+  /// [githubRedirectUri] are set. The redirect URI must match the callback URL of the
+  /// GitHub OAuth app, for example http://localhost:3000/auth.html while developing.
+  static const String githubClientId = String.fromEnvironment('GITHUB_CLIENT_ID');
+  static const String githubRedirectUri = String.fromEnvironment('GITHUB_REDIRECT_URI');
+
+  /// Facebook app ID (public). Needed on web and desktop; mobile reads it from the native setup.
+  static const String facebookAppId = String.fromEnvironment('FACEBOOK_APP_ID');
+
   static const Duration connectTimeout = Duration(seconds: 15);
   static const Duration receiveTimeout = Duration(seconds: 30);
 }

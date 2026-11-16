@@ -54,6 +54,10 @@ class AuthRepository {
   Future<AuthTokens> facebook(String accessToken) async =>
       _tokens(await _api.post('/auth/facebook', body: {'token': accessToken}));
 
+  /// [code] is the authorization code GitHub sent back after the person approved.
+  Future<AuthTokens> github(String code) async =>
+      _tokens(await _api.post('/auth/github', body: {'token': code}));
+
   /// Ends the session on the server. Failures are ignored by callers: the local
   /// session is cleared either way.
   Future<void> logout() async {

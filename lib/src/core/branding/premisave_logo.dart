@@ -190,12 +190,16 @@ class PremisaveLogo extends StatefulWidget {
     super.key,
     this.width = 260,
     this.onDark = false,
+    this.ink,
     this.animate = true,
     this.onCompleted,
   });
 
   final double width;
   final bool onDark;
+
+  /// Overrides the house and wordmark colour, so the logo can follow the app theme.
+  final Color? ink;
   final bool animate;
   final VoidCallback? onCompleted;
 
@@ -246,24 +250,25 @@ class _PremisaveLogoState extends State<PremisaveLogo> with SingleTickerProvider
       label: 'Premisave',
       child: CustomPaint(
         size: Size(widget.width, height),
-        painter: _LogoPainter(_controller, widget.onDark, _seconds),
+        painter: _LogoPainter(_controller, widget.onDark, widget.ink, _seconds),
       ),
     );
   }
 }
 
 class _LogoPainter extends CustomPainter {
-  _LogoPainter(this.animation, this.onDark, this.seconds) : super(repaint: animation);
+  _LogoPainter(this.animation, this.onDark, this.ink, this.seconds) : super(repaint: animation);
 
   final Animation<double> animation;
   final bool onDark;
+  final Color? ink;
   final double seconds;
 
   @override
   void paint(Canvas canvas, Size size) {
     final double s = size.width / PremisaveLogo._totalWidth;
     final double t = animation.value >= 1 ? double.infinity : animation.value * seconds;
-    final Color ink = onDark ? PremisaveColors.cream : PremisaveColors.green;
+    final Color ink = this.ink ?? (onDark ? PremisaveColors.cream : PremisaveColors.green);
     paintPremisaveMark(
       canvas,
       origin: Offset(PremisaveLogo._pad * s, PremisaveLogo._pad * s),
@@ -281,7 +286,7 @@ class _LogoPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_LogoPainter old) => old.onDark != onDark;
+  bool shouldRepaint(_LogoPainter old) => old.onDark != onDark || old.ink != ink;
 }
 
 // ---------------------------------------------------------------------------
@@ -296,10 +301,16 @@ class PremisaveSplash extends StatefulWidget {
     super.key,
     this.onFinished,
     this.hold = const Duration(milliseconds: 500),
+    this.background = PremisaveColors.green,
+    this.skyline = PremisaveColors.skyline,
   });
 
   final VoidCallback? onFinished;
   final Duration hold;
+
+  /// Backdrop and skyline colours, so the splash can follow the app theme.
+  final Color background;
+  final Color skyline;
 
   @override
   State<PremisaveSplash> createState() => _PremisaveSplashState();
@@ -346,7 +357,7 @@ class _PremisaveSplashState extends State<PremisaveSplash> with TickerProviderSt
       label: 'Premisave',
       child: SizedBox.expand(
         child: CustomPaint(
-          painter: _SplashPainter(_intro, _ambient, _introSeconds),
+          painter: _SplashPainter(_intro, _ambient, _introSeconds, widget.background, widget.skyline),
         ),
       ),
     );
@@ -373,12 +384,14 @@ const List<_Building> _skyline = <_Building>[
 ];
 
 class _SplashPainter extends CustomPainter {
-  _SplashPainter(this.intro, this.ambient, this.introSeconds)
+  _SplashPainter(this.intro, this.ambient, this.introSeconds, this.background, this.skyline)
       : super(repaint: Listenable.merge(<Listenable>[intro, ambient]));
 
   final Animation<double> intro;
   final Animation<double> ambient;
   final double introSeconds;
+  final Color background;
+  final Color skyline;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -386,7 +399,7 @@ class _SplashPainter extends CustomPainter {
     final double t = intro.value >= 1 ? double.infinity : intro.value * introSeconds;
     final double clock = ambient.value * 8; // seconds, loops every 8 s
 
-    canvas.drawRect(Offset.zero & size, Paint()..color = PremisaveColors.green);
+    canvas.drawRect(Offset.zero & size, Paint()..color = background);
     _paintSkyline(canvas, size, s, t, clock);
 
     // Lockup block.
@@ -431,8 +444,8 @@ class _SplashPainter extends CustomPainter {
   }
 
   void _paintSkyline(Canvas canvas, Size size, double s, double t, double clock) {
-    final Paint body = Paint()..color = PremisaveColors.skyline;
-    final Paint window = Paint()..color = PremisaveColors.green;
+    final Paint body = Paint()..color = skyline;
+    final Paint window = Paint()..color = background;
     double x = -30;
     int lit = 0;
     for (int i = 0; i < _skyline.length; i++) {
@@ -490,7 +503,7 @@ class _SplashPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_SplashPainter old) => false;
+  bool shouldRepaint(_SplashPainter old) => old.background != background || old.skyline != skyline;
 }
 
 // ---------------------------------------------------------------------------
@@ -500,10 +513,11 @@ class _SplashPainter extends CustomPainter {
 /// Looping loader: the house stands still and its four window panes pulse
 /// clockwise. Use it in place of a spinner for page or data loading.
 class PremisaveLoader extends StatefulWidget {
-  const PremisaveLoader({super.key, this.size = 48, this.onDark = false});
+  const PremisaveLoader({super.key, this.size = 48, this.onDark = false, this.ink});
 
   final double size;
   final bool onDark;
+  final Color? ink;
 
   @override
   State<PremisaveLoader> createState() => _PremisaveLoaderState();
@@ -534,17 +548,18 @@ class _PremisaveLoaderState extends State<PremisaveLoader> with SingleTickerProv
       label: 'Loading',
       child: CustomPaint(
         size: Size.square(widget.size),
-        painter: _LoaderPainter(_controller, widget.onDark),
+        painter: _LoaderPainter(_controller, widget.onDark, widget.ink),
       ),
     );
   }
 }
 
 class _LoaderPainter extends CustomPainter {
-  _LoaderPainter(this.animation, this.onDark) : super(repaint: animation);
+  _LoaderPainter(this.animation, this.onDark, this.ink) : super(repaint: animation);
 
   final Animation<double> animation;
   final bool onDark;
+  final Color? ink;
 
   static double _pulse(double u) {
     if (u < 0.25) return 1 - 0.75 * Curves.easeInOut.transform(u / 0.25);
@@ -561,7 +576,7 @@ class _LoaderPainter extends CustomPainter {
     final double seconds = animation.value * 1.6;
     _drawMark(
       canvas,
-      left: onDark ? PremisaveColors.cream : PremisaveColors.green,
+      left: ink ?? (onDark ? PremisaveColors.cream : PremisaveColors.green),
       right: PremisaveColors.gold,
       panes: <double>[
         for (int i = 0; i < 4; i++) _pulse((((seconds - i * 0.2) % 1.6) + 1.6) % 1.6 / 1.6),
@@ -571,5 +586,5 @@ class _LoaderPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_LoaderPainter old) => old.onDark != onDark;
+  bool shouldRepaint(_LoaderPainter old) => old.onDark != onDark || old.ink != ink;
 }

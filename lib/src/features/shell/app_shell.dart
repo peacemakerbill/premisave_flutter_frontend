@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/brand.dart';
+import '../../core/theme/palette.dart';
 import '../../core/widgets/widgets.dart';
 import '../../state/session_controller.dart';
 import 'nav.dart';
@@ -42,12 +43,12 @@ class AppShell extends ConsumerWidget {
                     ? Row(
                         mainAxisSize: MainAxisSize.min,
                         children: <Widget>[
-                          BrandMark(size: 34, onDark: context.isDark),
+                          BrandMark(size: 34, onDark: context.isDark, ink: context.isDark ? null : context.pal.accent),
                           const SizedBox(width: 10),
                           Text('premisave', style: context.display(size: 19, weight: FontWeight.w800, spacing: -0.6)),
                         ],
                       )
-                    : BrandMark(size: 34, onDark: context.isDark),
+                    : BrandMark(size: 34, onDark: context.isDark, ink: context.isDark ? null : context.pal.accent),
               ),
               destinations: <NavigationRailDestination>[
                 for (final d in dests)

@@ -1,17 +1,62 @@
+import 'dart:math';
+
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
+import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 import '../core/config/app_config.dart';
 import '../core/network/api_exception.dart';
 
 /// Gets a provider token on the device. The backend turns it into a Premisave session
-/// (POST /auth/google, POST /auth/facebook).
+/// (POST /auth/google, POST /auth/facebook, POST /auth/github).
 ///
-/// GitHub is not offered in the app: the backend expects an authorization code from a
-/// browser redirect, which needs a web flow rather than a native sign-in sheet.
+/// GitHub uses a browser window: the person approves in GitHub and the app receives an
+/// authorization code, which the backend exchanges for their profile.
 class SocialAuthService {
   SocialAuthService._();
+
+  static bool get _isWeb => kIsWeb;
+  static bool get _android => !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+  static bool get _ios => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+  static bool get _mac => !kIsWeb && defaultTargetPlatform == TargetPlatform.macOS;
+  static bool get _windows => !kIsWeb && defaultTargetPlatform == TargetPlatform.windows;
+  static bool get _linux => !kIsWeb && defaultTargetPlatform == TargetPlatform.linux;
+
+  /// Google's plugin has no Linux or Windows implementation.
+  static bool get googleAvailable {
+    if (_isWeb) return AppConfig.googleClientId.isNotEmpty;
+    return _android || _ios || _mac;
+  }
+
+  /// Facebook's plugin has no Linux implementation, and web and desktop need the app ID.
+  static bool get facebookAvailable {
+    if (_linux) return false;
+    if (_isWeb || _windows || _mac) return AppConfig.facebookAppId.isNotEmpty;
+    return true;
+  }
+
+  /// GitHub works everywhere a browser can open, once the client ID and redirect are set.
+  static bool get githubAvailable =>
+      AppConfig.githubClientId.isNotEmpty && AppConfig.githubRedirectUri.isNotEmpty;
+
+  static bool get anyAvailable => googleAvailable || facebookAvailable || githubAvailable;
+
+  /// Call once at start-up. Facebook on web and desktop must be told the app ID first.
+  static Future<void> init() async {
+    if (!(_isWeb || _windows || _mac) || AppConfig.facebookAppId.isEmpty) return;
+    try {
+      await FacebookAuth.instance.webAndDesktopInitialize(
+        appId: AppConfig.facebookAppId,
+        cookie: true,
+        xfbml: true,
+        version: 'v19.0',
+      );
+    } catch (_) {
+      // The button then reports the problem when it is pressed.
+    }
+  }
 
   static GoogleSignIn? _google;
 
@@ -60,6 +105,63 @@ class SocialAuthService {
     } catch (e) {
       throw ApiException('Facebook sign-in could not start: ${_short(e)}');
     }
+  }
+
+  /// GitHub authorization code, or null when the person cancelled.
+  static Future<String?> githubCode() async {
+    final redirect = Uri.tryParse(AppConfig.githubRedirectUri);
+    if (redirect == null || AppConfig.githubClientId.isEmpty) {
+      throw ApiException('GitHub sign-in is not set up. Add GITHUB_CLIENT_ID and GITHUB_REDIRECT_URI to your environment file.');
+    }
+    final state = _randomState();
+    final authorize = Uri.https('github.com', '/login/oauth/authorize', <String, String>{
+      'client_id': AppConfig.githubClientId,
+      'redirect_uri': AppConfig.githubRedirectUri,
+      'scope': 'read:user user:email',
+      'state': state,
+      'allow_signup': 'true',
+    });
+    try {
+      final result = await FlutterWebAuth2.authenticate(
+        url: authorize.toString(),
+        callbackUrlScheme: _callbackScheme(redirect),
+        options: const FlutterWebAuth2Options(useWebview: false),
+      );
+      final back = Uri.parse(result);
+      final error = back.queryParameters['error'];
+      if (error != null) {
+        if (error == 'access_denied') return null;
+        throw ApiException(back.queryParameters['error_description'] ?? 'GitHub sign-in did not complete.');
+      }
+      if (back.queryParameters['state'] != state) {
+        throw ApiException('GitHub sign-in could not be verified. Please try again.');
+      }
+      final code = back.queryParameters['code'];
+      if (code == null || code.isEmpty) throw ApiException('GitHub did not return an authorization code.');
+      return code;
+    } on ApiException {
+      rethrow;
+    } on PlatformException catch (e) {
+      if (_cancelled(e.code) || _cancelled(e.message)) return null;
+      throw ApiException('GitHub sign-in could not start: ${_short(e)}');
+    } catch (e) {
+      if (_cancelled(e.toString())) return null;
+      throw ApiException('GitHub sign-in could not start: ${_short(e)}');
+    }
+  }
+
+  static bool _cancelled(String? text) => text != null && text.toUpperCase().contains('CANCEL');
+
+  /// Linux and Windows catch the redirect on a local port; everything else on a link scheme.
+  static String _callbackScheme(Uri redirect) {
+    if (kIsWeb) return redirect.scheme;
+    if (_linux || _windows) return '${redirect.scheme}://${redirect.host}:${redirect.port}';
+    return 'premisave';
+  }
+
+  static String _randomState() {
+    final rnd = Random.secure();
+    return List<String>.generate(24, (_) => rnd.nextInt(256).toRadixString(16).padLeft(2, '0')).join();
   }
 
   static Future<void> signOut() async {
