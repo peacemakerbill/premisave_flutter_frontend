@@ -198,6 +198,7 @@ class _AddressSearchFieldState extends ConsumerState<AddressSearchField> {
           subtitle: s.subtitle,
           onTap: () => _choose(s),
         ),
+      if (results.any((r) => r.id != null)) const PoweredByGoogle(),
       SuggestionTile(
         leading: Icon(Icons.map_outlined, size: 22, color: context.mutedColor),
         title: 'Choose on the map',

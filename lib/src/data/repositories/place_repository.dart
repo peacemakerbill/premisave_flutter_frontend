@@ -37,6 +37,8 @@ class PlaceRepository {
   }
 
   Future<bool> _useGoogle() async {
+    // Google's terms keep its place data off other companies' maps, and Linux, Windows and macOS have no Google map.
+    if (!AppConfig.googleMapsSupported) return false;
     final known = _googleOn;
     if (known != null) return known;
     try {

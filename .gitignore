@@ -48,3 +48,4 @@ app.*.map.json
 config/env/*.local.json
 .env
 .env.*
+ios/Flutter/Maps.xcconfig

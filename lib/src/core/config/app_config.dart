@@ -16,6 +16,9 @@ class AppConfig {
   static const String _envBaseUrl = String.fromEnvironment('BASE_URL');
   static const String _envGeocoderUrl = String.fromEnvironment('GEOCODER_URL');
   static const String _envMapTileUrl = String.fromEnvironment('MAP_TILE_URL');
+  static const String _envMapsAndroid = String.fromEnvironment('GOOGLE_MAPS_ANDROID_KEY');
+  static const String _envMapsIos = String.fromEnvironment('GOOGLE_MAPS_IOS_KEY');
+  static const String _envMapsWeb = String.fromEnvironment('GOOGLE_MAPS_WEB_KEY');
 
   /// Address search server. The default is the free public Photon server, which is meant for modest traffic.
   /// For a large launch run your own Photon server or use a paid provider and set GEOCODER_URL.
@@ -27,6 +30,26 @@ class AppConfig {
   /// Map tile template. The default is the free OpenStreetMap server, which has a fair use policy.
   /// For a large launch use a tile provider with an account and set MAP_TILE_URL.
   static String get mapTileUrl => _envMapTileUrl.isEmpty ? 'https://tile.openstreetmap.org/{z}/{x}/{y}.png' : _envMapTileUrl;
+
+  /// True where Google's map component exists: Android, iOS and the web. It has no Linux, Windows or macOS version.
+  static bool get googleMapsSupported => kIsWeb || defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS;
+
+  /// The public Google Maps key for this platform, or an empty string when none is configured. Each platform has its
+  /// own key, restricted to that platform in the Google Cloud console. These are not secrets, unlike the auth-service key.
+  static String get googleMapsKey {
+    if (kIsWeb) return _envMapsWeb;
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.android:
+        return _envMapsAndroid;
+      case TargetPlatform.iOS:
+        return _envMapsIos;
+      default:
+        return '';
+    }
+  }
+
+  /// Draw maps with Google Maps. Otherwise they use OpenStreetMap.
+  static bool get useGoogleMap => googleMapsSupported && googleMapsKey.isNotEmpty;
 
   /// Auth-service base URL without a trailing slash.
   ///

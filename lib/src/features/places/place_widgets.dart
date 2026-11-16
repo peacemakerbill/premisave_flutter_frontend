@@ -105,6 +105,22 @@ class SuggestionNote extends StatelessWidget {
   }
 }
 
+/// The credit Google asks for when its place suggestions are listed outside a Google map.
+class PoweredByGoogle extends StatelessWidget {
+  const PoweredByGoogle({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 4, 14, 6),
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: Text('Powered by Google', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: context.mutedColor)),
+      ),
+    );
+  }
+}
+
 /// OpenStreetMap tiles. On dark themes the map is inverted so it does not glare.
 class MapTiles extends StatelessWidget {
   const MapTiles({super.key});

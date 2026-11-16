@@ -5,5 +5,8 @@
   "SUPPORT_EMAIL": "thepeacemakerske@gmail.com",
   "GITHUB_CLIENT_ID": "Ov23lipa2Rcs6Nj7Bgbj",
   "GITHUB_REDIRECT_URI": "http://localhost:3000/auth.html",
-  "FACEBOOK_APP_ID": "2045533782824957"
+  "FACEBOOK_APP_ID": "2045533782824957",
+  "GOOGLE_MAPS_ANDROID_KEY": "",
+  "GOOGLE_MAPS_IOS_KEY": "",
+  "GOOGLE_MAPS_WEB_KEY": ""
 }

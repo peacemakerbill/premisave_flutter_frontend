@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart' show SchedulerPhase;
-import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:pointer_interceptor/pointer_interceptor.dart';
 
 import '../../core/network/api_exception.dart';
 import '../../core/theme/brand.dart';
@@ -14,6 +14,7 @@ import '../../core/widgets/widgets.dart';
 import '../../data/models/place.dart';
 import '../../state/providers.dart';
 import 'device_position.dart';
+import 'place_map_view.dart';
 import 'place_searcher.dart';
 import 'place_widgets.dart';
 
@@ -53,7 +54,7 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
   static const LatLng _world = LatLng(15, 15);
   static const double _lookupZoom = 5;
 
-  final MapController _map = MapController();
+  final PlaceMapController _map = PlaceMapController();
   final TextEditingController _query = TextEditingController();
   final FocusNode _queryFocus = FocusNode();
   final ValueNotifier<bool> _moving = ValueNotifier<bool>(false);
@@ -152,9 +153,9 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
     }
   }
 
-  void _onMove(MapCamera camera, bool hasGesture) {
-    _centre = camera.center;
-    _zoom = camera.zoom;
+  void _onMove(LatLng centre, double zoom) {
+    _centre = centre;
+    _zoom = zoom;
     _setMoving(true);
     _settle?.cancel();
     _settle = Timer(const Duration(milliseconds: 450), _resolve);
@@ -225,8 +226,7 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
 
   void _zoomBy(double delta) {
     if (!_ready) return;
-    final camera = _map.camera;
-    _map.move(camera.center, (camera.zoom + delta).clamp(2.0, 19.0));
+    _map.move(_centre, (_zoom + delta).clamp(2.0, 19.0));
   }
 
   Future<void> _useMyPosition() async {
@@ -285,27 +285,20 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
           Expanded(
             child: Stack(
               children: <Widget>[
-                FlutterMap(
-                  mapController: _map,
-                  options: MapOptions(
-                    initialCenter: _centre,
-                    initialZoom: _zoom,
-                    minZoom: 2,
-                    maxZoom: 19,
-                    interactionOptions: const InteractionOptions(flags: InteractiveFlag.all & ~InteractiveFlag.rotate),
-                    onMapReady: _onReady,
-                    onTap: (_, __) => _queryFocus.unfocus(),
-                    onPositionChanged: _onMove,
-                  ),
-                  children: const <Widget>[MapTiles()],
+                PlaceMapView(
+                  centre: _centre,
+                  zoom: _zoom,
+                  controller: _map,
+                  onReady: _onReady,
+                  onMove: _onMove,
+                  onTap: _queryFocus.unfocus,
                 ),
-                const MapAttribution(),
                 ValueListenableBuilder<bool>(
                   valueListenable: _moving,
                   builder: (context, moving, _) => MapPin(lifted: moving),
                 ),
                 Positioned(top: 12, left: 12, right: 12, child: _searchBar(context)),
-                Positioned(right: 12, bottom: 40, child: _controls(context)),
+                Positioned(right: 12, bottom: 40, child: PointerInterceptor(child: _controls(context))),
               ],
             ),
           ),
@@ -320,72 +313,75 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 560),
-        child: ListenableBuilder(
-          listenable: _searcher,
-          builder: (context, _) {
-            final text = _query.text.trim();
-            final results = _searcher.results;
-            final open = _queryFocus.hasFocus && text.length >= 3 && (_searcher.loading || _searcher.searched || results.isNotEmpty);
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                Material(
-                  color: context.surfaceColor,
-                  elevation: 4,
-                  shadowColor: Colors.black.op(0.4),
-                  borderRadius: BorderRadius.circular(context.radius(Brand.radiusSmall + 2)),
-                  child: TextField(
-                    controller: _query,
-                    focusNode: _queryFocus,
-                    textInputAction: TextInputAction.search,
-                    onChanged: (v) {
-                      _searcher.search(v);
-                      setState(() {});
-                    },
-                    onTap: () => setState(() {}),
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-                    decoration: InputDecoration(
-                      hintText: 'Search for a place or address',
-                      hintStyle: TextStyle(color: context.mutedColor),
-                      prefixIcon: Icon(Icons.search_rounded, color: pal.ink3),
-                      suffixIcon: _searcher.loading
-                          ? const Padding(padding: EdgeInsets.all(14), child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)))
-                          : (_query.text.isEmpty
-                              ? null
-                              : IconButton(
-                                  tooltip: 'Clear',
-                                  icon: const Icon(Icons.close_rounded, size: 20),
-                                  onPressed: () {
-                                    _query.clear();
-                                    _searcher.clear();
-                                    setState(() {});
-                                  },
-                                )),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 15),
+        child: PointerInterceptor(
+          child: ListenableBuilder(
+            listenable: _searcher,
+            builder: (context, _) {
+              final text = _query.text.trim();
+              final results = _searcher.results;
+              final open = _queryFocus.hasFocus && text.length >= 3 && (_searcher.loading || _searcher.searched || results.isNotEmpty);
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  Material(
+                    color: context.surfaceColor,
+                    elevation: 4,
+                    shadowColor: Colors.black.op(0.4),
+                    borderRadius: BorderRadius.circular(context.radius(Brand.radiusSmall + 2)),
+                    child: TextField(
+                      controller: _query,
+                      focusNode: _queryFocus,
+                      textInputAction: TextInputAction.search,
+                      onChanged: (v) {
+                        _searcher.search(v);
+                        setState(() {});
+                      },
+                      onTap: () => setState(() {}),
+                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                      decoration: InputDecoration(
+                        hintText: 'Search for a place or address',
+                        hintStyle: TextStyle(color: context.mutedColor),
+                        prefixIcon: Icon(Icons.search_rounded, color: pal.ink3),
+                        suffixIcon: _searcher.loading
+                            ? const Padding(padding: EdgeInsets.all(14), child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)))
+                            : (_query.text.isEmpty
+                                ? null
+                                : IconButton(
+                                    tooltip: 'Clear',
+                                    icon: const Icon(Icons.close_rounded, size: 20),
+                                    onPressed: () {
+                                      _query.clear();
+                                      _searcher.clear();
+                                      setState(() {});
+                                    },
+                                  )),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 15),
+                      ),
                     ),
                   ),
-                ),
-                if (open)
-                  SuggestionPanel(
-                    maxHeight: 280,
-                    children: <Widget>[
-                      if (results.isEmpty && _searcher.loading) const SuggestionNote('Searching', busy: true),
-                      if (results.isEmpty && !_searcher.loading && _searcher.failed)
-                        const SuggestionNote('Search is not available right now. You can still move the map to place the pin.'),
-                      if (results.isEmpty && !_searcher.loading && !_searcher.failed) const SuggestionNote('No matching places. Try another spelling or move the map.'),
-                      for (final s in results)
-                        SuggestionTile(
-                          leading: Icon(Icons.place_outlined, size: 22, color: pal.accent),
-                          title: s.title,
-                          subtitle: s.subtitle,
-                          onTap: () => _choose(s),
-                        ),
-                    ],
-                  ),
-              ],
-            );
-          },
+                  if (open)
+                    SuggestionPanel(
+                      maxHeight: 280,
+                      children: <Widget>[
+                        if (results.isEmpty && _searcher.loading) const SuggestionNote('Searching', busy: true),
+                        if (results.isEmpty && !_searcher.loading && _searcher.failed)
+                          const SuggestionNote('Search is not available right now. You can still move the map to place the pin.'),
+                        if (results.isEmpty && !_searcher.loading && !_searcher.failed) const SuggestionNote('No matching places. Try another spelling or move the map.'),
+                        for (final s in results)
+                          SuggestionTile(
+                            leading: Icon(Icons.place_outlined, size: 22, color: pal.accent),
+                            title: s.title,
+                            subtitle: s.subtitle,
+                            onTap: () => _choose(s),
+                          ),
+                        if (results.any((r) => r.id != null)) const PoweredByGoogle(),
+                      ],
+                    ),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );

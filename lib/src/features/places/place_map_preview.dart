@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:pointer_interceptor/pointer_interceptor.dart';
 
 import '../../core/theme/brand.dart';
 import '../../core/theme/palette.dart';
+import 'place_map_view.dart';
 import 'place_widgets.dart';
 
 /// A small map with a pin on a saved point. Tap it to adjust the point.
@@ -25,18 +26,14 @@ class PlaceMapPreview extends StatelessWidget {
         child: Stack(
           children: <Widget>[
             IgnorePointer(
-              child: FlutterMap(
+              child: PlaceMapView(
                 key: ValueKey<String>('$latitude,$longitude'),
-                options: MapOptions(
-                  initialCenter: LatLng(latitude, longitude),
-                  initialZoom: 16,
-                  interactionOptions: const InteractionOptions(flags: InteractiveFlag.none),
-                ),
-                children: const <Widget>[MapTiles()],
+                centre: LatLng(latitude, longitude),
+                zoom: 16,
+                interactive: false,
               ),
             ),
             const MapPin(),
-            const MapAttribution(),
             if (onTap != null)
               Positioned(
                 top: 10,
@@ -58,13 +55,14 @@ class PlaceMapPreview extends StatelessWidget {
                   ),
                 ),
               ),
-            if (onTap != null)
-              Positioned.fill(
+            Positioned.fill(
+              child: PointerInterceptor(
                 child: Material(
                   type: MaterialType.transparency,
                   child: InkWell(onTap: onTap),
                 ),
               ),
+            ),
           ],
         ),
       ),
