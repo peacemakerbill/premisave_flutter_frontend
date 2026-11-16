@@ -22,6 +22,8 @@ Everything in `assets/` is plain SVG, drawn by [`tool/readme_assets.py`](../tool
 python3 tool/readme_assets.py
 ```
 
+The pictures move, and all of it is plain CSS: a scan across the banner, packets and lit layers on the architecture drawing, a row sweep on the roles table, a theme stepper with a **T** key, and a walk through the setup steps. A device that asks for reduced motion shows every picture still.
+
 | File | Shows |
 | --- | --- |
 | `banner.svg`, `divider.svg` | The header and the section dividers |
