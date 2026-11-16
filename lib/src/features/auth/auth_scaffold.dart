@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/branding/premisave_logo.dart';
 import '../../core/theme/brand.dart';
 import '../../core/widgets/p_scaffold.dart';
+import '../../core/theme/hero_backdrop.dart';
 import '../../core/theme/palette.dart';
 import '../account/appearance_picker.dart';
 
@@ -48,6 +49,7 @@ class AuthScaffold extends StatelessWidget {
           );
 
     return PScaffold(
+      animated: true,
       body: Stack(
         children: <Widget>[
           Positioned.fill(child: content),
@@ -116,10 +118,10 @@ class _BrandPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: context.pal.hero,
-      padding: const EdgeInsets.all(48),
-      child: const SafeArea(
+    return const AnimatedHeroBackdrop(
+      child: Padding(
+        padding: EdgeInsets.all(48),
+        child: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
@@ -135,6 +137,7 @@ class _BrandPanel extends StatelessWidget {
             _Point(Icons.public_rounded, 'Made for anywhere', 'One account for renting, hosting and managing property.'),
             SizedBox(height: 28),
           ],
+        ),
         ),
       ),
     );

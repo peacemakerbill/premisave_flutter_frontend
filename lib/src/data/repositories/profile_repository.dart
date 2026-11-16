@@ -69,8 +69,10 @@ class ProfileRepository {
     return mapList(res).map(UserModel.fromJson).toList();
   }
 
+  /// Active members for browsing. Uses the signed-in list, which hides email, phone and address.
+  /// (/profile/public/directory is reserved for server-to-server calls and needs the shared API key.)
   Future<List<DirectoryEntry>> directory() async =>
-      mapList(await _api.get('/profile/public/directory')).map(DirectoryEntry.new).toList();
+      mapList(await _api.get('/profile/all')).map(DirectoryEntry.new).toList();
 
   // Profile views
 

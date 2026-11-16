@@ -6,8 +6,8 @@ import '../../core/theme/brand.dart';
 import '../../data/social_auth_service.dart';
 import '../../state/session_controller.dart';
 
-/// "Or continue with" row for sign in and sign up. It lists only the providers that work on
-/// this device, and draws nothing when there are none.
+/// "Or continue with" row for sign in and sign up. All three providers are always shown; one
+/// that cannot work on this device says why when it is tapped, instead of failing.
 class SocialAuthButtons extends ConsumerStatefulWidget {
   const SocialAuthButtons({super.key, required this.onError, this.disabled = false, this.onBusyChanged});
 
@@ -24,6 +24,11 @@ class _SocialAuthButtonsState extends ConsumerState<SocialAuthButtons> {
   String? _active;
 
   Future<void> _run(String provider) async {
+    final reason = SocialAuthService.unavailableReason(provider);
+    if (reason != null) {
+      widget.onError(reason);
+      return;
+    }
     setState(() => _active = provider);
     widget.onBusyChanged?.call(true);
     widget.onError(null);
@@ -49,13 +54,10 @@ class _SocialAuthButtonsState extends ConsumerState<SocialAuthButtons> {
   @override
   Widget build(BuildContext context) {
     final items = <_Provider>[
-      if (SocialAuthService.googleAvailable)
-        const _Provider('google', 'Google', Text('G', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Color(0xFFDB4437)))),
-      if (SocialAuthService.facebookAvailable)
-        const _Provider('facebook', 'Facebook', Text('f', style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900, color: Color(0xFF1877F2)))),
-      if (SocialAuthService.githubAvailable) _Provider('github', 'GitHub', Icon(Icons.code_rounded, size: 21, color: context.inkColor)),
+      const _Provider('google', 'Google', Text('G', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Color(0xFFDB4437)))),
+      const _Provider('facebook', 'Facebook', Text('f', style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900, color: Color(0xFF1877F2)))),
+      _Provider('github', 'GitHub', Icon(Icons.code_rounded, size: 21, color: context.inkColor)),
     ];
-    if (items.isEmpty) return const SizedBox.shrink();
 
     final busy = widget.disabled || _active != null;
     return Column(

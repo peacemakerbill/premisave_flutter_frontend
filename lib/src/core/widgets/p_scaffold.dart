@@ -11,6 +11,7 @@ class PScaffold extends StatelessWidget {
     required this.body,
     this.bottomNavigationBar,
     this.floatingActionButton,
+    this.animated = false,
   });
 
   final PreferredSizeWidget? appBar;
@@ -18,9 +19,13 @@ class PScaffold extends StatelessWidget {
   final Widget? bottomNavigationBar;
   final Widget? floatingActionButton;
 
+  /// Let the texture drift slowly. Meant for calm screens such as sign in.
+  final bool animated;
+
   @override
   Widget build(BuildContext context) {
     return AppBackdrop(
+      animated: animated,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: appBar,

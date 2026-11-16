@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/branding/premisave_logo.dart';
 import '../../core/theme/brand.dart';
 import '../../core/widgets/widgets.dart';
+import '../../core/theme/hero_backdrop.dart';
 import '../../core/theme/palette.dart';
 import '../account/appearance_picker.dart';
 
@@ -16,7 +17,7 @@ class WelcomeScreen extends StatelessWidget {
     final wide = context.isWide;
     return Scaffold(
       backgroundColor: context.pal.hero,
-      body: Stack(children: <Widget>[
+      body: AnimatedHeroBackdrop(horizon: 0.9, child: Stack(children: <Widget>[
         Positioned.fill(child: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -78,7 +79,7 @@ class WelcomeScreen extends StatelessWidget {
           right: 0,
           child: SafeArea(child: Padding(padding: const EdgeInsets.all(6), child: AppearanceButton(color: Brand.cream.op(0.85)))),
         ),
-      ]),
+      ])),
     );
   }
 }

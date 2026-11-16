@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 /// A readable error from the backend (or from the network).
 ///
@@ -74,6 +75,12 @@ class ApiException implements Exception {
       message = data.trim();
     }
 
+    // A server fault carries internals (class names, stack text) that mean nothing to a person.
+    // Keep them in the debug console and show a plain sentence instead.
+    if (status != null && status >= 500) {
+      if (message != null) debugPrint('Server error $status: $message');
+      message = _fallbackFor(status);
+    }
     message ??= _fallbackFor(status);
     return ApiException(message, statusCode: status, fieldErrors: fields);
   }

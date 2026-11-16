@@ -120,6 +120,8 @@ class AppPalette extends ThemeExtension<AppPalette> {
     bad: Brand.danger,
     warn: Brand.warning,
     hero: Color(0xFF4A3FDB),
+    pattern: PatternKind.dots,
+    patternColor: Color.fromRGBO(74, 63, 219, 0.14),
   );
 
   /// Midnight indigo with amber. The default dark look.
@@ -144,6 +146,8 @@ class AppPalette extends ThemeExtension<AppPalette> {
     bad: Color(0xFFE8685A),
     warn: Color(0xFFE9A92F),
     hero: Color(0xFF3A31B5),
+    pattern: PatternKind.dots,
+    patternColor: Color.fromRGBO(242, 181, 68, 0.12),
   );
 
   /// Themes in the order the picker shows them.

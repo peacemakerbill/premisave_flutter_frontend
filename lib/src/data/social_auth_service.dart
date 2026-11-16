@@ -43,6 +43,29 @@ class SocialAuthService {
 
   static bool get anyAvailable => googleAvailable || facebookAvailable || githubAvailable;
 
+  static String get _where {
+    if (_linux) return 'Linux desktop';
+    if (_windows) return 'Windows desktop';
+    return 'this device';
+  }
+
+  /// Why [provider] cannot be used here, or null when it can.
+  static String? unavailableReason(String provider) {
+    switch (provider) {
+      case 'google':
+        if (googleAvailable) return null;
+        if (_isWeb) return 'Google sign in needs GOOGLE_CLIENT_ID in your environment file.';
+        return 'Google sign in is not available on $_where. Use the web app, Android or iOS, or sign in another way.';
+      case 'facebook':
+        if (facebookAvailable) return null;
+        if (_linux) return 'Facebook sign in is not available on Linux desktop. Use the web app, Android or iOS, or sign in another way.';
+        return 'Facebook sign in needs FACEBOOK_APP_ID in your environment file.';
+      default:
+        if (githubAvailable) return null;
+        return 'GitHub sign in is not set up for this build. Set GITHUB_REDIRECT_URI in your environment file.';
+    }
+  }
+
   /// Call once at start-up. Facebook on web and desktop must be told the app ID first.
   static Future<void> init() async {
     if (!(_isWeb || _windows || _mac) || AppConfig.facebookAppId.isEmpty) return;

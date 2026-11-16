@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/brand.dart';
+import '../theme/hero_backdrop.dart';
 import '../theme/palette.dart';
 
 /// Flat bordered surface. Taps ripple inside the rounded corners.
@@ -51,16 +52,22 @@ class HeroPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: padding,
-      decoration: BoxDecoration(
-        color: context.pal.hero,
-        borderRadius: BorderRadius.circular(context.radius(Brand.radiusLarge)),
-      ),
-      child: DefaultTextStyle.merge(
-        style: const TextStyle(color: Brand.cream),
-        child: IconTheme.merge(data: const IconThemeData(color: Brand.cream), child: child),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(context.radius(Brand.radiusLarge)),
+      child: SizedBox(
+        width: double.infinity,
+        child: Stack(
+          children: <Widget>[
+            const Positioned.fill(child: HeroBackdropLayer(skyline: false)),
+            Padding(
+              padding: padding,
+              child: DefaultTextStyle.merge(
+                style: const TextStyle(color: Brand.cream),
+                child: IconTheme.merge(data: const IconThemeData(color: Brand.cream), child: child),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
