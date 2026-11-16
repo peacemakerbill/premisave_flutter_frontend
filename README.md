@@ -53,3 +53,15 @@ lib/
     router/      go_router with role guards
     features/    auth, home, account, security, people, application, staff, admin, modules
 ```
+
+## Environments
+
+Development, staging and production each have a JSON file in `config/env/`.
+
+```bash
+flutter run -d chrome --web-port=3000 --dart-define-from-file=config/env/development.json
+APP_ENV=staging ./run_web.sh
+flutter build web --release --dart-define-from-file=config/env/production.json
+```
+
+See `config/env/README.md` for the keys.

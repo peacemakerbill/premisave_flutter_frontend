@@ -118,4 +118,5 @@ Write-Host ""
 # ========================
 # RUN FLUTTER
 # ========================
-flutter run -d chrome --web-port=3000
+$envName = if ($env:APP_ENV) { $env:APP_ENV } else { "development" }
+flutter run -d chrome --web-port=3000 "--dart-define-from-file=config/env/$envName.json"

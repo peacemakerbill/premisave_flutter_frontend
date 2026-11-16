@@ -40,4 +40,4 @@ echo -e "${GREEN}✓ Browser: $BROWSER${RESET}"
 echo -e "${GREEN}✓ Running on port 3000...${RESET}\n"
 
 # Run Flutter web
-flutter run -d "$BROWSER" --web-port=3000
+flutter run -d "$BROWSER" --web-port=3000 --dart-define-from-file=config/env/${APP_ENV:-development}.json

@@ -1,0 +1,6 @@
+{
+  "BASE_URL": "https://staging-api.premisave.example",
+  "GOOGLE_SERVER_CLIENT_ID": "836161536260-b3p6bk2q8tdtrdd636faeka3dhps3d6m.apps.googleusercontent.com",
+  "GOOGLE_CLIENT_ID": "836161536260-b3p6bk2q8tdtrdd636faeka3dhps3d6m.apps.googleusercontent.com",
+  "SUPPORT_EMAIL": "support@premisave.com"
+}
