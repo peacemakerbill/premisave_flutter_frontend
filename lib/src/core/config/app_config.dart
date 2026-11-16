@@ -10,7 +10,7 @@ class AppConfig {
   static const String appName = 'Premisave';
   static const String supportEmail = String.fromEnvironment(
     'SUPPORT_EMAIL',
-    defaultValue: 'support@premisave.com',
+    defaultValue: 'thepeacemakerske@gmail.com',
   );
 
   static const String _envBaseUrl = String.fromEnvironment('BASE_URL');
