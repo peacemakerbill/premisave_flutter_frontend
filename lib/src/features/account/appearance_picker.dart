@@ -329,7 +329,7 @@ class _LookChip extends StatelessWidget {
     final pal = context.pal;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-      decoration: BoxDecoration(color: pal.panel, borderRadius: BorderRadius.circular(99), border: Border.all(color: pal.line)),
+      decoration: BoxDecoration(color: pal.panel, borderRadius: BorderRadius.circular(99), border: Border.all(color: pal.line2)),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[

@@ -110,9 +110,18 @@ class AppTheme {
       ),
       progressIndicatorTheme: ProgressIndicatorThemeData(color: p.accent),
       chipTheme: ChipThemeData(
-        side: BorderSide(color: p.line),
+        backgroundColor: p.panel,
+        selectedColor: p.accentSoft,
+        disabledColor: p.panel2,
+        checkmarkColor: p.accent,
+        iconTheme: IconThemeData(color: p.ink2, size: 18),
+        labelStyle: TextStyle(fontWeight: FontWeight.w600, color: p.ink),
+        secondaryLabelStyle: TextStyle(fontWeight: FontWeight.w700, color: p.ink),
+        side: WidgetStateBorderSide.resolveWith((states) {
+          final selected = states.contains(WidgetState.selected);
+          return BorderSide(color: selected ? p.accent : p.line2, width: selected ? 1.4 : 1);
+        }),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Brand.radiusSmall * s)),
-        labelStyle: const TextStyle(fontWeight: FontWeight.w600),
       ),
     );
   }
