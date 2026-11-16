@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import 'country.dart';
+import 'json_utils.dart';
 
 /// A place on the map: a point plus the address parts the geocoder knows about it.
 @immutable
@@ -44,6 +45,27 @@ class Place {
         postcode = null,
         country = null,
         countryCode = null;
+
+  /// Reads a place sent by the auth-service (/places/details and /places/reverse). Returns null without coordinates.
+  static Place? fromJson(Map<String, dynamic> j) {
+    final lat = doubleOrNull(j['latitude']);
+    final lng = doubleOrNull(j['longitude']);
+    if (lat == null || lng == null) return null;
+    final code = str(j['countryCode'])?.toUpperCase();
+    return Place(
+      latitude: lat,
+      longitude: lng,
+      name: str(j['name']),
+      houseNumber: str(j['houseNumber']),
+      street: str(j['street']),
+      district: str(j['district']),
+      city: str(j['city']),
+      state: str(j['state']),
+      postcode: str(j['postcode']),
+      country: Country.byCode(code)?.name ?? str(j['country']),
+      countryCode: code,
+    );
+  }
 
   /// Reads one feature of a Photon (OpenStreetMap) response. Returns null without coordinates.
   static Place? fromPhoton(Object? feature) {
@@ -144,4 +166,18 @@ class Place {
     }
     return out.join(', ');
   }
+}
+
+/// One line in the address search results. The free search returns the whole [place] at once. Google results only
+/// carry an [id], and the place is fetched when the user chooses the suggestion.
+@immutable
+class PlaceSuggestion {
+  const PlaceSuggestion({required this.title, this.subtitle = '', this.id, this.place});
+
+  factory PlaceSuggestion.fromPlace(Place p) => PlaceSuggestion(title: p.title, subtitle: p.subtitle, place: p);
+
+  final String title;
+  final String subtitle;
+  final String? id;
+  final Place? place;
 }

@@ -22,7 +22,7 @@ final contactRepositoryProvider = Provider<ContactRepository>((ref) => ContactRe
 final profileRepositoryProvider =
     Provider<ProfileRepository>((ref) => ProfileRepository(ref.watch(apiClientProvider)));
 
-final placeRepositoryProvider = Provider<PlaceRepository>((ref) => PlaceRepository());
+final placeRepositoryProvider = Provider<PlaceRepository>((ref) => PlaceRepository(ref.watch(apiClientProvider)));
 
 final socialRepositoryProvider = Provider<SocialRepository>((ref) => SocialRepository(ref.watch(apiClientProvider)));
 

@@ -124,9 +124,8 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
     final text = widget.centerOn?.trim() ?? '';
     if (text.length < 2) return;
     try {
-      final found = await ref.read(placeRepositoryProvider).search(text, countryCode: widget.countryCode, limit: 1);
-      if (!mounted || found.isEmpty || _place != null) return;
-      final p = found.first;
+      final p = await ref.read(placeRepositoryProvider).locate(text);
+      if (!mounted || p == null || _place != null) return;
       _moveTo(LatLng(p.latitude, p.longitude), _zoomFor(p));
     } catch (_) {
       // The map still opens on the world view and the user can search or move it.
@@ -135,7 +134,8 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
 
   /// How close to zoom for a search result: a street or building closely, a town less, a country far out.
   double _zoomFor(Place p) {
-    if (p.street != null || p.houseNumber != null) return 17;
+    if (p.houseNumber != null) return 17;
+    if (p.street != null) return 16;
     final n = p.name;
     if (n == null) return p.state != null ? 9 : 5;
     if (n == p.country) return 5;
@@ -241,10 +241,23 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
     }
   }
 
-  void _choose(Place p) {
-    _query.text = p.title;
+  Future<Place?> _loadPlace(PlaceSuggestion s, String session) async {
+    try {
+      return await ref.read(placeRepositoryProvider).resolve(s, sessionToken: session);
+    } catch (e) {
+      if (mounted) showApiError(context, e);
+      return null;
+    }
+  }
+
+  Future<void> _choose(PlaceSuggestion s) async {
+    final session = _searcher.session;
+    _query.text = s.title;
     _searcher.clear();
     _queryFocus.unfocus();
+    final p = await _loadPlace(s, session);
+    if (p == null || !mounted) return;
+    _searcher.endSession();
     _pinned = p;
     setState(() {
       _place = p;
@@ -361,12 +374,12 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
                       if (results.isEmpty && !_searcher.loading && _searcher.failed)
                         const SuggestionNote('Search is not available right now. You can still move the map to place the pin.'),
                       if (results.isEmpty && !_searcher.loading && !_searcher.failed) const SuggestionNote('No matching places. Try another spelling or move the map.'),
-                      for (final p in results)
+                      for (final s in results)
                         SuggestionTile(
                           leading: Icon(Icons.place_outlined, size: 22, color: pal.accent),
-                          title: p.title,
-                          subtitle: p.subtitle,
-                          onTap: () => _choose(p),
+                          title: s.title,
+                          subtitle: s.subtitle,
+                          onTap: () => _choose(s),
                         ),
                     ],
                   ),

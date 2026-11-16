@@ -68,6 +68,7 @@ class _AddressSearchFieldState extends ConsumerState<AddressSearchField> {
   final FocusNode _focus = FocusNode();
   late final PlaceSearcher _searcher;
   bool _quiet = false;
+  bool _resolving = false;
   Place? _picked;
 
   @override
@@ -104,6 +105,23 @@ class _AddressSearchFieldState extends ConsumerState<AddressSearchField> {
     // Only react to typing. Text written by code, such as autofilling from a pick, must not start a search.
     if (_quiet || !_focus.hasFocus) return;
     _searcher.search(widget.controller.text);
+  }
+
+  /// The user chose a suggestion. Google suggestions need one more lookup for the coordinates.
+  Future<void> _choose(PlaceSuggestion s) async {
+    if (_resolving) return;
+    final session = _searcher.session;
+    setState(() => _resolving = true);
+    try {
+      final place = await ref.read(placeRepositoryProvider).resolve(s, sessionToken: session);
+      if (!mounted) return;
+      _searcher.endSession();
+      _pick(place);
+    } catch (e) {
+      if (mounted) showApiError(context, e);
+    } finally {
+      if (mounted) setState(() => _resolving = false);
+    }
   }
 
   void _pick(Place p) {
@@ -153,7 +171,7 @@ class _AddressSearchFieldState extends ConsumerState<AddressSearchField> {
               suffix: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  if (_searcher.loading) const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+                  if (_searcher.loading || _resolving) const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
                   IconButton(tooltip: 'Pick on map', icon: const Icon(Icons.map_outlined, size: 21), onPressed: _openMap),
                 ],
               ),
@@ -173,12 +191,12 @@ class _AddressSearchFieldState extends ConsumerState<AddressSearchField> {
         const SuggestionNote('Address search is not available right now. You can keep typing your address or pick it on the map.'),
       if (results.isEmpty && !_searcher.loading && !_searcher.failed)
         const SuggestionNote('No matching places. What you typed will be used as it is.'),
-      for (final p in results)
+      for (final s in results)
         SuggestionTile(
           leading: Icon(Icons.place_outlined, size: 22, color: context.pal.accent),
-          title: p.title,
-          subtitle: p.subtitle,
-          onTap: () => _pick(p),
+          title: s.title,
+          subtitle: s.subtitle,
+          onTap: () => _choose(s),
         ),
       SuggestionTile(
         leading: Icon(Icons.map_outlined, size: 22, color: context.mutedColor),

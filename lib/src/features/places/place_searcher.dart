@@ -16,12 +16,20 @@ class PlaceSearcher extends ChangeNotifier {
   /// Results in this country (ISO code) are listed first.
   String? countryCode;
 
-  List<Place> results = const <Place>[];
+  List<PlaceSuggestion> results = const <PlaceSuggestion>[];
   bool loading = false;
   bool failed = false;
 
   /// True once a search has finished for the current text, so the screen can say "no matches".
   bool searched = false;
+
+  String? _session;
+
+  /// Groups one typed search and the choice that ends it, which is how Google bills address search.
+  String get session => _session ??= _repository.newSession();
+
+  /// Call after the user has chosen a suggestion, so the next search starts a new session.
+  void endSession() => _session = null;
 
   Timer? _wait;
   CancelToken? _cancel;
@@ -34,7 +42,7 @@ class PlaceSearcher extends ChangeNotifier {
     final q = text.trim();
     final turn = ++_turn;
     if (q.length < 3) {
-      results = const <Place>[];
+      results = const <PlaceSuggestion>[];
       loading = false;
       failed = false;
       searched = false;
@@ -49,13 +57,13 @@ class PlaceSearcher extends ChangeNotifier {
       final token = CancelToken();
       _cancel = token;
       try {
-        final found = await _repository.search(q, countryCode: countryCode, cancelToken: token);
+        final found = await _repository.search(q, countryCode: countryCode, sessionToken: session, cancelToken: token);
         if (turn != _turn) return;
         results = found;
         failed = false;
       } catch (e) {
         if (turn != _turn || (e is DioException && CancelToken.isCancel(e))) return;
-        results = const <Place>[];
+        results = const <PlaceSuggestion>[];
         failed = true;
       }
       loading = false;
@@ -68,7 +76,7 @@ class PlaceSearcher extends ChangeNotifier {
     _wait?.cancel();
     _cancel?.cancel();
     _turn++;
-    results = const <Place>[];
+    results = const <PlaceSuggestion>[];
     loading = false;
     failed = false;
     searched = false;
