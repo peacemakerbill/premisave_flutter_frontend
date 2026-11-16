@@ -7,6 +7,7 @@ import '../core/network/api_exception.dart';
 import '../data/models/auth_models.dart';
 import '../data/models/user_model.dart';
 import '../data/social_auth_service.dart';
+import '../roles/role.dart';
 import 'providers.dart';
 
 enum SessionStatus { booting, signedOut, signedIn }

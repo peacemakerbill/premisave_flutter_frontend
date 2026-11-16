@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/widgets/widgets.dart';
-import '../data/models/user_model.dart';
 import '../features/account/account_screen.dart';
 import '../features/account/change_password_screen.dart';
 import '../features/account/edit_profile_screen.dart';
@@ -27,7 +26,8 @@ import '../features/auth/verify_screen.dart';
 import '../features/auth/welcome_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/home/module_pages.dart';
-import '../features/modules/client/client_explore_content.dart';
+import '../features/overview/role_overview_page.dart';
+import '../features/explore/explore_content.dart';
 import '../features/people/people_screen.dart';
 import '../features/people/public_profile_screen.dart';
 import '../features/security/device_detail_screen.dart';
@@ -37,9 +37,10 @@ import '../features/security/security_events_screen.dart';
 import '../features/security/sessions_screen.dart';
 import '../features/security/sign_in_history_screen.dart';
 import '../features/shell/app_shell.dart';
-import '../features/staff/staff_detail_screen.dart';
-import '../features/staff/staff_queue_screen.dart';
+import '../features/review/review_detail_screen.dart';
+import '../features/review/review_queue_screen.dart';
 import '../state/session_controller.dart';
+import 'guards.dart';
 import 'transitions.dart';
 
 /// Pages anyone can open, signed in or not (links from emails land here).
@@ -83,10 +84,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     }
     if (_signedOutOnly.contains(loc) || loc == '/') return '/home';
 
-    final role = session.role;
-    if (loc.startsWith('/admin') && role != Role.admin) return '/home';
-    if (loc.startsWith('/staff') && !role.isStaff) return '/home';
-    if (loc.startsWith('/explore') && role != Role.client) return '/home';
+    if (!canOpen(session.role, loc)) return '/home';
     return null;
   }
 
@@ -139,7 +137,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(path: 'contact', pageBuilder: (_, s) => detailPage(s, const ModulePage(module: AppModule.contact))),
             ],
           ),
-          GoRoute(path: '/explore', pageBuilder: (_, s) => tabPage(s, const ClientExploreContent())),
+          GoRoute(path: '/explore', pageBuilder: (_, s) => tabPage(s, const ExploreContent())),
           GoRoute(
             path: '/application',
             pageBuilder: (_, s) => tabPage(s, const ApplicationHubScreen()),
@@ -179,9 +177,9 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/staff',
-            pageBuilder: (_, s) => tabPage(s, const StaffQueueScreen()),
+            pageBuilder: (_, s) => tabPage(s, const ReviewQueueScreen()),
             routes: <RouteBase>[
-              GoRoute(path: ':id', pageBuilder: (_, s) => detailPage(s, StaffDetailScreen(applicationId: s.pathParameters['id']!))),
+              GoRoute(path: ':id', pageBuilder: (_, s) => detailPage(s, ReviewDetailScreen(applicationId: s.pathParameters['id']!))),
             ],
           ),
           GoRoute(path: '/admin', redirect: (_, __) => '/admin/users'),

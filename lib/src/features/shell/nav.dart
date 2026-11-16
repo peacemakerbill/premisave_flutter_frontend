@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../data/models/user_model.dart';
+import '../../roles/role.dart';
+import '../../roles/role_registry.dart';
 
 /// One tab in the bottom bar (phones) or side rail (wide screens).
 class NavDest {
@@ -33,17 +34,22 @@ const NavDest _people = NavDest('/people', 'People', Icons.groups_outlined, Icon
 const NavDest _account =
     NavDest('/account', 'Account', Icons.account_circle_outlined, Icons.account_circle_rounded);
 
-List<NavDest> destinationsFor(Role role) {
-  switch (role) {
-    case Role.client:
-      return const <NavDest>[_home, _explore, _people, _account];
-    case Role.homeOwner:
-      return const <NavDest>[_home, _people, _account];
-    case Role.admin:
-      return const <NavDest>[_home, _queue, _users, _people, _account];
-    case Role.operations:
-    case Role.finance:
-    case Role.support:
-      return const <NavDest>[_home, _queue, _people, _account];
+NavDest _destinationFor(AppTab tab) {
+  switch (tab) {
+    case AppTab.home:
+      return _home;
+    case AppTab.explore:
+      return _explore;
+    case AppTab.applications:
+      return _queue;
+    case AppTab.users:
+      return _users;
+    case AppTab.people:
+      return _people;
+    case AppTab.account:
+      return _account;
   }
 }
+
+/// The tabs for a role. Which tabs a role gets is decided in `roles/role_registry.dart`.
+List<NavDest> destinationsFor(Role role) => <NavDest>[for (final tab in role.tabs) _destinationFor(tab)];

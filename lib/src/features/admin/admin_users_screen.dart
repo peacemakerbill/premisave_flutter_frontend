@@ -7,6 +7,7 @@ import '../../core/utils/formatters.dart';
 import '../../core/utils/validators.dart';
 import '../../core/widgets/widgets.dart';
 import '../../data/models/user_model.dart';
+import '../../roles/role.dart';
 import '../../state/data_providers.dart';
 import '../../state/providers.dart';
 import '../../core/theme/palette.dart';

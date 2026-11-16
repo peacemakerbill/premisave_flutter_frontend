@@ -4,7 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/theme/brand.dart';
 import '../../core/widgets/widgets.dart';
-import '../../data/models/user_model.dart';
+import '../../roles/permissions.dart';
+import '../../roles/role_registry.dart';
 import '../../state/session_controller.dart';
 import '../../core/theme/palette.dart';
 
@@ -72,25 +73,27 @@ class AccountScreen extends ConsumerWidget {
               MenuTile(icon: Icons.password_rounded, title: 'Change password', onTap: () => context.push('/account/password')),
             ],
           ),
-          if (user.role == Role.client || user.role == Role.homeOwner) ...<Widget>[
+          if (user.role.can(Capability.applyAsHomeOwner) || user.role.can(Capability.viewHomeOwnerApplication)) ...<Widget>[
             const SectionHeader('Hosting'),
             MenuGroup(
               children: <Widget>[
                 MenuTile(
                   icon: Icons.home_work_outlined,
-                  title: user.role == Role.homeOwner ? 'Home owner application' : 'Become a home owner',
-                  subtitle: user.role == Role.homeOwner ? 'Your approved application' : 'Apply to list your properties',
+                  title: user.role.can(Capability.viewHomeOwnerApplication) ? 'Home owner application' : 'Become a home owner',
+                  subtitle: user.role.can(Capability.viewHomeOwnerApplication) ? 'Your approved application' : 'Apply to list your properties',
                   onTap: () => context.push('/application'),
                 ),
               ],
             ),
           ],
-          if (user.role == Role.admin) ...<Widget>[
+          if (user.role.can(Capability.manageUsers) || user.role.can(Capability.viewAuditTrail)) ...<Widget>[
             const SectionHeader('Administration'),
             MenuGroup(
               children: <Widget>[
-                MenuTile(icon: Icons.manage_accounts_outlined, title: 'Users', onTap: () => context.go('/admin/users')),
-                MenuTile(icon: Icons.history_edu_outlined, title: 'Security audit trail', onTap: () => context.push('/admin/audit')),
+                if (user.role.can(Capability.manageUsers))
+                  MenuTile(icon: Icons.manage_accounts_outlined, title: 'Users', onTap: () => context.go('/admin/users')),
+                if (user.role.can(Capability.viewAuditTrail))
+                  MenuTile(icon: Icons.history_edu_outlined, title: 'Security audit trail', onTap: () => context.push('/admin/audit')),
               ],
             ),
           ],

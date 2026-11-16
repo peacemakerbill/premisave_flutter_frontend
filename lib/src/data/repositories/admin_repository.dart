@@ -1,4 +1,5 @@
 import '../../core/network/api_client.dart';
+import '../../roles/role.dart';
 import '../models/json_utils.dart';
 import '../models/user_model.dart';
 

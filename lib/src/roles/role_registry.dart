@@ -1,0 +1,98 @@
+import 'package:flutter/foundation.dart';
+
+import 'permissions.dart';
+import 'role.dart';
+
+/// A destination in the bottom bar (phones) or side rail (wide screens). Only names the tab;
+/// `features/shell/nav.dart` owns how it looks and where it goes.
+enum AppTab { home, explore, applications, users, people, account }
+
+/// Everything that differs between roles, in one place.
+@immutable
+class RoleSpec {
+  const RoleSpec({required this.tabs, required this.capabilities, required this.overviewTitle});
+
+  /// Tabs in the order they appear.
+  final List<AppTab> tabs;
+
+  /// What this role may see and do.
+  final Set<Capability> capabilities;
+
+  /// Name of the dashboard entry on the Home screen.
+  final String overviewTitle;
+}
+
+const RoleSpec _client = RoleSpec(
+  tabs: <AppTab>[AppTab.home, AppTab.explore, AppTab.people, AppTab.account],
+  capabilities: <Capability>{
+    Capability.exploreProperties,
+    Capability.useClientWorkspace,
+    Capability.applyAsHomeOwner,
+  },
+  overviewTitle: 'My dashboard',
+);
+
+const RoleSpec _homeOwner = RoleSpec(
+  tabs: <AppTab>[AppTab.home, AppTab.people, AppTab.account],
+  capabilities: <Capability>{Capability.viewHomeOwnerApplication},
+  overviewTitle: 'Home owner overview',
+);
+
+const RoleSpec _operations = RoleSpec(
+  tabs: <AppTab>[AppTab.home, AppTab.applications, AppTab.people, AppTab.account],
+  capabilities: <Capability>{Capability.reviewApplications},
+  overviewTitle: 'Operations overview',
+);
+
+const RoleSpec _finance = RoleSpec(
+  tabs: <AppTab>[AppTab.home, AppTab.applications, AppTab.people, AppTab.account],
+  capabilities: <Capability>{Capability.reviewApplications},
+  overviewTitle: 'Finance overview',
+);
+
+const RoleSpec _support = RoleSpec(
+  tabs: <AppTab>[AppTab.home, AppTab.applications, AppTab.people, AppTab.account],
+  capabilities: <Capability>{Capability.reviewApplications},
+  overviewTitle: 'Support overview',
+);
+
+const RoleSpec _admin = RoleSpec(
+  tabs: <AppTab>[AppTab.home, AppTab.applications, AppTab.users, AppTab.people, AppTab.account],
+  capabilities: <Capability>{
+    Capability.reviewApplications,
+    Capability.approveApplications,
+    Capability.manageUsers,
+    Capability.viewAuditTrail,
+  },
+  overviewTitle: 'Administrator overview',
+);
+
+/// The spec for a role. The switch has no default on purpose: adding a value to [Role] without
+/// adding its spec here is a compile error, so a new role can never ship half configured.
+RoleSpec specFor(Role role) {
+  switch (role) {
+    case Role.client:
+      return _client;
+    case Role.homeOwner:
+      return _homeOwner;
+    case Role.operations:
+      return _operations;
+    case Role.finance:
+      return _finance;
+    case Role.support:
+      return _support;
+    case Role.admin:
+      return _admin;
+  }
+}
+
+extension RoleAccess on Role {
+  /// Whether this role has the given capability.
+  bool can(Capability capability) => specFor(this).capabilities.contains(capability);
+
+  /// Tabs this role sees, in order.
+  List<AppTab> get tabs => specFor(this).tabs;
+
+  /// Name of the dashboard entry on the Home screen.
+  String get overviewTitle => specFor(this).overviewTitle;
+}

@@ -7,6 +7,9 @@ import '../../core/utils/formatters.dart';
 import '../../core/widgets/widgets.dart';
 import '../../data/models/security_models.dart';
 import '../../data/models/user_model.dart';
+import '../../roles/permissions.dart';
+import '../../roles/role.dart';
+import '../../roles/role_registry.dart';
 import '../../state/data_providers.dart';
 import '../../state/session_controller.dart';
 
@@ -44,9 +47,9 @@ class HomeScreen extends ConsumerWidget {
             ),
           ],
           const _SecurityGlance(),
-          if (role == Role.client) const _BecomeHomeOwnerCard(),
-          if (role == Role.homeOwner) const _HomeOwnerStatusCard(),
-          if (role.isStaff) _StaffGlance(isAdmin: role == Role.admin),
+          if (role.can(Capability.applyAsHomeOwner)) const _BecomeHomeOwnerCard(),
+          if (role.can(Capability.viewHomeOwnerApplication)) const _HomeOwnerStatusCard(),
+          if (role.can(Capability.reviewApplications)) const _StaffGlance(),
           const SectionHeader('Your workspace'),
           _Workspace(role: role),
           const SectionHeader('Your standing'),
@@ -259,9 +262,7 @@ class _HomeOwnerStatusCard extends StatelessWidget {
 }
 
 class _StaffGlance extends ConsumerWidget {
-  const _StaffGlance({required this.isAdmin});
-
-  final bool isAdmin;
+  const _StaffGlance();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -301,11 +302,11 @@ class _Workspace extends StatelessWidget {
     final items = <Widget>[
       MenuTile(
         icon: Icons.dashboard_outlined,
-        title: role == Role.client ? 'My dashboard' : '${role.label} overview',
+        title: role.overviewTitle,
         subtitle: 'Summary and shortcuts',
         onTap: () => context.push('/home/overview'),
       ),
-      if (role == Role.client) ...<Widget>[
+      if (role.can(Capability.useClientWorkspace)) ...<Widget>[
         MenuTile(icon: Icons.event_available_outlined, title: 'Bookings', subtitle: 'Stays and viewings', onTap: () => context.push('/home/bookings')),
         MenuTile(icon: Icons.favorite_border_rounded, title: 'Wishlists', subtitle: 'Places you saved', onTap: () => context.push('/home/wishlists')),
         MenuTile(icon: Icons.chat_bubble_outline_rounded, title: 'Messages', subtitle: 'Talk to owners and support', onTap: () => context.push('/home/messages')),

@@ -5,6 +5,7 @@ import '../../core/theme/brand.dart';
 import '../../core/widgets/widgets.dart';
 import '../../data/models/social_models.dart';
 import '../../data/models/user_model.dart';
+import '../../roles/role.dart';
 
 /// One person in a list: avatar, name and a line of detail.
 class PersonTile extends StatelessWidget {

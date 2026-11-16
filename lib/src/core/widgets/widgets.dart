@@ -1,5 +1,7 @@
 export 'brand_mark.dart';
 export 'feedback.dart';
+export 'hero_action.dart';
+export 'icon_badge.dart';
 export 'layout.dart';
 export 'p_button.dart';
 export 'p_scaffold.dart';
