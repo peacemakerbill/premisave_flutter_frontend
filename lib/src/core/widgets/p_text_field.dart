@@ -81,6 +81,7 @@ class PTextField extends StatefulWidget {
     this.minLines,
     this.maxLength,
     this.prefixIcon,
+    this.prefixWidget,
     this.suffix,
     this.enabled = true,
     this.readOnly = false,
@@ -107,6 +108,9 @@ class PTextField extends StatefulWidget {
   final int? minLines;
   final int? maxLength;
   final IconData? prefixIcon;
+
+  /// Replaces the prefix icon with any widget, such as a country code button.
+  final Widget? prefixWidget;
   final Widget? suffix;
   final bool enabled;
   final bool readOnly;
@@ -164,7 +168,7 @@ class _PTextFieldState extends State<PTextField> {
             hint: widget.hint,
             errorText: widget.errorText,
             counter: widget.maxLength == null ? null : '',
-            prefix: widget.prefixIcon == null ? null : Icon(widget.prefixIcon, size: 20),
+            prefix: widget.prefixWidget ?? (widget.prefixIcon == null ? null : Icon(widget.prefixIcon, size: 20)),
             suffix: suffix,
           ),
         ),

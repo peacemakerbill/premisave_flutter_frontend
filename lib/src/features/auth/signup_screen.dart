@@ -11,6 +11,7 @@ import 'auth_scaffold.dart';
 import 'resend_activation_button.dart';
 import 'password_strength_meter.dart';
 import '../places/country_field.dart';
+import '../places/phone_field.dart';
 import 'social_buttons.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
@@ -28,6 +29,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   final _email = TextEditingController();
   final _phone = TextEditingController();
   final _country = TextEditingController();
+  String? _countryCode;
   final _username = TextEditingController();
   final _password = TextEditingController();
   final _confirm = TextEditingController();
@@ -172,20 +174,20 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 errorText: _fieldErrors['email'],
               ),
               const SizedBox(height: 16),
-              PTextField(
-                label: 'Phone number',
-                controller: _phone,
-                hint: '+1 555 123 4567',
-                keyboardType: TextInputType.phone,
-                textInputAction: TextInputAction.next,
-                autofillHints: const <String>[AutofillHints.telephoneNumber],
-                prefixIcon: Icons.phone_outlined,
-                validator: Validators.phone,
-                errorText: _fieldErrors['phoneNumber'],
-                helper: 'Include your country code.',
+              CountryField(
+                controller: _country,
+                optional: true,
+                onCountry: (c) => setState(() => _countryCode = c?.code),
               ),
               const SizedBox(height: 16),
-              CountryField(controller: _country, optional: true),
+              PhoneField(
+                controller: _phone,
+                countryCode: _countryCode,
+                autofillHints: const <String>[AutofillHints.telephoneNumber],
+                validator: Validators.phone,
+                errorText: _fieldErrors['phoneNumber'],
+                helper: 'Pick your country code, then type the number.',
+              ),
               const SizedBox(height: 16),
               PTextField(
                 label: 'Username',

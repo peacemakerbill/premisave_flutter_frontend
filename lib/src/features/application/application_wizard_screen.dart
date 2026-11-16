@@ -14,6 +14,7 @@ import '../../data/models/place.dart';
 import '../../state/data_providers.dart';
 import '../../state/providers.dart';
 import '../places/address_search_field.dart';
+import '../places/phone_field.dart';
 import 'application_widgets.dart';
 
 class ApplicationWizardScreen extends ConsumerWidget {
@@ -323,6 +324,20 @@ class _WizardBodyState extends ConsumerState<_WizardBody> {
     );
   }
 
+  /// A phone box with a country code button. The saved value is the full international number.
+  Widget _phone(String key, String label, {bool optional = false}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: PhoneField(
+        label: label,
+        optional: optional,
+        controller: _c[key]!,
+        errorText: _err(key),
+        countryCode: _v['country'] as String?,
+      ),
+    );
+  }
+
   /// An address box with search. Choosing a result fills the text and calls [onPlace].
   Widget _address(
     String key,
@@ -434,9 +449,9 @@ class _WizardBodyState extends ConsumerState<_WizardBody> {
   }
 
   List<Widget> _stepContact() => <Widget>[
-        _text('phoneNumber', 'Phone number', keyboard: TextInputType.phone, hint: '+1 555 123 4567', helper: 'Include the country code.'),
-        _text('alternatePhoneNumber', 'Alternate phone', keyboard: TextInputType.phone, optional: true),
         _select('country', 'Country', _meta.countries, searchable: true),
+        _phone('phoneNumber', 'Phone number'),
+        _phone('alternatePhoneNumber', 'Alternate phone', optional: true),
         _address('physicalAddress', 'Street address', onPlace: _fillFromPlace),
         _text('region', 'Region, state or county', caps: TextCapitalization.words),
         _text('city', 'City or town', caps: TextCapitalization.words),
@@ -493,7 +508,7 @@ class _WizardBodyState extends ConsumerState<_WizardBody> {
       _select('payoutMethod', 'Payout method', _meta.payoutMethods),
       if (method == 'MOBILE_MONEY') ...<Widget>[
         _text('mobileMoneyProvider', 'Mobile money provider'),
-        _text('mobileMoneyNumber', 'Mobile money number', keyboard: TextInputType.phone),
+        _phone('mobileMoneyNumber', 'Mobile money number'),
       ],
       if (method == 'PAYPAL') _text('paypalEmail', 'PayPal email', keyboard: TextInputType.emailAddress),
       if (method == 'BANK_TRANSFER') ...<Widget>[

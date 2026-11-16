@@ -13,6 +13,7 @@ import '../../state/providers.dart';
 import '../../state/session_controller.dart';
 import '../places/address_search_field.dart';
 import '../places/country_field.dart';
+import '../places/phone_field.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});
@@ -208,11 +209,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       const SizedBox(height: 16),
                       PTextField(label: 'Middle name', controller: _middle, optional: true, textCapitalization: TextCapitalization.words),
                       const SizedBox(height: 16),
-                      PTextField(
-                        label: 'Phone number',
+                      PhoneField(
                         controller: _phone,
-                        keyboardType: TextInputType.phone,
-                        prefixIcon: Icons.phone_outlined,
+                        countryCode: _countryCode,
                         validator: Validators.phone,
                         errorText: _fieldErrors['phoneNumber'],
                       ),

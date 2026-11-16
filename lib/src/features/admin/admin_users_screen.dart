@@ -10,6 +10,7 @@ import '../../data/models/user_model.dart';
 import '../../roles/role.dart';
 import '../../state/data_providers.dart';
 import '../../state/providers.dart';
+import '../places/phone_field.dart';
 import '../../core/theme/palette.dart';
 
 enum _UserFilter { all, active, inactive, unverified, archived }
@@ -328,7 +329,7 @@ class _CreateUserSheetState extends ConsumerState<_CreateUserSheet> {
               const SizedBox(height: 14),
               PTextField(label: 'Email', controller: _email, keyboardType: TextInputType.emailAddress, validator: Validators.email),
               const SizedBox(height: 14),
-              PTextField(label: 'Phone', controller: _phone, keyboardType: TextInputType.phone, validator: Validators.phone, hint: '+254 700 000000'),
+              PhoneField(label: 'Phone', controller: _phone, validator: Validators.phone),
               const SizedBox(height: 14),
               PSelectField<Role>(
                 label: 'Role',
