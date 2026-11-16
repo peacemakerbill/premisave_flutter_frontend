@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -31,7 +32,8 @@ class AppearancePicker extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        SectionHeader('Theme (${AppPalette.all.length})', padding: const EdgeInsets.only(top: 8, bottom: 6)),
+        _CurrentLook(look: look),
+        SectionHeader('Theme (${AppPalette.all.length})', padding: const EdgeInsets.only(top: 24, bottom: 6)),
         Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: Text(
@@ -122,46 +124,218 @@ Future<void> showAppearanceSheet(BuildContext context) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
-    showDragHandle: true,
+    showDragHandle: false,
     useSafeArea: true,
+    backgroundColor: context.surfaceColor,
     constraints: const BoxConstraints(maxWidth: 820),
-    builder: (_) => DraggableScrollableSheet(
-      expand: false,
-      initialChildSize: 0.85,
-      minChildSize: 0.4,
-      maxChildSize: 0.95,
-      builder: (context, controller) => Column(
-        children: <Widget>[
-          const _SheetHeader(),
-          Expanded(
-            child: ListView(
-              controller: controller,
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
-              children: const <Widget>[AppearancePicker()],
-            ),
-          ),
-        ],
-      ),
-    ),
+    builder: (_) => const _AppearanceSheet(),
   );
 }
 
-/// Title and close button that stay in view while the themes scroll underneath.
-class _SheetHeader extends StatelessWidget {
-  const _SheetHeader();
+/// The appearance controls in a sheet that can be dragged taller, shorter or away. The header and the Close
+/// button stay in view, and the drag works with a mouse as well as a finger.
+class _AppearanceSheet extends StatelessWidget {
+  const _AppearanceSheet();
+
+  static const Set<PointerDeviceKind> _dragDevices = <PointerDeviceKind>{
+    PointerDeviceKind.touch,
+    PointerDeviceKind.mouse,
+    PointerDeviceKind.stylus,
+    PointerDeviceKind.trackpad,
+  };
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 8, 4),
-      child: Row(
+    return DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: 0.88,
+      minChildSize: 0.4,
+      maxChildSize: 0.96,
+      builder: (context, controller) => ScrollConfiguration(
+        behavior: ScrollConfiguration.of(context).copyWith(dragDevices: _dragDevices),
+        child: Column(
+          children: <Widget>[
+            Expanded(
+              child: CustomScrollView(
+                controller: controller,
+                slivers: const <Widget>[
+                  SliverPersistentHeader(pinned: true, delegate: _HeaderDelegate()),
+                  SliverPadding(
+                    padding: EdgeInsets.fromLTRB(20, 8, 20, 24),
+                    sliver: SliverToBoxAdapter(child: AppearancePicker()),
+                  ),
+                ],
+              ),
+            ),
+            const _SheetFooter(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Grab handle, title and a close button. It is part of the scroll view, so dragging it moves the whole sheet.
+class _HeaderDelegate extends SliverPersistentHeaderDelegate {
+  const _HeaderDelegate();
+
+  static const double _height = 96;
+
+  @override
+  double get minExtent => _height;
+
+  @override
+  double get maxExtent => _height;
+
+  @override
+  bool shouldRebuild(covariant _HeaderDelegate oldDelegate) => false;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    final pal = context.pal;
+    return Container(
+      decoration: BoxDecoration(
+        color: context.surfaceColor,
+        border: Border(bottom: BorderSide(color: overlapsContent ? context.borderColor : Colors.transparent)),
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 10, 8, 8),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
         children: <Widget>[
-          Expanded(child: Text('Appearance', style: context.display(size: 18, weight: FontWeight.w800))),
-          IconButton(
-            tooltip: 'Close',
-            icon: const Icon(Icons.close_rounded),
-            onPressed: () => Navigator.of(context).pop(),
+          Container(
+            width: 44,
+            height: 5,
+            decoration: BoxDecoration(color: pal.line2, borderRadius: BorderRadius.circular(99)),
           ),
+          const SizedBox(height: 12),
+          Row(
+            children: <Widget>[
+              const IconBadge(Icons.palette_outlined, size: 44),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text('Appearance', maxLines: 1, overflow: TextOverflow.ellipsis, style: context.display(size: 19, weight: FontWeight.w800, spacing: -0.4)),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Choose a theme, font and corner style.',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 13, color: context.mutedColor),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                tooltip: 'Close',
+                icon: const Icon(Icons.close_rounded),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Close button pinned under the scrolling controls.
+class _SheetFooter extends StatelessWidget {
+  const _SheetFooter();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: context.surfaceColor,
+        border: Border(top: BorderSide(color: context.borderColor)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+          child: Row(
+            children: <Widget>[
+              Expanded(
+                child: Text(
+                  'Changes apply straight away and are saved on this device.',
+                  style: TextStyle(fontSize: 12.5, height: 1.4, color: context.mutedColor),
+                ),
+              ),
+              const SizedBox(width: 14),
+              PButton(label: 'Close', icon: Icons.close_rounded, onPressed: () => Navigator.of(context).pop()),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A short summary of the look in use now: the theme with its colours, the font and the corner style.
+class _CurrentLook extends StatelessWidget {
+  const _CurrentLook({required this.look});
+
+  final Appearance look;
+
+  @override
+  Widget build(BuildContext context) {
+    final pal = context.pal;
+    return PCard(
+      color: pal.accentSoft,
+      borderColor: pal.accent.op(0.25),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              const Expanded(child: Text('Your current look', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800))),
+              for (final c in <Color>[pal.accent, pal.good, pal.warn, pal.bad])
+                Container(
+                  width: 16,
+                  height: 16,
+                  margin: const EdgeInsets.only(left: 6),
+                  decoration: BoxDecoration(color: c, shape: BoxShape.circle, border: Border.all(color: pal.line2)),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: <Widget>[
+              _LookChip(icon: Icons.palette_outlined, label: look.palette?.name ?? 'Match device'),
+              _LookChip(icon: Icons.text_fields_rounded, label: look.font.name),
+              _LookChip(icon: Icons.rounded_corner_rounded, label: '${look.corner.name} corners'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LookChip extends StatelessWidget {
+  const _LookChip({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final pal = context.pal;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(color: pal.panel, borderRadius: BorderRadius.circular(99), border: Border.all(color: pal.line)),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon(icon, size: 16, color: pal.accent),
+          const SizedBox(width: 6),
+          Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
         ],
       ),
     );
@@ -249,42 +423,62 @@ class _ThemeCard extends StatelessWidget {
       button: true,
       selected: selected,
       label: '$title theme',
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTapUp: (d) => onSelect(d.globalPosition),
-        child: Container(
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            color: context.surfaceColor,
-            borderRadius: radius,
-            border: Border.all(color: selected ? context.pal.accent : context.borderColor, width: selected ? 2.2 : 1.2),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              preview,
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-                decoration: BoxDecoration(border: Border(top: BorderSide(color: context.borderColor))),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTapUp: (d) => onSelect(d.globalPosition),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              color: context.surfaceColor,
+              borderRadius: radius,
+              border: Border.all(color: selected ? context.pal.accent : context.borderColor, width: selected ? 2.2 : 1.2),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Stack(
                   children: <Widget>[
-                    Row(
-                      children: <Widget>[
-                        Expanded(child: Text(title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5))),
-                        if (selected) Icon(Icons.check_circle_rounded, size: 17, color: context.pal.accent),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Text(note, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, height: 1.3, color: context.mutedColor)),
+                    preview,
+                    if (selected) const Positioned(top: 8, right: 8, child: _CheckBadge()),
                   ],
                 ),
-              ),
-            ],
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+                  decoration: BoxDecoration(border: Border(top: BorderSide(color: context.borderColor))),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5)),
+                      const SizedBox(height: 2),
+                      Text(note, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, height: 1.3, color: context.mutedColor)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Round tick shown on the theme that is in use.
+class _CheckBadge extends StatelessWidget {
+  const _CheckBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    final pal = context.pal;
+    return Container(
+      width: 24,
+      height: 24,
+      decoration: BoxDecoration(color: pal.accent, shape: BoxShape.circle, border: Border.all(color: pal.accentInk, width: 2)),
+      child: Icon(Icons.check_rounded, size: 14, color: pal.accentInk),
     );
   }
 }
@@ -303,46 +497,49 @@ class _FontCard extends StatelessWidget {
       button: true,
       selected: selected,
       label: '${option.name} font',
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onSelect,
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: context.surfaceColor,
-            borderRadius: radius,
-            border: Border.all(color: selected ? context.pal.accent : context.borderColor, width: selected ? 2.2 : 1.2),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text(
-                'Find a place',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontFamily: option.display, fontSize: 23, height: 1.15, fontWeight: FontWeight.w700, color: context.inkColor),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Verified owners and a secure sign in, 0123456789',
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontFamily: option.sans, fontSize: 13, height: 1.35, color: context.pal.ink2),
-              ),
-              const SizedBox(height: 10),
-              Container(
-                padding: const EdgeInsets.only(top: 8),
-                decoration: BoxDecoration(border: Border(top: BorderSide(color: context.borderColor))),
-                child: Row(
-                  children: <Widget>[
-                    Text(option.name, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
-                    const SizedBox(width: 8),
-                    Expanded(child: Text(option.note, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11.5, color: context.mutedColor))),
-                    if (selected) Icon(Icons.check_circle_rounded, size: 17, color: context.pal.accent),
-                  ],
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onSelect,
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: context.surfaceColor,
+              borderRadius: radius,
+              border: Border.all(color: selected ? context.pal.accent : context.borderColor, width: selected ? 2.2 : 1.2),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  'Find a place',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontFamily: option.display, fontSize: 23, height: 1.15, fontWeight: FontWeight.w700, color: context.inkColor),
                 ),
-              ),
-            ],
+                const SizedBox(height: 4),
+                Text(
+                  'Verified owners and a secure sign in, 0123456789',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontFamily: option.sans, fontSize: 13, height: 1.35, color: context.pal.ink2),
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.only(top: 8),
+                  decoration: BoxDecoration(border: Border(top: BorderSide(color: context.borderColor))),
+                  child: Row(
+                    children: <Widget>[
+                      Text(option.name, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+                      const SizedBox(width: 8),
+                      Expanded(child: Text(option.note, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11.5, color: context.mutedColor))),
+                      if (selected) Icon(Icons.check_circle_rounded, size: 17, color: context.pal.accent),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
