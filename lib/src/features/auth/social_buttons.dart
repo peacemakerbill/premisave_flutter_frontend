@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/branding/social_logos.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/theme/brand.dart';
 import '../../data/social_auth_service.dart';
@@ -65,9 +66,9 @@ class _SocialAuthButtonsState extends ConsumerState<SocialAuthButtons> {
   @override
   Widget build(BuildContext context) {
     final items = <_Provider>[
-      const _Provider('google', 'Google', Text('G', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Color(0xFFDB4437)))),
-      const _Provider('facebook', 'Facebook', Text('f', style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900, color: Color(0xFF1877F2)))),
-      _Provider('github', 'GitHub', Icon(Icons.code_rounded, size: 21, color: context.inkColor)),
+      const _Provider('google', 'Google', SocialLogo.google()),
+      const _Provider('facebook', 'Facebook', SocialLogo.facebook()),
+      _Provider('github', 'GitHub', SocialLogo.github(color: context.inkColor)),
     ];
 
     final busy = widget.disabled || _active != null;
@@ -141,7 +142,7 @@ class _SocialButton extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
                   glyph,
-                  const SizedBox(width: 7),
+                  const SizedBox(width: 9),
                   Flexible(
                     child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
                   ),
