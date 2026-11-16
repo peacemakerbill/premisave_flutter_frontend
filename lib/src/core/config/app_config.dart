@@ -46,8 +46,9 @@ class AppConfig {
 
   /// OAuth web client ID (Google Cloud console). Needed on Android so Google
   /// returns an ID token the backend can verify. Optional on iOS and web.
-  static const String googleServerClientId = String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID');
-  static const String googleClientId = String.fromEnvironment('GOOGLE_CLIENT_ID');
+  static const String _googleWebClient = '836161536260-b3p6bk2q8tdtrdd636faeka3dhps3d6m.apps.googleusercontent.com';
+  static const String googleServerClientId = String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID', defaultValue: _googleWebClient);
+  static const String googleClientId = String.fromEnvironment('GOOGLE_CLIENT_ID', defaultValue: _googleWebClient);
 
   /// GitHub OAuth app client ID (public). The sign-in button shows only when this and
   /// [githubRedirectUri] are set. The redirect URI must match the callback URL of the

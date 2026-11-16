@@ -24,9 +24,14 @@ class SocialAuthService {
   static bool get _windows => !kIsWeb && defaultTargetPlatform == TargetPlatform.windows;
   static bool get _linux => !kIsWeb && defaultTargetPlatform == TargetPlatform.linux;
 
-  /// Google's plugin has no Linux or Windows implementation.
+  /// Google's plugin has no Linux or Windows implementation, and its web version often returns
+  /// no ID token. On those platforms Google opens in the browser instead, like GitHub does.
+  static bool get _googleViaBrowser => _isWeb || _linux || _windows;
+
   static bool get googleAvailable {
-    if (_isWeb) return AppConfig.googleClientId.isNotEmpty;
+    if (_googleViaBrowser) {
+      return AppConfig.googleClientId.isNotEmpty && AppConfig.githubRedirectUri.isNotEmpty;
+    }
     return _android || _ios || _mac;
   }
 
@@ -54,7 +59,9 @@ class SocialAuthService {
     switch (provider) {
       case 'google':
         if (googleAvailable) return null;
-        if (_isWeb) return 'Google sign in needs GOOGLE_CLIENT_ID in your environment file.';
+        if (_googleViaBrowser) {
+          return 'Google sign in needs GOOGLE_CLIENT_ID and GITHUB_REDIRECT_URI (the shared browser redirect) in your environment file.';
+        }
         return 'Google sign in is not available on $_where. Use the web app, Android or iOS, or sign in another way.';
       case 'facebook':
         if (facebookAvailable) return null;
@@ -91,6 +98,7 @@ class SocialAuthService {
 
   /// Google ID token, or null when the person cancelled.
   static Future<String?> googleIdToken() async {
+    if (_googleViaBrowser) return _googleIdTokenViaBrowser();
     try {
       final account = await _googleClient.signIn();
       if (account == null) return null;
@@ -106,6 +114,58 @@ class SocialAuthService {
     } on ApiException {
       rethrow;
     } catch (e) {
+      throw ApiException('Google sign-in could not start: ${_short(e)}');
+    }
+  }
+
+  /// Google's own sign in page in a browser window. It hands back an ID token in the address
+  /// fragment, which is what the backend verifies. The redirect (the same one GitHub uses) must be
+  /// listed under Authorized redirect URIs on the Google OAuth client.
+  static Future<String?> _googleIdTokenViaBrowser() async {
+    final redirect = Uri.tryParse(AppConfig.githubRedirectUri);
+    if (redirect == null || AppConfig.googleClientId.isEmpty) {
+      throw ApiException(unavailableReason('google') ?? 'Google sign in is not set up.');
+    }
+    final state = _randomState();
+    final nonce = _randomState();
+    final authorize = Uri.https('accounts.google.com', '/o/oauth2/v2/auth', <String, String>{
+      'client_id': AppConfig.googleClientId,
+      'redirect_uri': AppConfig.githubRedirectUri,
+      'response_type': 'id_token',
+      'scope': 'openid email profile',
+      'state': state,
+      'nonce': nonce,
+      'prompt': 'select_account',
+    });
+    try {
+      final result = await FlutterWebAuth2.authenticate(
+        url: authorize.toString(),
+        callbackUrlScheme: _callbackScheme(redirect),
+        options: const FlutterWebAuth2Options(useWebview: false),
+      );
+      final back = Uri.parse(result);
+      final params = <String, String>{
+        ...back.queryParameters,
+        if (back.fragment.isNotEmpty) ...Uri.splitQueryString(back.fragment),
+      };
+      final error = params['error'];
+      if (error != null) {
+        if (error == 'access_denied') return null;
+        throw ApiException(params['error_description'] ?? 'Google sign-in did not complete ($error).');
+      }
+      if (params['state'] != state) {
+        throw ApiException('Google sign-in could not be verified. Please try again.');
+      }
+      final token = params['id_token'];
+      if (token == null || token.isEmpty) throw ApiException('Google did not return an ID token.');
+      return token;
+    } on ApiException {
+      rethrow;
+    } on PlatformException catch (e) {
+      if (_cancelled(e.code) || _cancelled(e.message)) return null;
+      throw ApiException('Google sign-in could not start: ${_short(e)}');
+    } catch (e) {
+      if (_cancelled(e.toString())) return null;
       throw ApiException('Google sign-in could not start: ${_short(e)}');
     }
   }

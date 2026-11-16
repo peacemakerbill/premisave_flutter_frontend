@@ -395,12 +395,15 @@ class _SplashPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final double s = size.width / 1080; // design width is 1080
+    // The design is 1080 wide and about 1000 tall for the lockup. Scaling by width alone pushed the
+    // wordmark off the bottom of wide, short windows, so the lockup also scales by height.
+    final double s = math.min(size.width / 1080, size.height / 1000);
+    final double sk = math.min(size.width / 1080, size.height / 1920); // skyline
     final double t = intro.value >= 1 ? double.infinity : intro.value * introSeconds;
     final double clock = ambient.value * 8; // seconds, loops every 8 s
 
     canvas.drawRect(Offset.zero & size, Paint()..color = background);
-    _paintSkyline(canvas, size, s, t, clock);
+    _paintSkyline(canvas, size, sk, t, clock);
 
     // Lockup block.
     const double wsc = 3.2;
@@ -448,10 +451,11 @@ class _SplashPainter extends CustomPainter {
     final Paint window = Paint()..color = background;
     double x = -30;
     int lit = 0;
-    for (int i = 0; i < _skyline.length; i++) {
-      final _Building b = _skyline[i];
+    // Repeat the row of buildings until it reaches the right edge of wide windows.
+    for (int i = 0; x * s < size.width + 40; i++) {
+      final _Building b = _skyline[i % _skyline.length];
       final double roof = b.pitched ? b.w * 0.30 : 0;
-      final double p = _seg(t, i * 0.06, 1.1, _rise);
+      final double p = _seg(t, math.min(i, 14) * 0.06, 1.1, _rise);
       final double dy = (1 - p) * (b.h + roof) * s;
       final double topY = size.height - b.h * s + dy;
 
@@ -483,7 +487,7 @@ class _SplashPainter extends CustomPainter {
           canvas.drawRRect(rr, window);
           if ((i * 7 + row * 3 + c * 5) % 5 == 0) {
             // Slow gold "lights on" once the intro has settled.
-            final double on = _seg(t, 2.6 + lit * 0.35, 0.6, Curves.easeOut);
+            final double on = _seg(t, 2.6 + math.min(lit, 14) * 0.35, 0.6, Curves.easeOut);
             // 1, 2 or 3 whole cycles per 8 s loop, so the loop restarts without a jump.
             final int cycles = 1 + lit % 3;
             final double wave = 0.5 + 0.5 * math.sin(2 * math.pi * cycles * (clock / 8) + lit);
