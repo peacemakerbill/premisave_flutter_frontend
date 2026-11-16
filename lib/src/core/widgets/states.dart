@@ -104,28 +104,87 @@ class ErrorState extends StatelessWidget {
   }
 }
 
-/// Grey animated blocks shown while a list loads.
+enum SkeletonKind {
+  /// A rounded block per item, for lists of cards.
+  card,
+
+  /// An avatar and two lines per item, for lists of rows.
+  row,
+}
+
+/// Grey animated placeholders shown while a list loads. Use it instead of a spinner so the page keeps its shape.
+/// Set [shrink] when it sits inside a column or a sliver.
 class SkeletonList extends StatelessWidget {
-  const SkeletonList({super.key, this.count = 4, this.height = 86, this.padding});
+  const SkeletonList({
+    super.key,
+    this.count = 4,
+    this.height,
+    this.padding,
+    this.kind = SkeletonKind.card,
+    this.shrink = false,
+  });
 
   final int count;
-  final double height;
+  final double? height;
   final EdgeInsetsGeometry? padding;
+  final SkeletonKind kind;
+  final bool shrink;
 
   @override
   Widget build(BuildContext context) {
+    final pal = context.pal;
+    final rows = kind == SkeletonKind.row;
+    final h = height ?? (rows ? 56.0 : 86.0);
     return Shimmer.fromColors(
-      baseColor: context.pal.panel2,
-      highlightColor: context.pal.line,
+      baseColor: rows ? pal.line : pal.panel2,
+      highlightColor: rows ? pal.panel2 : pal.line,
       child: ListView.separated(
+        shrinkWrap: shrink,
         physics: const NeverScrollableScrollPhysics(),
         padding: padding ?? const EdgeInsets.all(20),
         itemCount: count,
-        separatorBuilder: (_, __) => const SizedBox(height: 12),
-        itemBuilder: (_, __) => Container(
-          height: height,
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(context.radius(Brand.radius))),
+        separatorBuilder: (_, __) => SizedBox(height: rows ? 18 : 12),
+        itemBuilder: (_, __) => rows
+            ? _SkeletonRow(height: h)
+            : Container(
+                height: h,
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(context.radius(Brand.radius))),
+              ),
+      ),
+    );
+  }
+}
+
+class _SkeletonRow extends StatelessWidget {
+  const _SkeletonRow({required this.height});
+
+  final double height;
+
+  Widget _bar(double factor, double barHeight) => FractionallySizedBox(
+        widthFactor: factor,
+        alignment: Alignment.centerLeft,
+        child: Container(
+          height: barHeight,
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(6)),
         ),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: height,
+      child: Row(
+        children: <Widget>[
+          Container(width: 42, height: 42, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle)),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[_bar(0.55, 13), const SizedBox(height: 9), _bar(0.35, 11)],
+            ),
+          ),
+        ],
       ),
     );
   }

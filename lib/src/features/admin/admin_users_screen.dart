@@ -172,7 +172,17 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
                 ),
                 const SizedBox(height: 14),
                 if (items.isEmpty)
-                  const EmptyState(icon: Icons.group_off_outlined, title: 'No users match', message: 'Try another search or filter.')
+                  EmptyState(
+                    icon: Icons.group_off_outlined,
+                    title: 'No users match',
+                    message: 'Try another search or filter.',
+                    actionLabel: 'Clear filters',
+                    onAction: () => setState(() {
+                      _search.clear();
+                      _filter = _UserFilter.all;
+                      _role = null;
+                    }),
+                  )
                 else
                   MenuGroup(
                     children: <Widget>[

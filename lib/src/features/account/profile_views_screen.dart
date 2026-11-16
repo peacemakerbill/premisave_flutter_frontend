@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/brand.dart';
-import '../../core/utils/formatters.dart';
 import '../../core/widgets/widgets.dart';
 import '../../data/models/social_models.dart';
 import '../../state/data_providers.dart';
@@ -74,7 +73,11 @@ class _ViewList extends ConsumerWidget {
           return EmptyState(
             icon: Icons.visibility_off_outlined,
             title: mine ? 'No views yet' : 'You have not looked at anyone',
-            message: mine ? 'When people open your profile they will show up here.' : 'Profiles you open will be listed here.',
+            message: mine
+                ? 'When people open your profile they will show up here. A complete profile gets noticed more.'
+                : 'Profiles you open will be listed here, so you can find them again.',
+            actionLabel: mine ? 'Complete my profile' : 'Browse people',
+            onAction: () => context.go(mine ? '/account/profile/edit' : '/people'),
           );
         }
         return RefreshIndicator(
@@ -100,7 +103,7 @@ class _ViewList extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
                             Text(v.user.name, style: const TextStyle(fontWeight: FontWeight.w700)),
-                            if (v.at != null) Text(timeAgo(v.at), style: TextStyle(fontSize: 12.5, color: context.mutedColor)),
+                            RelativeTime(v.at),
                           ],
                         ),
                       ),

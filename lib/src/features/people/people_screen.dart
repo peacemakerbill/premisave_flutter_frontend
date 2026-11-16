@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/brand.dart';
-import '../../core/utils/formatters.dart';
 import '../../core/widgets/widgets.dart';
 import '../../data/models/social_models.dart';
 import '../../data/models/user_model.dart';
@@ -151,7 +150,13 @@ class _DiscoverTabState extends ConsumerState<_DiscoverTab> with AutomaticKeepAl
                   builder: (entries) {
                     final list = entries.where((e) => e.id != myId).toList();
                     if (list.isEmpty) {
-                      return const EmptyState(icon: Icons.groups_outlined, title: 'Nobody here yet', message: 'Members will show up as they join.');
+                      return EmptyState(
+                        icon: Icons.groups_outlined,
+                        title: 'Nobody here yet',
+                        message: 'Members will show up as they join.',
+                        actionLabel: 'Refresh',
+                        onAction: () => ref.invalidate(directoryProvider),
+                      );
                     }
                     return _list(
                       onRefresh: () async => ref.invalidate(directoryProvider),
@@ -165,11 +170,20 @@ class _DiscoverTabState extends ConsumerState<_DiscoverTab> with AutomaticKeepAl
   }
 
   Widget _searchBody(String? myId) {
-    if (_searching && _results == null) return const LoadingState();
+    if (_searching && _results == null) return const SkeletonList(count: 6, height: 76);
     if (_searchError != null) return ErrorState(error: _searchError!, onRetry: () => _runSearch(_query));
     final list = (_results ?? <UserModel>[]).where((u) => u.id != myId).toList();
     if (list.isEmpty) {
-      return EmptyState(icon: Icons.search_off_rounded, title: 'No matches', message: 'Nobody matched "$_query".');
+      return EmptyState(
+        icon: Icons.search_off_rounded,
+        title: 'No matches',
+        message: 'Nobody matched "$_query". Check the spelling or try part of a name.',
+        actionLabel: 'Clear search',
+        onAction: () {
+          _search.clear();
+          _onChanged('');
+        },
+      );
     }
     return _list(tiles: <Widget>[for (final u in list) PersonTile.fromUser(u)]);
   }
@@ -214,7 +228,16 @@ class _UserListTab extends ConsumerWidget {
       value: value,
       onRetry: () => ref.invalidate(provider),
       builder: (users) {
-        if (users.isEmpty) return EmptyState(icon: icon, title: title, message: message);
+        if (users.isEmpty) {
+          final canDiscover = kind != _ListKind.followers;
+          return EmptyState(
+            icon: icon,
+            title: title,
+            message: message,
+            actionLabel: canDiscover ? 'Discover people' : null,
+            onAction: canDiscover ? () => DefaultTabController.maybeOf(context)?.animateTo(0) : null,
+          );
+        }
         return _list(
           onRefresh: () async => ref.invalidate(provider),
           tiles: <Widget>[for (final u in users) PersonTile.fromUser(u)],
@@ -264,6 +287,8 @@ class _ReviewsTabState extends ConsumerState<_ReviewsTab> {
                   icon: Icons.star_outline_rounded,
                   title: _aboutMe ? 'No reviews yet' : 'You have not written any reviews',
                   message: _aboutMe ? 'Reviews people write about you show up here.' : 'Open someone\'s profile to leave a review.',
+                  actionLabel: _aboutMe ? null : 'Find someone to review',
+                  onAction: _aboutMe ? null : () => DefaultTabController.maybeOf(context)?.animateTo(0),
                 );
               }
               return _list(
@@ -290,7 +315,9 @@ class ReviewCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final r = review;
     return PCard(
-      onTap: showTarget && r.targetId.isNotEmpty ? () => context.push('/people/${r.targetId}') : null,
+      onTap: (showTarget ? r.targetId : r.userId).isEmpty
+          ? null
+          : () => context.push('/people/${showTarget ? r.targetId : r.userId}'),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -307,7 +334,7 @@ class ReviewCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(showTarget ? 'Review you wrote' : r.reviewer, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
-                    Text(timeAgo(r.updatedAt ?? r.createdAt), style: TextStyle(fontSize: 12, color: context.mutedColor)),
+                    RelativeTime(r.updatedAt ?? r.createdAt, style: TextStyle(fontSize: 12, color: context.mutedColor)),
                   ],
                 ),
               ),

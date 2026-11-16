@@ -149,7 +149,7 @@ class _SecurityGlance extends ConsumerWidget {
                   const SizedBox(height: 2),
                   Text(
                     alerts.isNotEmpty
-                        ? 'Review recent activity ${timeAgo(alerts.first.createdAt)}'
+                        ? 'Latest alert ${timeAgo(alerts.first.createdAt)}. Review your activity.'
                         : (other == 0 ? 'Only this device is signed in.' : '${plural(other, 'other session')} signed in.'),
                     style: TextStyle(fontSize: 12.5, color: context.mutedColor),
                   ),
@@ -269,7 +269,7 @@ class _StaffGlance extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.only(top: 14),
       child: stats.when(
-        loading: () => const SizedBox(height: 120, child: LoadingState()),
+        loading: () => const SkeletonList(count: 1, height: 110, shrink: true, padding: EdgeInsets.zero),
         error: (e, _) => ErrorState(error: e, onRetry: () => ref.invalidate(staffStatsProvider)),
         data: (s) => Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -338,7 +338,7 @@ class _SocialGlance extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final stats = ref.watch(myStatsProvider);
     return stats.when(
-      loading: () => const SizedBox(height: 100, child: LoadingState()),
+      loading: () => const SkeletonList(count: 1, height: 100, shrink: true, padding: EdgeInsets.zero),
       error: (e, _) => ErrorState(error: e, onRetry: () => ref.invalidate(myStatsProvider)),
       data: (s) {
         String fmt(num? n) => n == null ? '0' : n.toInt().toString();

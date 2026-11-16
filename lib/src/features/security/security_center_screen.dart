@@ -96,7 +96,7 @@ class SecurityCenterScreen extends ConsumerWidget {
           ),
           SectionHeader('Recent activity', action: recent.isEmpty ? null : 'See all', onAction: () => context.push('/account/security/events')),
           events.when(
-            loading: () => const SizedBox(height: 100, child: LoadingState()),
+            loading: () => const SkeletonList(kind: SkeletonKind.row, count: 3, shrink: true, padding: EdgeInsets.symmetric(vertical: 8)),
             error: (e, _) => ErrorState(error: e, onRetry: () => ref.invalidate(securityEventsProvider)),
             data: (_) => recent.isEmpty
                 ? Text('No activity yet.', style: TextStyle(color: context.mutedColor))

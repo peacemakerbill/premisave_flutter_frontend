@@ -4,6 +4,7 @@ export 'layout.dart';
 export 'p_button.dart';
 export 'p_scaffold.dart';
 export 'p_text_field.dart';
+export 'relative_time.dart';
 export 'states.dart';
 export 'surfaces.dart';
 export 'theme_reveal.dart';

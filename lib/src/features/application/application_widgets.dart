@@ -144,7 +144,7 @@ class ApplicationTimeline extends StatelessWidget {
                           ),
                           if (list[i].message != null) Text(list[i].message!, style: TextStyle(fontSize: 13, height: 1.4, color: context.mutedColor)),
                           Text(
-                            <String>[if (list[i].actor != null) list[i].actor!, formatDateTime(list[i].at)].join(' · '),
+                            <String>[if (list[i].actor != null) list[i].actor!, whenLabel(list[i].at)].join(' · '),
                             style: TextStyle(fontSize: 12, color: context.mutedColor),
                           ),
                         ],

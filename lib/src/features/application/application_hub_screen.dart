@@ -114,7 +114,7 @@ class _ApplicationHubScreenState extends ConsumerState<ApplicationHubScreen> {
                           MenuTile(
                             icon: Icons.history_rounded,
                             title: i.applicationNumber,
-                            subtitle: '${i.statusLabel} · ${formatDate(i.updatedAt)}',
+                            subtitle: '${i.statusLabel} · ${timeAgo(i.updatedAt)}',
                             onTap: () => context.push('/application/${i.id}'),
                           ),
                       ],

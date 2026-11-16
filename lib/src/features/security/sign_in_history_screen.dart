@@ -47,7 +47,7 @@ class SignInTile extends StatelessWidget {
                 const SizedBox(height: 3),
                 for (final l in lines) Text(l, style: TextStyle(fontSize: 12.5, color: context.mutedColor)),
                 const SizedBox(height: 2),
-                Text(formatDateTime(s.at), style: TextStyle(fontSize: 12, color: context.mutedColor)),
+                Text(whenLabel(s.at), style: TextStyle(fontSize: 12, color: context.mutedColor)),
               ],
             ),
           ),
@@ -71,7 +71,11 @@ class SignInHistoryScreen extends ConsumerWidget {
         onRetry: () => ref.invalidate(signInsProvider),
         builder: (items) {
           if (items.isEmpty) {
-            return const EmptyState(icon: Icons.history_rounded, title: 'No sign-ins recorded');
+            return const EmptyState(
+              icon: Icons.history_rounded,
+              title: 'No sign-ins recorded',
+              message: 'Each time you sign in, the device and place are recorded here.',
+            );
           }
           return PageBody(
             maxWidth: 760,

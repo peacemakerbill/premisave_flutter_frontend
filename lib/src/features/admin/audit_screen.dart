@@ -69,11 +69,17 @@ class _AuditScreenState extends ConsumerState<AuditScreen> {
           ),
           const SizedBox(height: 14),
           value.when(
-            loading: () => const Padding(padding: EdgeInsets.only(top: 48), child: LoadingState()),
+            loading: () => const SkeletonList(kind: SkeletonKind.row, count: 6, shrink: true, padding: EdgeInsets.symmetric(vertical: 8)),
             error: (e, _) => ErrorState(error: e, onRetry: () => ref.invalidate(auditEventsProvider(_filter))),
             data: (items) {
               if (items.isEmpty) {
-                return const EmptyState(icon: Icons.list_alt_rounded, title: 'Nothing recorded', message: 'No events match this filter.');
+                return EmptyState(
+                  icon: Icons.list_alt_rounded,
+                  title: 'Nothing recorded',
+                  message: 'No events match this filter.',
+                  actionLabel: _type == null ? null : 'Show all events',
+                  onAction: _type == null ? null : () => setState(() => _type = null),
+                );
               }
               return MenuGroup(
                 children: <Widget>[
@@ -83,7 +89,7 @@ class _AuditScreenState extends ConsumerState<AuditScreen> {
                       tint: severityColor(e.severity),
                       title: e.title,
                       subtitle: <String>[
-                        formatDateTime(e.createdAt),
+                        whenLabel(e.createdAt),
                         if (e.subject != null) e.subject!,
                         if (e.ipAddress != null) e.ipAddress!,
                         if (e.reason != null) e.reason!,

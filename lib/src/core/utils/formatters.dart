@@ -18,15 +18,24 @@ String formatDateTime(DateTime? d) {
   return '${formatDate(l)}, ${_two(l.hour)}:${_two(l.minute)}';
 }
 
-/// "just now", "5 min ago", "3 h ago", "2 days ago", then a date.
+/// "just now", "5 minutes ago", "3 hours ago", "yesterday", "4 days ago", then a date.
 String timeAgo(DateTime? d) {
   if (d == null) return '';
   final diff = DateTime.now().difference(d.toLocal());
   if (diff.isNegative || diff.inSeconds < 45) return 'just now';
-  if (diff.inMinutes < 60) return '${diff.inMinutes} min ago';
-  if (diff.inHours < 24) return '${diff.inHours} h ago';
+  if (diff.inMinutes < 60) return '${plural(diff.inMinutes < 1 ? 1 : diff.inMinutes, 'minute')} ago';
+  if (diff.inHours < 24) return '${plural(diff.inHours, 'hour')} ago';
   if (diff.inDays < 7) return diff.inDays == 1 ? 'yesterday' : '${diff.inDays} days ago';
   return formatDate(d);
+}
+
+/// "2 hours ago · 14 Nov 2026, 09:30" for the past week, the exact date and time for anything older.
+/// Used on security and audit lists, where the exact moment matters as well as how long ago it was.
+String whenLabel(DateTime? d) {
+  if (d == null) return '';
+  final diff = DateTime.now().difference(d.toLocal());
+  if (diff.isNegative || diff.inDays >= 7) return formatDateTime(d);
+  return '${timeAgo(d)} · ${formatDateTime(d)}';
 }
 
 String formatBytes(int bytes) {

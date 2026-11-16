@@ -123,6 +123,7 @@ class ProfileViewEntry {
 /// "followerCount" becomes "Follower count".
 String humanize(String key) {
   final spaced = key
+      .replaceAllMapped(RegExp(r'([a-z])([0-9])'), (m) => '${m[1]} ${m[2]}')
       .replaceAllMapped(RegExp(r'([a-z0-9])([A-Z])'), (m) => '${m[1]} ${m[2]}')
       .replaceAll('_', ' ')
       .trim()

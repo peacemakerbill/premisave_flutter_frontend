@@ -22,7 +22,11 @@ class SecurityEventsScreen extends ConsumerWidget {
         onRetry: () => ref.invalidate(securityEventsProvider),
         builder: (items) {
           if (items.isEmpty) {
-            return const EmptyState(icon: Icons.list_alt_rounded, title: 'No events yet');
+            return const EmptyState(
+              icon: Icons.list_alt_rounded,
+              title: 'No events yet',
+              message: 'Sign-ins, password changes and other account activity will be listed here.',
+            );
           }
           return PageBody(
             maxWidth: 760,
@@ -36,7 +40,7 @@ class SecurityEventsScreen extends ConsumerWidget {
                       tint: severityColor(e.severity),
                       title: e.title,
                       subtitle: <String>[
-                        formatDateTime(e.createdAt),
+                        whenLabel(e.createdAt),
                         if (e.ipAddress != null) e.ipAddress!,
                         if (e.reason != null) e.reason!,
                       ].join(' · '),

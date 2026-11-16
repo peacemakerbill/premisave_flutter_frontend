@@ -224,13 +224,25 @@ class _StaffQueueScreenState extends ConsumerState<StaffQueueScreen> {
               ),
             ),
             if (_loading)
-              const SliverFillRemaining(hasScrollBody: false, child: Padding(padding: EdgeInsets.only(top: 60), child: LoadingState()))
+              const SliverToBoxAdapter(child: ContentWidth(maxWidth: 900, child: SkeletonList(count: 4, height: 104, shrink: true, padding: EdgeInsets.only(top: 4))))
             else if (_error != null)
               SliverFillRemaining(hasScrollBody: false, child: ErrorState(error: _error!, onRetry: _refilter))
             else if (_items.isEmpty)
-              const SliverFillRemaining(
+              SliverFillRemaining(
                 hasScrollBody: false,
-                child: EmptyState(icon: Icons.inbox_outlined, title: 'Nothing here', message: 'No applications match these filters.'),
+                child: EmptyState(
+                  icon: Icons.inbox_outlined,
+                  title: 'Nothing here',
+                  message: 'No applications match these filters.',
+                  actionLabel: (_status != null || _assignee != null || _q.isNotEmpty) ? 'Clear filters' : null,
+                  onAction: () {
+                    _search.clear();
+                    _q = '';
+                    _status = null;
+                    _assignee = null;
+                    _refilter();
+                  },
+                ),
               )
             else ...<Widget>[
               SliverList.separated(
@@ -276,20 +288,31 @@ class _ApplicationTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = statusTint(item.statusColor);
     final place = <String>[if (item.region != null) item.region!, if (item.country != null) item.country!].join(', ');
+    final name = item.applicantName.isEmpty ? item.applicantEmail : item.applicantName;
     return PCard(
       onTap: () => context.push('/staff/${item.id}'),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Expanded(child: Text(item.applicantName.isEmpty ? item.applicantEmail : item.applicantName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15.5))),
+              UserAvatar(initials: _initialsOf(name), size: 40),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15.5)),
+                    const SizedBox(height: 3),
+                    Text('${item.applicationNumber}${place.isEmpty ? '' : ' · $place'}', style: TextStyle(fontSize: 12.5, color: context.mutedColor)),
+                  ],
+                ),
+              ),
               const SizedBox(width: 8),
               StatusPill(item.statusLabel, color: c, dense: true),
             ],
           ),
-          const SizedBox(height: 3),
-          Text('${item.applicationNumber}${place.isEmpty ? '' : ' · $place'}', style: TextStyle(fontSize: 12.5, color: context.mutedColor)),
           const SizedBox(height: 10),
           Row(
             children: <Widget>[
@@ -316,4 +339,12 @@ class _ApplicationTile extends StatelessWidget {
       ),
     );
   }
+}
+
+/// "Jane Doe" becomes "JD", "jane@example.com" becomes "J".
+String _initialsOf(String name) {
+  final parts = name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+  if (parts.isEmpty) return '?';
+  if (parts.length == 1) return parts.first[0].toUpperCase();
+  return (parts.first[0] + parts.last[0]).toUpperCase();
 }
