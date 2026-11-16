@@ -130,13 +130,42 @@ Future<void> showAppearanceSheet(BuildContext context) {
       initialChildSize: 0.85,
       minChildSize: 0.4,
       maxChildSize: 0.95,
-      builder: (context, controller) => ListView(
-        controller: controller,
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
-        children: const <Widget>[AppearancePicker()],
+      builder: (context, controller) => Column(
+        children: <Widget>[
+          const _SheetHeader(),
+          Expanded(
+            child: ListView(
+              controller: controller,
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
+              children: const <Widget>[AppearancePicker()],
+            ),
+          ),
+        ],
       ),
     ),
   );
+}
+
+/// Title and close button that stay in view while the themes scroll underneath.
+class _SheetHeader extends StatelessWidget {
+  const _SheetHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 8, 4),
+      child: Row(
+        children: <Widget>[
+          Expanded(child: Text('Appearance', style: context.display(size: 18, weight: FontWeight.w800))),
+          IconButton(
+            tooltip: 'Close',
+            icon: const Icon(Icons.close_rounded),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 /// Miniature of a theme: page colour and texture, a panel, and three swatches.
