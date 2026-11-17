@@ -28,6 +28,16 @@ import '../features/home/home_screen.dart';
 import '../features/home/module_pages.dart';
 import '../features/overview/role_overview_page.dart';
 import '../features/explore/explore_content.dart';
+import '../features/messenger/group_info_screen.dart';
+import '../features/messenger/group_invite_screen.dart';
+import '../features/messenger/join_group_screen.dart';
+import '../features/messenger/messenger_screen.dart';
+import '../features/messenger/new_chat_screen.dart';
+import '../features/messenger/new_group_screen.dart';
+import '../features/messenger/past_statuses_screen.dart';
+import '../features/messenger/status_composer_screen.dart';
+import '../features/messenger/status_insights_screen.dart';
+import '../features/messenger/status_viewer_screen.dart';
 import '../features/people/people_screen.dart';
 import '../features/people/public_profile_screen.dart';
 import '../features/security/device_detail_screen.dart';
@@ -103,6 +113,8 @@ final routerProvider = Provider<GoRouter>((ref) {
     ),
     routes: <RouteBase>[
       GoRoute(path: '/', redirect: (_, __) => '/home'),
+      // Group invite links and QR codes open the app here: https://premisave.com/join/CODE
+      GoRoute(path: '/join/:code', redirect: (_, s) => '/messages/join/${Uri.encodeComponent(s.pathParameters['code'] ?? '')}'),
       GoRoute(path: '/splash', pageBuilder: (_, s) => fadePage(s, const SplashScreen())),
       GoRoute(path: '/welcome', pageBuilder: (_, s) => fadePage(s, const WelcomeScreen())),
       GoRoute(path: '/login', pageBuilder: (_, s) => fadePage(s, const LoginScreen())),
@@ -132,9 +144,27 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(path: 'payments', pageBuilder: (_, s) => detailPage(s, const ModulePage(module: AppModule.payments))),
               GoRoute(path: 'transactions', pageBuilder: (_, s) => detailPage(s, const ModulePage(module: AppModule.transactions))),
               GoRoute(path: 'wishlists', pageBuilder: (_, s) => detailPage(s, const ModulePage(module: AppModule.wishlists))),
-              GoRoute(path: 'messages', pageBuilder: (_, s) => detailPage(s, const ModulePage(module: AppModule.messages))),
+              GoRoute(path: 'messages', redirect: (_, __) => '/messages'),
               GoRoute(path: 'about', pageBuilder: (_, s) => detailPage(s, const ModulePage(module: AppModule.about))),
               GoRoute(path: 'contact', pageBuilder: (_, s) => detailPage(s, const ModulePage(module: AppModule.contact))),
+            ],
+          ),
+          GoRoute(
+            path: '/messages',
+            pageBuilder: (_, s) => tabPage(s, const MessengerScreen()),
+            routes: <RouteBase>[
+              GoRoute(path: 'chat/:id', pageBuilder: (_, s) => tabPage(s, MessengerScreen(chatId: s.pathParameters['id']))),
+              GoRoute(path: 'new', pageBuilder: (_, s) => detailPage(s, const NewChatScreen())),
+              GoRoute(path: 'new-group', pageBuilder: (_, s) => detailPage(s, const NewGroupScreen())),
+              GoRoute(path: 'group/:id', pageBuilder: (_, s) => detailPage(s, GroupInfoScreen(groupId: s.pathParameters['id'] ?? ''))),
+              GoRoute(path: 'group/:id/invite', pageBuilder: (_, s) => detailPage(s, GroupInviteScreen(groupId: s.pathParameters['id'] ?? ''))),
+              GoRoute(path: 'join', pageBuilder: (_, s) => detailPage(s, const JoinGroupScreen())),
+              GoRoute(path: 'join/:code', pageBuilder: (_, s) => detailPage(s, JoinGroupScreen(code: s.pathParameters['code']))),
+              GoRoute(path: 'status/new', pageBuilder: (_, s) => detailPage(s, const StatusComposerScreen())),
+              GoRoute(path: 'status/past', pageBuilder: (_, s) => detailPage(s, const PastStatusesScreen())),
+              GoRoute(path: 'status/mine', pageBuilder: (_, s) => detailPage(s, const StatusViewerScreen(userId: '', mine: true))),
+              GoRoute(path: 'status/user/:id', pageBuilder: (_, s) => detailPage(s, StatusViewerScreen(userId: s.pathParameters['id'] ?? ''))),
+              GoRoute(path: 'status/:id/insights', pageBuilder: (_, s) => detailPage(s, StatusInsightsScreen(statusId: s.pathParameters['id'] ?? ''))),
             ],
           ),
           GoRoute(path: '/explore', pageBuilder: (_, s) => tabPage(s, const ExploreContent())),

@@ -14,6 +14,8 @@ class AppConfig {
   );
 
   static const String _envBaseUrl = String.fromEnvironment('BASE_URL');
+  static const String _envMessengerUrl = String.fromEnvironment('MESSENGER_URL');
+  static const String _envInviteBaseUrl = String.fromEnvironment('GROUP_INVITE_BASE_URL');
   static const String _envGeocoderUrl = String.fromEnvironment('GEOCODER_URL');
   static const String _envMapTileUrl = String.fromEnvironment('MAP_TILE_URL');
   static const String _envMapsAndroid = String.fromEnvironment('GOOGLE_MAPS_ANDROID_KEY');
@@ -65,6 +67,29 @@ class AppConfig {
       return 'http://10.0.2.2:8080';
     }
     return 'http://localhost:8080';
+  }
+
+  /// Messenger service base URL without a trailing slash (REST under /api, live updates at /ws-messenger).
+  ///
+  /// Defaults: Android emulator reaches the host machine on 10.0.2.2, everything else uses localhost.
+  static String get messengerUrl {
+    if (_envMessengerUrl.isNotEmpty) {
+      return _envMessengerUrl.endsWith('/') ? _envMessengerUrl.substring(0, _envMessengerUrl.length - 1) : _envMessengerUrl;
+    }
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      return 'http://10.0.2.2:8081';
+    }
+    return 'http://localhost:8081';
+  }
+
+  /// The live updates address: the messenger URL with http turned into ws.
+  static String get messengerSocketUrl => '${messengerUrl.replaceFirst(RegExp('^http', caseSensitive: false), 'ws')}/ws-messenger';
+
+  /// Start of every shared group invite link. It must match GROUP_INVITE_BASE_URL on the messenger service,
+  /// because the app reads the invite code from the end of a pasted or scanned link.
+  static String get inviteBaseUrl {
+    final u = _envInviteBaseUrl.isEmpty ? 'https://premisave.com/join' : _envInviteBaseUrl;
+    return u.endsWith('/') ? u.substring(0, u.length - 1) : u;
   }
 
   /// Turns a stored picture path into a full URL. Absolute URLs pass through untouched.

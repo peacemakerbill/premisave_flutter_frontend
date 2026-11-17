@@ -309,7 +309,7 @@ class _Workspace extends StatelessWidget {
       if (role.can(Capability.useClientWorkspace)) ...<Widget>[
         MenuTile(icon: Icons.event_available_outlined, title: 'Bookings', subtitle: 'Stays and viewings', onTap: () => context.push('/home/bookings')),
         MenuTile(icon: Icons.favorite_border_rounded, title: 'Wishlists', subtitle: 'Places you saved', onTap: () => context.push('/home/wishlists')),
-        MenuTile(icon: Icons.chat_bubble_outline_rounded, title: 'Messages', subtitle: 'Talk to owners and support', onTap: () => context.push('/home/messages')),
+        MenuTile(icon: Icons.chat_bubble_outline_rounded, title: 'Messages', subtitle: 'Chats, groups and statuses', onTap: () => context.go('/messages')),
         MenuTile(icon: Icons.account_balance_wallet_outlined, title: 'Payments', subtitle: 'Methods and upcoming payments', onTap: () => context.push('/home/payments')),
         MenuTile(icon: Icons.receipt_long_outlined, title: 'Transactions', subtitle: 'Your payment history', onTap: () => context.push('/home/transactions')),
       ],
@@ -323,7 +323,7 @@ class _Workspace extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(top: 8, left: 4),
           child: Text(
-            'Bookings, payments and messages show sample data until those services are connected.',
+            'Bookings and payments show sample data until those services are connected.',
             style: TextStyle(fontSize: 12, color: context.mutedColor),
           ),
         ),

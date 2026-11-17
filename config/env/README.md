@@ -36,6 +36,8 @@ If you are unsure whether something is public, ask: *would it matter if anyone w
 | Key | Meaning | If empty |
 | --- | --- | --- |
 | `BASE_URL` | Address of the auth-service, with no trailing slash, for example `https://api.example.com` | A default for the platform: `http://localhost:8080`, or `http://10.0.2.2:8080` on the Android emulator |
+| `MESSENGER_URL` | Address of the messenger service, with no trailing slash. The chat socket is opened on the same host at `/ws-messenger` | A default for the platform: `http://localhost:8081`, or `http://10.0.2.2:8081` on the Android emulator |
+| `GROUP_INVITE_BASE_URL` | Start of the group invite links the app shows when the server does not send a full link, for example `https://premisave.com/join` | `https://premisave.com/join` |
 | `SUPPORT_EMAIL` | The address shown on help and contact screens | A development address. **Set it for production** |
 
 On a real phone `localhost` means the phone itself, so set `BASE_URL` to your computer's address on the network, for example `http://192.168.1.20:8080`.

@@ -4,7 +4,6 @@ import '../../core/widgets/widgets.dart';
 import '../bookings/bookings_content.dart';
 import '../info/about_content.dart';
 import '../info/contact_content.dart';
-import '../messages/messages_content.dart';
 import '../payments/payments_content.dart';
 import '../transactions/transactions_content.dart';
 import '../wishlists/wishlists_content.dart';
@@ -14,7 +13,6 @@ enum AppModule {
   payments('Payments'),
   transactions('Transactions'),
   wishlists('Wishlists'),
-  messages('Messages'),
   about('About Premisave'),
   contact('Contact us');
 
@@ -40,8 +38,6 @@ class ModulePage extends StatelessWidget {
         return const TransactionsContent();
       case AppModule.wishlists:
         return const WishlistsContent();
-      case AppModule.messages:
-        return const MessagesContent();
       case AppModule.about:
         return const AboutContent();
       case AppModule.contact:

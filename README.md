@@ -132,7 +132,8 @@ Everything marked **live** talks to the real auth-service. The rest shows sample
 | Staff review | live | Queue and decisions on submitted applications |
 | Administration | live | User list and details, role changes, platform wide audit trail, final approval of applications |
 | Places | live | Address search and "what is here", through the auth-service when it has a Google key, free Photon search otherwise |
-| Bookings, payments, transactions, wishlists, messages | sample | Screens are built, the services behind them are not |
+| Messages | live | Chats, groups, replies, reactions, files, typing and online status, statuses, group invite links and QR codes, through the messenger service. See [docs/MESSENGER.md](docs/MESSENGER.md) |
+| Bookings, payments, transactions, wishlists | sample | Screens are built, the services behind them are not |
 
 <img src="docs/assets/divider.svg" alt="" width="100%"/>
 
@@ -268,6 +269,8 @@ The app reads its settings at build time with `--dart-define`, and `AppConfig` i
 | Key | Needed for | Default |
 | --- | --- | --- |
 | `BASE_URL` | Where the auth-service lives | `http://localhost:8080`, or `http://10.0.2.2:8080` on the Android emulator |
+| `MESSENGER_URL` | Where the messenger service lives | `http://localhost:8081`, or `http://10.0.2.2:8081` on the Android emulator |
+| `GROUP_INVITE_BASE_URL` | The address shown in group invite links and QR codes | `https://premisave.com/join` |
 | `GOOGLE_SERVER_CLIENT_ID`, `GOOGLE_CLIENT_ID` | Google sign in | The project's own web client |
 | `GITHUB_CLIENT_ID`, `GITHUB_REDIRECT_URI` | GitHub sign in, and the code flow on Linux and Windows | Client built in, redirect `http://localhost:3000/auth.html` in debug builds |
 | `FACEBOOK_APP_ID` | Facebook sign in on web and desktop | The project's own app |
@@ -326,7 +329,7 @@ After changing a `--dart-define` value, **stop the app and start it again**. Flu
 
 Being straight about what is not finished saves everyone a debugging session.
 
-- **Bookings, payments, transactions, wishlists and messages** show sample data. The screens exist, the services do not.
+- **Bookings, payments, transactions and wishlists** show sample data. The screens exist, the services do not.
 - **Native social sign in on Android, iOS and macOS** needs each platform's own app registration (Google services files, Facebook app configuration, URL schemes). The Dart side is written, the native files are not in the repository.
 - **Sign in with Apple** is not implemented yet.
 - **There are no automated tests.** `flutter analyze` is the safety net today.

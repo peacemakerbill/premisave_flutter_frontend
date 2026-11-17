@@ -5,7 +5,7 @@ import 'role.dart';
 
 /// A destination in the bottom bar (phones) or side rail (wide screens). Only names the tab;
 /// `features/shell/nav.dart` owns how it looks and where it goes.
-enum AppTab { home, explore, applications, users, people, account }
+enum AppTab { home, explore, applications, users, messages, people, account }
 
 /// Everything that differs between roles, in one place.
 @immutable
@@ -23,7 +23,7 @@ class RoleSpec {
 }
 
 const RoleSpec _client = RoleSpec(
-  tabs: <AppTab>[AppTab.home, AppTab.explore, AppTab.people, AppTab.account],
+  tabs: <AppTab>[AppTab.home, AppTab.explore, AppTab.messages, AppTab.people, AppTab.account],
   capabilities: <Capability>{
     Capability.exploreProperties,
     Capability.useClientWorkspace,
@@ -33,31 +33,31 @@ const RoleSpec _client = RoleSpec(
 );
 
 const RoleSpec _homeOwner = RoleSpec(
-  tabs: <AppTab>[AppTab.home, AppTab.people, AppTab.account],
+  tabs: <AppTab>[AppTab.home, AppTab.messages, AppTab.people, AppTab.account],
   capabilities: <Capability>{Capability.viewHomeOwnerApplication},
   overviewTitle: 'Home owner overview',
 );
 
 const RoleSpec _operations = RoleSpec(
-  tabs: <AppTab>[AppTab.home, AppTab.applications, AppTab.people, AppTab.account],
+  tabs: <AppTab>[AppTab.home, AppTab.applications, AppTab.messages, AppTab.people, AppTab.account],
   capabilities: <Capability>{Capability.reviewApplications},
   overviewTitle: 'Operations overview',
 );
 
 const RoleSpec _finance = RoleSpec(
-  tabs: <AppTab>[AppTab.home, AppTab.applications, AppTab.people, AppTab.account],
+  tabs: <AppTab>[AppTab.home, AppTab.applications, AppTab.messages, AppTab.people, AppTab.account],
   capabilities: <Capability>{Capability.reviewApplications},
   overviewTitle: 'Finance overview',
 );
 
 const RoleSpec _support = RoleSpec(
-  tabs: <AppTab>[AppTab.home, AppTab.applications, AppTab.people, AppTab.account],
+  tabs: <AppTab>[AppTab.home, AppTab.applications, AppTab.messages, AppTab.people, AppTab.account],
   capabilities: <Capability>{Capability.reviewApplications},
   overviewTitle: 'Support overview',
 );
 
 const RoleSpec _admin = RoleSpec(
-  tabs: <AppTab>[AppTab.home, AppTab.applications, AppTab.users, AppTab.people, AppTab.account],
+  tabs: <AppTab>[AppTab.home, AppTab.applications, AppTab.users, AppTab.messages, AppTab.people, AppTab.account],
   capabilities: <Capability>{
     Capability.reviewApplications,
     Capability.approveApplications,

@@ -6,6 +6,7 @@ import '../../core/theme/brand.dart';
 import '../../core/widgets/widgets.dart';
 import '../../data/models/social_models.dart';
 import '../../state/data_providers.dart';
+import '../../state/messenger_controller.dart';
 import '../../state/providers.dart';
 import '../../state/session_controller.dart';
 import 'people_screen.dart';
@@ -22,6 +23,22 @@ class PublicProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
+  bool _chatBusy = false;
+
+  /// Opens the private chat with this person, creating it when it does not exist yet.
+  Future<void> _message(String userId) async {
+    if (_chatBusy) return;
+    setState(() => _chatBusy = true);
+    try {
+      final chatId = await ref.read(messengerProvider.notifier).startPrivateChat(userId);
+      if (mounted) context.go('/messages/chat/${Uri.encodeComponent(chatId)}');
+    } catch (e) {
+      if (mounted) showApiError(context, e);
+    } finally {
+      if (mounted) setState(() => _chatBusy = false);
+    }
+  }
+
   bool _busy = false;
 
   void _reload() {
@@ -144,6 +161,10 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                     ),
                   ],
                 ),
+              if (!isMe) ...<Widget>[
+                const SizedBox(height: 10),
+                PButton(label: 'Message', icon: Icons.chat_bubble_outline_rounded, expand: true, kind: PButtonKind.accent, loading: _chatBusy, onPressed: () => _message(u.id)),
+              ],
               const SizedBox(height: 18),
               ResponsiveWrap(
                 minItemWidth: 140,

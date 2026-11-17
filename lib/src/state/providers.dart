@@ -1,11 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/config/app_config.dart';
 import '../core/network/api_client.dart';
 import '../core/storage/token_store.dart';
 import '../data/repositories/admin_repository.dart';
 import '../data/repositories/application_repository.dart';
 import '../data/repositories/auth_repository.dart';
 import '../data/repositories/contact_repository.dart';
+import '../data/repositories/messenger_repository.dart';
 import '../data/repositories/place_repository.dart';
 import '../data/repositories/profile_repository.dart';
 import '../data/repositories/security_repository.dart';
@@ -33,3 +35,15 @@ final adminRepositoryProvider = Provider<AdminRepository>((ref) => AdminReposito
 
 final applicationRepositoryProvider =
     Provider<ApplicationRepository>((ref) => ApplicationRepository(ref.watch(apiClientProvider)));
+
+/// The messenger service has its own address. It shares the saved sign-in, and token refreshes go through the
+/// auth-service client, so both services always hold the same tokens.
+final messengerApiClientProvider = Provider<ApiClient>((ref) {
+  final auth = ref.watch(apiClientProvider);
+  final client = ApiClient(ref.watch(tokenStoreProvider), baseUrl: AppConfig.messengerUrl, authClient: auth);
+  client.onSessionExpired = () => auth.onSessionExpired?.call();
+  return client;
+});
+
+final messengerRepositoryProvider =
+    Provider<MessengerRepository>((ref) => MessengerRepository(ref.watch(messengerApiClientProvider)));

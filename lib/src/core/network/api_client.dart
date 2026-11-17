@@ -17,13 +17,17 @@ import 'api_exception.dart';
 ///  * runs only one refresh at a time, so parallel requests never burn the same token
 ///  * turns every failure into an [ApiException] with a readable message
 class ApiClient {
-  ApiClient(this._tokens)
-      : dio = Dio(_options()),
-        _bare = Dio(_options()) {
+  /// [baseUrl] points the client at another service (the messenger). That client shares the same saved tokens,
+  /// and hands token refreshes to [authClient], so the single refresh rule below still holds across services.
+  ApiClient(this._tokens, {String? baseUrl, ApiClient? authClient})
+      : _authClient = authClient,
+        dio = Dio(_options(baseUrl)),
+        _bare = Dio(_options(baseUrl)) {
     dio.interceptors.add(InterceptorsWrapper(onRequest: _onRequest, onError: _onError));
   }
 
   final TokenStore _tokens;
+  final ApiClient? _authClient;
 
   /// Authenticated client with interceptors.
   final Dio dio;
@@ -37,13 +41,15 @@ class ApiClient {
 
   Future<bool>? _refreshing;
 
-  static BaseOptions _options() => BaseOptions(
-        baseUrl: AppConfig.baseUrl,
+  static BaseOptions _options(String? baseUrl) => BaseOptions(
+        baseUrl: baseUrl ?? AppConfig.baseUrl,
         connectTimeout: AppConfig.connectTimeout,
         receiveTimeout: AppConfig.receiveTimeout,
         headers: <String, dynamic>{
           'Accept': 'application/json',
-          'X-Client-Platform': AppConfig.clientPlatform,
+          // Only the auth-service reads this. Other services (the messenger) do not list it in their CORS
+          // headers, so sending it there makes the browser block every request before it is sent.
+          if (baseUrl == null) 'X-Client-Platform': AppConfig.clientPlatform,
         },
       );
 
@@ -72,7 +78,8 @@ class ApiClient {
   Future<void> _onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
     await _tokens.load();
     final device = _tokens.current.deviceToken;
-    if (device != null && device.isNotEmpty) {
+    // The device token belongs to the auth-service. Other services do not accept it as a CORS header.
+    if (_authClient == null && device != null && device.isNotEmpty) {
       options.headers['X-Device-Token'] = device;
     }
     if (!_isPublic(options.path)) {
@@ -118,7 +125,11 @@ class ApiClient {
 
   /// Exchanges the stored refresh token for a new access and refresh token.
   /// Returns true when new tokens were saved. Concurrent callers share one call.
-  Future<bool> refresh() => _refreshing ??= _doRefresh().whenComplete(() => _refreshing = null);
+  Future<bool> refresh() {
+    final delegate = _authClient;
+    if (delegate != null) return delegate.refresh();
+    return _refreshing ??= _doRefresh().whenComplete(() => _refreshing = null);
+  }
 
   Future<bool> _doRefresh() async {
     await _tokens.load();
@@ -174,12 +185,13 @@ class ApiClient {
   Future<dynamic> delete(String path, {Object? body, Map<String, dynamic>? query}) =>
       _run(() => dio.delete<dynamic>(path, data: body, queryParameters: query));
 
-  /// multipart/form-data upload.
-  Future<dynamic> upload(String path, FormData form) => _run(
+  /// multipart/form-data upload. [onProgress] gets the bytes sent so far and the total.
+  Future<dynamic> upload(String path, FormData form, {void Function(int sent, int total)? onProgress}) => _run(
         () => dio.post<dynamic>(
           path,
           data: form,
           options: Options(contentType: 'multipart/form-data'),
+          onSendProgress: onProgress,
         ),
       );
 

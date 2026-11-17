@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/brand.dart';
 import '../../core/theme/palette.dart';
 import '../../core/widgets/widgets.dart';
+import '../../state/messenger_controller.dart';
 import '../../state/session_controller.dart';
 import 'nav.dart';
 
@@ -18,9 +19,21 @@ class AppShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(sessionProvider);
+    // Watching the unread count also starts the live messenger connection for as long as someone is signed in.
+    final unread = ref.watch(messengerUnreadProvider);
+    ref.listen<int>(messengerProvider.select((s) => s.noticeSeq), (prev, next) {
+      final text = ref.read(messengerProvider).notice;
+      if (text != null && text.isNotEmpty) showToast(context, text, error: true);
+    });
     final dests = destinationsFor(session.role);
     var index = dests.indexWhere((d) => d.matches(location));
     if (index < 0) index = 0;
+
+    Widget iconFor(NavDest d, bool selected) {
+      final icon = Icon(selected ? d.selectedIcon : d.icon);
+      if (d.path != '/messages' || unread <= 0) return icon;
+      return Badge(label: Text(unread > 99 ? '99+' : '$unread'), child: icon);
+    }
 
     void go(int i) {
       if (i != index) context.go(dests[i].path);
@@ -53,8 +66,8 @@ class AppShell extends ConsumerWidget {
               destinations: <NavigationRailDestination>[
                 for (final d in dests)
                   NavigationRailDestination(
-                    icon: Icon(d.icon),
-                    selectedIcon: Icon(d.selectedIcon),
+                    icon: iconFor(d, false),
+                    selectedIcon: iconFor(d, true),
                     label: Text(d.label),
                   ),
               ],
@@ -86,6 +99,10 @@ class AppShell extends ConsumerWidget {
       );
     }
 
+    // An open chat or status takes the whole screen on a phone, like in any messenger.
+    final immersive = location.startsWith('/messages/chat/') || location.startsWith('/messages/status/user/') || location == '/messages/status/mine';
+    if (immersive) return PScaffold(body: child);
+
     return PScaffold(
       body: child,
       bottomNavigationBar: DecoratedBox(
@@ -97,8 +114,8 @@ class AppShell extends ConsumerWidget {
           destinations: <NavigationDestination>[
             for (final d in dests)
               NavigationDestination(
-                icon: Icon(d.icon),
-                selectedIcon: Icon(d.selectedIcon),
+                icon: iconFor(d, false),
+                selectedIcon: iconFor(d, true),
                 label: d.label,
               ),
           ],
