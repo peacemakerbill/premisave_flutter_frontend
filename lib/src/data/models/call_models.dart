@@ -553,15 +553,41 @@ class CallRecording {
 
 /// The call switches the administrators control.
 class CallSettings {
-  const CallSettings({this.recordingEnabled = false, this.canManage = false});
+  const CallSettings({
+    this.recordingEnabled = false,
+    this.canManage = false,
+    this.storageMode = 'LOCAL',
+    this.storageReady = true,
+    this.storageLocation,
+    this.storageProblem,
+    this.storageFreeMb,
+  });
 
   final bool recordingEnabled;
 
   /// True for an administrator, who may change the switches.
   final bool canManage;
 
+  /// Where recordings are kept: LOCAL (a folder on the server) or NETWORK (a mounted share).
+  final String storageMode;
+
+  /// False when a new recording cannot be saved right now (share not mounted, disk full).
+  final bool storageReady;
+
+  /// Administrators only: the folder the videos are in, and why the storage is not ready.
+  final String? storageLocation;
+  final String? storageProblem;
+  final int? storageFreeMb;
+
+  bool get storageIsNetwork => storageMode == 'NETWORK';
+
   factory CallSettings.fromJson(Map<String, dynamic> j) => CallSettings(
         recordingEnabled: boolOr(j['recordingEnabled']),
         canManage: boolOr(j['canManage']),
+        storageMode: str(j['storageMode']) ?? 'LOCAL',
+        storageReady: boolOr(j['storageReady'], true),
+        storageLocation: str(j['storageLocation']),
+        storageProblem: str(j['storageProblem']),
+        storageFreeMb: intOrNull(j['storageFreeMb']),
       );
 }

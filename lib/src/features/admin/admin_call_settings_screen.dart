@@ -45,6 +45,8 @@ class _AdminCallSettingsScreenState extends ConsumerState<AdminCallSettingsScree
     }
   }
 
+  static String _freeSpace(int mb) => mb >= 1024 ? '${(mb / 1024).toStringAsFixed(1)} GB' : '$mb MB';
+
   @override
   Widget build(BuildContext context) {
     final value = ref.watch(callSettingsProvider);
@@ -77,6 +79,42 @@ class _AdminCallSettingsScreenState extends ConsumerState<AdminCallSettingsScree
                 onChanged: s.canManage && !_saving ? _setRecording : null,
               ),
             ),
+            if (s.canManage) ...<Widget>[
+              const SectionHeader('Storage', padding: EdgeInsets.only(top: 22, bottom: 10)),
+              PCard(
+                padding: EdgeInsets.zero,
+                child: ListTile(
+                  contentPadding: const EdgeInsets.fromLTRB(18, 10, 18, 10),
+                  leading: Icon(
+                    s.storageReady
+                        ? (s.storageIsNetwork ? Icons.lan_rounded : Icons.storage_rounded)
+                        : Icons.warning_amber_rounded,
+                    color: s.storageReady ? context.mutedColor : Brand.danger,
+                  ),
+                  title: Text(
+                    s.storageIsNetwork ? 'Network share' : 'This server',
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  subtitle: Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      s.storageReady
+                          ? <String>[
+                              if ((s.storageLocation ?? '').isNotEmpty) s.storageLocation!,
+                              if (s.storageFreeMb != null) '${_freeSpace(s.storageFreeMb!)} free',
+                            ].join('\n')
+                          : 'New recordings cannot be saved right now. ${s.storageProblem ?? ''}'.trim(),
+                      style: TextStyle(height: 1.45, color: s.storageReady ? context.mutedColor : Brand.danger),
+                    ),
+                  ),
+                  trailing: StatusPill(
+                    s.storageReady ? 'Ready' : 'Not available',
+                    dense: true,
+                    color: s.storageReady ? Brand.success : Brand.danger,
+                  ),
+                ),
+              ),
+            ],
             Padding(
               padding: const EdgeInsets.only(top: 14),
               child: Row(
@@ -87,7 +125,7 @@ class _AdminCallSettingsScreenState extends ConsumerState<AdminCallSettingsScree
                   Expanded(
                     child: Text(
                       s.canManage
-                          ? 'Recordings are kept on the server until someone deletes them: the person who recorded, or a host of that call. '
+                          ? 'Recordings are kept until someone deletes them: the person who recorded, or a host of that call. '
                               'The recording service must be running on the server for this to work.'
                           : 'Only an administrator can change this.',
                       style: TextStyle(fontSize: 12.5, height: 1.5, color: context.mutedColor),
