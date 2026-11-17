@@ -142,6 +142,8 @@ class _AdminUserDetailScreenState extends ConsumerState<AdminUserDetailScreen> {
               PCard(
                 child: Column(
                   children: <Widget>[
+                    InfoRow('Full name', u.fullName, icon: Icons.badge_outlined),
+                    InfoRow('Username', u.username.isEmpty ? null : '@${u.username}', icon: Icons.alternate_email_rounded),
                     InfoRow('Email', u.email, icon: Icons.mail_outline_rounded),
                     InfoRow('Phone', u.phoneNumber.isEmpty ? null : u.phoneNumber, icon: Icons.phone_outlined),
                     InfoRow('Country', u.country.isEmpty ? null : u.country, icon: Icons.public_rounded),
@@ -154,6 +156,12 @@ class _AdminUserDetailScreenState extends ConsumerState<AdminUserDetailScreen> {
               const SectionHeader('Manage'),
               MenuGroup(
                 children: <Widget>[
+                  MenuTile(
+                    icon: Icons.edit_outlined,
+                    title: 'Edit details',
+                    subtitle: 'Name, email, phone, address, language, role and status',
+                    onTap: _busy ? null : () => context.push('/admin/users/${u.id}/edit'),
+                  ),
                   MenuTile(
                     icon: Icons.admin_panel_settings_outlined,
                     title: 'Change role',

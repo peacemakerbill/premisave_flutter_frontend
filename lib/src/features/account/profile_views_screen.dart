@@ -103,6 +103,8 @@ class _ViewList extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
                             Text(v.user.name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                            if (v.user.username != null && v.user.username!.isNotEmpty && v.user.username != v.user.name)
+                              Text('@${v.user.username}', style: TextStyle(fontSize: 12.5, color: context.mutedColor)),
                             RelativeTime(v.at),
                           ],
                         ),

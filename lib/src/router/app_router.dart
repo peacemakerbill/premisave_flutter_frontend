@@ -10,6 +10,7 @@ import '../features/account/location_screen.dart';
 import '../features/account/profile_screen.dart';
 import '../features/account/profile_views_screen.dart';
 import '../features/account/settings_screen.dart';
+import '../features/admin/admin_edit_user_screen.dart';
 import '../features/admin/admin_user_detail_screen.dart';
 import '../features/admin/admin_users_screen.dart';
 import '../features/admin/audit_screen.dart';
@@ -223,7 +224,13 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/admin/users',
             pageBuilder: (_, s) => tabPage(s, const AdminUsersScreen()),
             routes: <RouteBase>[
-              GoRoute(path: ':id', pageBuilder: (_, s) => detailPage(s, AdminUserDetailScreen(userId: s.pathParameters['id']!))),
+              GoRoute(
+                path: ':id',
+                pageBuilder: (_, s) => detailPage(s, AdminUserDetailScreen(userId: s.pathParameters['id']!)),
+                routes: <RouteBase>[
+                  GoRoute(path: 'edit', pageBuilder: (_, s) => detailPage(s, AdminEditUserScreen(userId: s.pathParameters['id']!))),
+                ],
+              ),
             ],
           ),
           GoRoute(path: '/admin/audit', pageBuilder: (_, s) => tabPage(s, AuditScreen(userId: s.uri.queryParameters['userId']))),

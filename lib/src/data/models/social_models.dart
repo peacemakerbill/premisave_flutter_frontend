@@ -111,12 +111,32 @@ class ProfileViewEntry {
   final DateTime? at;
   final int? count;
 
+  /// The service names the person in the row with a prefix: `viewerId`, `viewerName` and
+  /// `viewerProfilePicture` for someone who looked at me, `targetId`, `targetName`, `targetUsername` and
+  /// `targetProfilePicture` for someone I looked at. A nested `viewer`, `user`, `target` or `profile`
+  /// object is read too, and so is a plain row.
   static DirectoryEntry _user(Map<String, dynamic> j) {
     for (final key in ['viewer', 'user', 'target', 'profile']) {
       final inner = j[key];
       if (inner is Map) return DirectoryEntry(asMap(inner));
     }
+    for (final prefix in ['viewer', 'target']) {
+      final id = str(j['${prefix}Id']);
+      if (id == null) continue;
+      return DirectoryEntry(<String, dynamic>{
+        'id': id,
+        'name': _realName(j['${prefix}Name']),
+        'username': j['${prefix}Username'],
+        'profilePictureUrl': j['${prefix}ProfilePicture'] ?? j['${prefix}ProfilePictureUrl'],
+      });
+    }
     return DirectoryEntry(j);
+  }
+
+  /// An older service build joined missing names into "null null". That is not a name.
+  static String? _realName(Object? v) {
+    final t = str(v)?.replaceAll(RegExp(r'\bnull\b'), '').replaceAll(RegExp(r'\s+'), ' ').trim();
+    return (t == null || t.isEmpty) ? null : t;
   }
 }
 

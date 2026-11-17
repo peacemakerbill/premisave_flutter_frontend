@@ -48,6 +48,45 @@ class AdminRepository {
     return UserModel.fromJson(asMap(res));
   }
 
+  /// Changes every detail of an account in one call. The password is only sent when [password] is given.
+  Future<UserModel> update(
+    String id, {
+    required String username,
+    required String firstName,
+    required String middleName,
+    required String lastName,
+    required String email,
+    required String phoneNumber,
+    required String country,
+    required String address1,
+    required String address2,
+    required String language,
+    required Role role,
+    required bool active,
+    required bool verified,
+    required bool archived,
+    String? password,
+  }) async {
+    final res = await _api.put('/admin/users/update/${_id(id)}', body: <String, dynamic>{
+      'username': username.trim(),
+      'firstName': firstName.trim(),
+      'middleName': middleName.trim(),
+      'lastName': lastName.trim(),
+      'email': email.trim(),
+      'phoneNumber': phoneNumber.trim(),
+      'country': country.trim(),
+      'address1': address1.trim(),
+      'address2': address2.trim(),
+      'language': language,
+      'role': role.api,
+      'active': active,
+      'verified': verified,
+      'archived': archived,
+      if (password != null && password.isNotEmpty) 'password': password,
+    });
+    return UserModel.fromJson(asMap(res));
+  }
+
   Future<bool> emailExists(String email) async =>
       boolOr(await _api.get('/admin/users/exists/email/${_id(email)}'));
 
