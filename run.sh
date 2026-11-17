@@ -97,6 +97,9 @@ fi
 UNI=0
 case "${LC_ALL:-${LC_CTYPE:-${LANG:-}}}" in *[Uu][Tt][Ff]-8*|*[Uu][Tt][Ff]8*) UNI=1 ;; esac
 
+# a short window gets a compact menu so the arrow keys still work
+COMPACT=0; [ "$ROWS" -lt 22 ] && COMPACT=1
+
 ANIM=1
 if [ "$TTY" != 1 ] || [ "$COLOR" = 0 ] || [ "$OPT_QUICK" = 1 ] || [ "$OPT_YES" = 1 ]; then ANIM=0; fi
 
@@ -541,7 +544,7 @@ pick_platform() {
     menu_reset
     local MAP=() s_android=0 s_ios=0 s_linux=0 s_windows=0 s_macos=0 s_web=0
     if [ "${#ORDER[@]}" -gt 0 ]; then
-      menu_head "Ready to run"
+      [ "$COMPACT" = 1 ] || menu_head "Ready to run"
       for i in "${ORDER[@]}"; do
         menu_add "$(badge "${DEV_PLAT[i]}" "${DEV_EMU[i]}") ${DEV_NAME[i]}" "${DEV_ID[i]}"
         MAP+=("dev:$i")
@@ -552,7 +555,7 @@ pick_platform() {
       done
     fi
 
-    if [ $(( s_android + s_ios + s_linux + s_windows + s_macos + s_web )) -lt 6 ]; then
+    if [ "$COMPACT" != 1 ] && [ $(( s_android + s_ios + s_linux + s_windows + s_macos + s_web )) -lt 6 ]; then
       menu_head "Not ready on this computer"
       if [ "$s_android" = 0 ]; then menu_add "$(badge android 0) Phone or emulator" "plug in a phone with USB debugging, or start an emulator below" 0; MAP+=("x"); fi
       if [ "$s_ios" = 0 ]; then
@@ -574,7 +577,7 @@ pick_platform() {
       if [ "$s_web" = 0 ]; then menu_add "$(badge web 0) Browser" "run: flutter config --enable-web, and install Chrome or Chromium" 0; MAP+=("x"); fi
     fi
 
-    menu_head "More"
+    [ "$COMPACT" = 1 ] || menu_head "More"
     menu_add "Start an emulator or simulator" "" 1;      MAP+=("emu")
     menu_add "Look for devices again" "" 1;               MAP+=("refresh")
     menu_add "Check my setup with flutter doctor" "" 1;   MAP+=("doctor")
