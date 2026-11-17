@@ -55,3 +55,6 @@ final userStatusesProvider = FutureProvider.autoDispose.family<List<StatusPost>,
   ref.watch(messengerProvider.select((s) => s.statusRevision));
   return ref.watch(messengerRepositoryProvider).statusesOf(userId);
 });
+
+/// How many hours a sender can still edit a message, as the server sets it. 0 means editing is off.
+final editWindowProvider = FutureProvider.autoDispose<int>((ref) => ref.watch(messengerRepositoryProvider).editWindowHours());

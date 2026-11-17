@@ -178,6 +178,7 @@ class _ChatListPaneState extends ConsumerState<ChatListPane> {
           ),
           IconButton(tooltip: 'Search', icon: const Icon(Icons.search_rounded), onPressed: () => setState(() => _searching = true)),
           IconButton(tooltip: 'Join a group', icon: const Icon(Icons.qr_code_scanner_rounded), onPressed: () => context.push('/messages/join')),
+          IconButton(tooltip: 'Messenger settings', icon: const Icon(Icons.settings_outlined), onPressed: () => context.push('/messages/settings')),
         ],
       ),
     );

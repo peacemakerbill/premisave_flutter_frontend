@@ -7,11 +7,13 @@ import '../../core/theme/brand.dart';
 import '../../core/theme/palette.dart';
 import '../../core/widgets/widgets.dart';
 import '../../core/network/messenger_socket.dart';
+import '../../data/models/file_ref.dart';
 import '../../data/models/messenger_models.dart';
 import '../../data/repositories/messenger_repository.dart';
 import '../../state/messenger_controller.dart';
 import '../../state/messenger_providers.dart';
 import 'emoji_panel.dart';
+import 'file_actions.dart';
 import 'message_bubble.dart';
 import 'message_composer.dart';
 import 'messenger_common.dart';
@@ -131,6 +133,9 @@ class _ConversationPaneState extends ConsumerState<ConversationPane> with Widget
     final myId = _controller.meId;
     final mine = m.senderId == myId;
     final deleted = m.deleted || m.deletedForEveryone;
+    final editable = _canEdit(m, myId);
+    final editHours = ref.read(editWindowProvider).valueOrNull ?? 1;
+    final fileUrl = resolveMedia(m.mediaUrl);
 
     if (m.status == MDelivery.failed && m.isPending) {
       final pick = await showModalBottomSheet<String>(
@@ -181,7 +186,17 @@ class _ConversationPaneState extends ConsumerState<ConversationPane> with Widget
                 ),
               if (!deleted) ListTile(leading: const Icon(Icons.reply_rounded), title: const Text('Reply'), onTap: () => Navigator.of(ctx).pop('reply')),
               if (!deleted && m.content.trim().isNotEmpty) ListTile(leading: const Icon(Icons.copy_rounded), title: const Text('Copy text'), onTap: () => Navigator.of(ctx).pop('copy')),
-              if (_canEdit(m, myId)) ListTile(leading: const Icon(Icons.edit_outlined), title: const Text('Edit'), onTap: () => Navigator.of(ctx).pop('edit')),
+              if (!deleted && m.hasFile && fileUrl != null)
+                ListTile(leading: const Icon(Icons.download_rounded), title: const Text('Download'), onTap: () => Navigator.of(ctx).pop('save')),
+              if (mine && !deleted)
+                ListTile(
+                  leading: Icon(Icons.edit_outlined, color: editable ? null : ctx.mutedColor),
+                  title: Text(m.hasFile ? 'Edit caption' : 'Edit', style: editable ? null : TextStyle(color: ctx.mutedColor)),
+                  subtitle: editable
+                      ? null
+                      : Text(editHours <= 0 ? 'Editing messages is turned off' : 'A message can be edited for $editHours ${editHours == 1 ? 'hour' : 'hours'} after it is sent'),
+                  onTap: editable ? () => Navigator.of(ctx).pop('edit') : null,
+                ),
               ListTile(leading: const Icon(Icons.visibility_off_outlined), title: const Text('Delete for me'), onTap: () => Navigator.of(ctx).pop('delete-me')),
               if (mine && !deleted)
                 ListTile(
@@ -211,6 +226,8 @@ class _ConversationPaneState extends ConsumerState<ConversationPane> with Widget
       } else if (action == 'copy') {
         await Clipboard.setData(ClipboardData(text: m.content));
         if (mounted) showToast(context, 'Copied');
+      } else if (action == 'save') {
+        await saveFile(context, ref, FileRef.fromMessage(m, fileUrl));
       } else if (action == 'edit') {
         setState(() {
           _replyTo = null;
@@ -297,6 +314,7 @@ class _ConversationPaneState extends ConsumerState<ConversationPane> with Widget
   @override
   Widget build(BuildContext context) {
     final s = ref.watch(messengerProvider);
+    ref.watch(editWindowProvider); // keeps the edit window loaded so the Edit item can explain itself
     final chat = s.chatById(widget.chatId);
     final pal = context.pal;
 

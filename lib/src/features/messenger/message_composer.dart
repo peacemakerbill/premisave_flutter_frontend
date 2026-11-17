@@ -8,6 +8,7 @@ import '../../data/models/messenger_models.dart';
 import '../../data/repositories/messenger_repository.dart';
 import 'emoji_panel.dart';
 import 'messenger_common.dart';
+import 'send_preview_dialog.dart';
 
 /// Someone who can be tagged with @ in this chat.
 class MentionTarget {
@@ -150,7 +151,8 @@ class _MessageComposerState extends State<MessageComposer> {
 
   void _submit() {
     final text = _text.text.trim();
-    if (text.isEmpty) return;
+    final captionOnly = widget.editing?.hasFile ?? false; // a photo or file may have its caption cleared
+    if (text.isEmpty && !captionOnly) return;
     final ids = _mentionIds(text);
     if (widget.editing != null) {
       widget.onSaveEdit?.call(text, ids);
@@ -208,13 +210,7 @@ class _MessageComposerState extends State<MessageComposer> {
         files = one == null ? const <LocalFile>[] : <LocalFile>[one];
       }
       if (files.isEmpty || !mounted) return;
-      final caption = await promptDialog(
-        context,
-        title: files.length == 1 ? 'Send ${files.first.name}' : 'Send ${files.length} files',
-        label: 'Caption (optional)',
-        confirmLabel: 'Send',
-        multiline: false,
-      );
+      final caption = await showSendFilesPreview(context, files);
       if (caption == null) return;
       widget.onSendFiles(files, caption);
     } catch (e) {
@@ -226,8 +222,14 @@ class _MessageComposerState extends State<MessageComposer> {
   Widget build(BuildContext context) {
     final pal = context.pal;
     final editing = widget.editing != null;
+    final editingFile = widget.editing?.hasFile ?? false;
     final banner = editing
-        ? _Banner(icon: Icons.edit_outlined, title: 'Edit message', text: widget.editing!.content, onClose: widget.onCancelContext)
+        ? _Banner(
+            icon: Icons.edit_outlined,
+            title: editingFile ? 'Edit caption' : 'Edit message',
+            text: widget.editing!.content.trim().isNotEmpty ? widget.editing!.content : (widget.editing!.fileName ?? typeLabel(widget.editing!.type)),
+            onClose: widget.onCancelContext,
+          )
         : (widget.replyTo != null
             ? _Banner(
                 icon: Icons.reply_rounded,
@@ -277,6 +279,10 @@ class _MessageComposerState extends State<MessageComposer> {
                       child: Focus(
                         onKeyEvent: (node, event) {
                           // On desktop and web, Enter sends and Shift+Enter adds a line.
+                          if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.escape && widget.editing != null) {
+                            widget.onCancelContext?.call();
+                            return KeyEventResult.handled;
+                          }
                           if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.enter && !HardwareKeyboard.instance.isShiftPressed && context.isWide) {
                             _submit();
                             return KeyEventResult.handled;
@@ -291,7 +297,7 @@ class _MessageComposerState extends State<MessageComposer> {
                           textCapitalization: TextCapitalization.sentences,
                           keyboardType: TextInputType.multiline,
                           decoration: InputDecoration(
-                            hintText: editing ? 'Edit your message' : 'Message',
+                            hintText: editing ? (editingFile ? 'Add a caption' : 'Edit your message') : 'Message',
                             border: InputBorder.none,
                             enabledBorder: InputBorder.none,
                             focusedBorder: InputBorder.none,
@@ -311,7 +317,7 @@ class _MessageComposerState extends State<MessageComposer> {
                     child: IconButton.filled(
                       tooltip: editing ? 'Save' : 'Send',
                       style: IconButton.styleFrom(backgroundColor: pal.accent, foregroundColor: pal.accentInk, disabledBackgroundColor: pal.panel2),
-                      onPressed: _hasText ? _submit : null,
+                      onPressed: (_hasText || editingFile) ? _submit : null,
                       icon: Icon(editing ? Icons.check_rounded : Icons.send_rounded, size: 21),
                     ),
                   ),

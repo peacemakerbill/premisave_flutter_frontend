@@ -28,10 +28,12 @@ import '../features/home/home_screen.dart';
 import '../features/home/module_pages.dart';
 import '../features/overview/role_overview_page.dart';
 import '../features/explore/explore_content.dart';
+import '../features/messenger/downloaded_files_screen.dart';
 import '../features/messenger/group_info_screen.dart';
 import '../features/messenger/group_invite_screen.dart';
 import '../features/messenger/join_group_screen.dart';
 import '../features/messenger/messenger_screen.dart';
+import '../features/messenger/messenger_settings_screen.dart';
 import '../features/messenger/new_chat_screen.dart';
 import '../features/messenger/new_group_screen.dart';
 import '../features/messenger/past_statuses_screen.dart';
@@ -158,6 +160,8 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(path: 'new-group', pageBuilder: (_, s) => detailPage(s, const NewGroupScreen())),
               GoRoute(path: 'group/:id', pageBuilder: (_, s) => detailPage(s, GroupInfoScreen(groupId: s.pathParameters['id'] ?? ''))),
               GoRoute(path: 'group/:id/invite', pageBuilder: (_, s) => detailPage(s, GroupInviteScreen(groupId: s.pathParameters['id'] ?? ''))),
+              GoRoute(path: 'settings', pageBuilder: (_, s) => detailPage(s, const MessengerSettingsScreen())),
+              GoRoute(path: 'settings/downloads', pageBuilder: (_, s) => detailPage(s, const DownloadedFilesScreen())),
               GoRoute(path: 'join', pageBuilder: (_, s) => detailPage(s, const JoinGroupScreen())),
               GoRoute(path: 'join/:code', pageBuilder: (_, s) => detailPage(s, JoinGroupScreen(code: s.pathParameters['code']))),
               GoRoute(path: 'status/new', pageBuilder: (_, s) => detailPage(s, const StatusComposerScreen())),

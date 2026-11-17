@@ -5,8 +5,10 @@ import 'package:url_launcher/url_launcher.dart' show LaunchMode, launchUrl;
 
 import '../../core/theme/brand.dart';
 import '../../core/theme/palette.dart';
-import '../../core/utils/formatters.dart';
+import '../../data/models/file_ref.dart';
 import '../../data/models/messenger_models.dart';
+import 'file_preview.dart';
+import 'file_viewer_screen.dart';
 import 'messenger_common.dart';
 
 /// One message as a bubble: reply preview, text or file, reactions, time and delivery ticks.
@@ -83,7 +85,7 @@ class MessageBubble extends StatelessWidget {
         ],
       ));
     } else {
-      if (m.hasFile) children.add(_FileBody(message: m, mine: mine, fg: fg, soft: soft));
+      if (m.hasFile) children.add(m.type == MType.image ? _ImageBody(message: m) : FileAttachment(message: m, mine: mine, fg: fg, soft: soft));
       if (m.content.trim().isNotEmpty) {
         children.add(Padding(
           padding: EdgeInsets.only(top: m.hasFile ? 6 : 0),
@@ -105,7 +107,13 @@ class MessageBubble extends StatelessWidget {
       ),
     ));
 
-    final bubble = GestureDetector(
+    final canAct = onLongPress != null && !deleted && !m.isPending;
+    final bubble = _HoverMore(
+      enabled: canAct,
+      color: bg,
+      iconColor: fg,
+      onTap: onLongPress,
+      child: GestureDetector(
       onLongPress: onLongPress,
       onSecondaryTap: onLongPress,
       child: Container(
@@ -117,6 +125,7 @@ class MessageBubble extends StatelessWidget {
           border: mine ? null : Border.all(color: context.borderColor),
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: children),
+      ),
       ),
     );
 
@@ -202,73 +211,39 @@ class _ReplyPreview extends StatelessWidget {
   }
 }
 
-class _FileBody extends StatelessWidget {
-  const _FileBody({required this.message, required this.mine, required this.fg, required this.soft});
+/// A photo inside a bubble. Tapping it opens the viewer, where it can be zoomed and downloaded.
+class _ImageBody extends StatelessWidget {
+  const _ImageBody({required this.message});
 
   final MMessage message;
-  final bool mine;
-  final Color fg;
-  final Color soft;
 
   @override
   Widget build(BuildContext context) {
     final m = message;
     final url = resolveMedia(m.mediaUrl);
     final pending = m.status == MDelivery.sending && m.progress != null;
-
-    if (m.type == MType.image) {
-      return GestureDetector(
-        onTap: url == null ? null : () => openImageViewer(context, url, m.fileName),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 280, maxHeight: 320, minWidth: 160, minHeight: 120),
-            child: Stack(
-              alignment: Alignment.center,
-              children: <Widget>[
-                if (url != null)
-                  CachedNetworkImage(
-                    imageUrl: url,
-                    fit: BoxFit.cover,
-                    width: 280,
-                    placeholder: (_, __) => Container(height: 160, color: context.pal.panel2, alignment: Alignment.center, child: const CircularProgressIndicator(strokeWidth: 2)),
-                    errorWidget: (_, __, ___) => _brokenImage(context),
-                  )
-                else
-                  Container(width: 220, height: 160, color: context.pal.panel2, alignment: Alignment.center, child: Icon(Icons.image_outlined, color: context.mutedColor, size: 36)),
-                if (pending) _ProgressRing(value: m.progress ?? 0),
-              ],
-            ),
+    return GestureDetector(
+      onTap: url == null ? null : () => openFileViewer(context, FileRef.fromMessage(m, url)),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 280, maxHeight: 320, minWidth: 160, minHeight: 120),
+          child: Stack(
+            alignment: Alignment.center,
+            children: <Widget>[
+              if (url != null)
+                CachedNetworkImage(
+                  imageUrl: url,
+                  fit: BoxFit.cover,
+                  width: 280,
+                  placeholder: (_, __) => Container(height: 160, color: context.pal.panel2, alignment: Alignment.center, child: const CircularProgressIndicator(strokeWidth: 2)),
+                  errorWidget: (_, __, ___) => _brokenImage(context),
+                )
+              else
+                Container(width: 220, height: 160, color: context.pal.panel2, alignment: Alignment.center, child: Icon(Icons.image_outlined, color: context.mutedColor, size: 36)),
+              if (pending) _ProgressRing(value: m.progress ?? 0),
+            ],
           ),
-        ),
-      );
-    }
-
-    final icon = m.type == MType.video ? Icons.play_circle_outline_rounded : (m.type == MType.voice ? Icons.graphic_eq_rounded : Icons.insert_drive_file_outlined);
-    return InkWell(
-      borderRadius: BorderRadius.circular(10),
-      onTap: url == null ? null : () => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(color: (mine ? context.pal.accentInk : context.pal.accent).op(0.12), borderRadius: BorderRadius.circular(10)),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            pending
-                ? SizedBox(width: 34, height: 34, child: _ProgressRing(value: m.progress ?? 0, onBubble: false, color: fg))
-                : Icon(icon, size: 34, color: fg),
-            const SizedBox(width: 10),
-            Flexible(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Text(m.fileName ?? typeLabel(m.type), maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontWeight: FontWeight.w700, color: fg, fontSize: 14)),
-                  if ((m.fileSize ?? 0) > 0) Text(formatBytes(m.fileSize ?? 0), style: TextStyle(fontSize: 12, color: soft)),
-                ],
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -290,51 +265,73 @@ class _FileBody extends StatelessWidget {
       );
 }
 
-class _ProgressRing extends StatelessWidget {
-  const _ProgressRing({required this.value, this.onBubble = true, this.color});
+/// Shows a small arrow on a bubble while the pointer is over it, so on a computer the message actions
+/// (reply, react, edit, delete) are one click away instead of hidden behind a right click.
+class _HoverMore extends StatefulWidget {
+  const _HoverMore({required this.child, required this.enabled, required this.color, required this.iconColor, this.onTap});
 
-  final double value;
-  final bool onBubble;
-  final Color? color;
+  final Widget child;
+  final bool enabled;
+  final Color color;
+  final Color iconColor;
+  final VoidCallback? onTap;
+
+  @override
+  State<_HoverMore> createState() => _HoverMoreState();
+}
+
+class _HoverMoreState extends State<_HoverMore> {
+  bool _hover = false;
 
   @override
   Widget build(BuildContext context) {
-    final ring = SizedBox(
-      width: onBubble ? 46 : 34,
-      height: onBubble ? 46 : 34,
-      child: CircularProgressIndicator(value: value <= 0 ? null : value, strokeWidth: 3, color: color ?? Colors.white),
+    if (!widget.enabled) return widget.child;
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: <Widget>[
+          widget.child,
+          if (_hover)
+            Positioned(
+              top: 3,
+              right: 3,
+              child: Material(
+                color: widget.color.op(0.92),
+                shape: const CircleBorder(),
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: widget.onTap,
+                  child: Padding(padding: const EdgeInsets.all(2), child: Icon(Icons.keyboard_arrow_down_rounded, size: 20, color: widget.iconColor)),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
-    if (!onBubble) return ring;
+  }
+}
+
+class _ProgressRing extends StatelessWidget {
+  const _ProgressRing({required this.value});
+
+  final double value;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       width: 62,
       height: 62,
       decoration: const BoxDecoration(color: Color(0x88000000), shape: BoxShape.circle),
       alignment: Alignment.center,
-      child: ring,
+      child: SizedBox(
+        width: 46,
+        height: 46,
+        child: CircularProgressIndicator(value: value <= 0 ? null : value, strokeWidth: 3, color: Colors.white),
+      ),
     );
   }
-}
-
-/// Opens a photo full screen, with pinch to zoom.
-void openImageViewer(BuildContext context, String url, String? title) {
-  Navigator.of(context).push(MaterialPageRoute<void>(
-    fullscreenDialog: true,
-    builder: (_) => Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(backgroundColor: Colors.black, foregroundColor: Colors.white, title: Text(title ?? 'Photo', style: const TextStyle(fontSize: 15))),
-      body: Center(
-        child: InteractiveViewer(
-          maxScale: 5,
-          child: CachedNetworkImage(
-            imageUrl: url,
-            fit: BoxFit.contain,
-            placeholder: (_, __) => const CircularProgressIndicator(),
-            errorWidget: (_, __, ___) => const Icon(Icons.broken_image_outlined, color: Colors.white54, size: 48),
-          ),
-        ),
-      ),
-    ),
-  ));
 }
 
 /// Message text with links you can tap, invite links that open the join screen, and the words being searched marked.

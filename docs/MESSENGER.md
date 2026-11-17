@@ -7,13 +7,33 @@ The Messages tab talks to the **premisave-messenger-service**. It is a second ba
 | Area | What you can do |
 | --- | --- |
 | Chats | Private chats, search, mark as unread, delete a chat, unread badge on the Messages tab |
-| Messages | Send text, reply, edit within the allowed time, delete for me or for everyone, copy, retry a failed send, search inside a chat, mention people in a group |
+| Messages | Send text, reply, edit text or a file's caption within the allowed time, delete for me or for everyone, copy, retry a failed send, search inside a chat, mention people in a group |
 | Reactions | Tap an emoji under a message, or long press for the full emoji list |
-| Files | Photos, videos, audio and documents with a progress ring. Photos open full screen |
+| Files | Photos, videos, audio and documents with a progress ring. Each file shows a preview in the chat, opens inside the app and can be downloaded into a folder you choose (see Files and downloads) |
 | Live | New messages, delivery ticks and read receipts, typing, online and last seen, reactions and group changes all arrive over the socket |
 | Groups | Create, picture, name, description, add and remove members, admins, make someone the owner, leave. An owner must choose a new owner before leaving |
 | Invites | Invite link and QR code with an expiry and a use limit, revoke, join by link, join by scanning a QR code, tap an invite link inside a message |
 | Statuses | Text, photo, video and audio statuses for up to a day, view, like, react, comment, who saw it, past statuses |
+
+## Files and downloads
+
+**In the chat.** A photo shows the picture. A PDF shows its first page. A small text file shows its first lines. A video shows a poster with a play button. Audio has a player in the bubble. Word, Excel, PowerPoint, archives and everything else show a coloured tile with the file type. Under each file are its name, size and a download button that turns into a progress ring, then a tick.
+
+**Opening.** Tap a file to open it inside the app. Photos zoom, PDFs scroll, text files can be selected, audio and video play. Other types show their details and a button to download them and open them with another app. On Linux and Windows the video plugin does not exist, so videos open in the system player once downloaded.
+
+**Saving.** Files are saved to `Downloads/Premisave`, in a subfolder for each kind, the way WhatsApp and Telegram do it:
+
+| Kind | Default folder |
+| --- | --- |
+| Photos | `Premisave Images` |
+| Videos | `Premisave Video` |
+| Audio | `Premisave Audio` |
+| PDF, Word, Excel, PowerPoint, text | `Premisave Documents` |
+| Archives and anything else | `Premisave Other` |
+
+Open **Messenger settings** (the gear in the Messages header) to change the main folder or any single subfolder, and to see the files you have saved. Folder choices apply to the phone and computer apps. A web browser saves into its own Downloads folder and does not allow subfolders. When a folder cannot be written to, for example because the system forbids it, the file is saved in the app's own folder so it is not lost.
+
+**Editing.** Press and hold a message (or right click it, or use the arrow that appears on a bubble when the pointer is over it) and choose Edit. Press Esc to cancel. For a photo or file this edits the caption. The server decides how long a message can be edited: `MESSAGE_EDIT_WINDOW_HOURS`, one hour by default.
 
 ## Settings
 
@@ -43,6 +63,8 @@ The messenger service must also allow the app's origin when you run on the web (
 | `lib/src/data/models/messenger_models.dart` | Chats, messages, groups, invites, statuses |
 | `lib/src/state/messenger_controller.dart` | Holds the chats and open conversations, sends optimistically, reacts to live events |
 | `lib/src/state/messenger_providers.dart` | Group, invite and status data for the screens |
+| `lib/src/state/file_downloads.dart` | Download folders, the list of saved files and download progress |
+| `lib/src/core/files/` | File kinds and folders, and saving files (real folders on phones and computers, the browser's download on the web) |
 | `lib/src/features/messenger/` | All the screens and widgets |
 
 ## Group invite links from outside the app
