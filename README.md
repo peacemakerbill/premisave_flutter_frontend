@@ -141,7 +141,7 @@ Everything marked **live** talks to the real auth-service. The rest shows sample
 | Staff review | live | Queue and decisions on submitted applications |
 | Administration | live | User list and details, role changes, platform wide audit trail, final approval of applications |
 | Places | live | Address search and "what is here", through the auth-service when it has a Google key, free Photon search otherwise |
-| Messages | live | Chats, groups, replies, reactions, files, typing and online status, statuses, group invite links and QR codes, through the messenger service. See [docs/MESSENGER.md](docs/MESSENGER.md) |
+| Messages | live | Chats, groups, replies, reactions, files, typing and online status, statuses, group invite links and QR codes, voice and video calls (one to one, group, call links, screen share), through the messenger service. See [docs/MESSENGER.md](docs/MESSENGER.md) |
 | Bookings, payments, transactions, wishlists | sample | Screens are built, the services behind them are not |
 
 <img src="docs/assets/divider.svg" alt="" width="100%"/>

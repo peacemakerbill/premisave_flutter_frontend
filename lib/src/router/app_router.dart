@@ -29,6 +29,7 @@ import '../features/home/home_screen.dart';
 import '../features/home/module_pages.dart';
 import '../features/overview/role_overview_page.dart';
 import '../features/explore/explore_content.dart';
+import '../features/calls/call_link_screen.dart';
 import '../features/messenger/downloaded_files_screen.dart';
 import '../features/messenger/group_info_screen.dart';
 import '../features/messenger/group_invite_screen.dart';
@@ -118,6 +119,8 @@ final routerProvider = Provider<GoRouter>((ref) {
     routes: <RouteBase>[
       GoRoute(path: '/', redirect: (_, __) => '/home'),
       // Group invite links and QR codes open the app here: https://premisave.com/join/CODE
+      // Call links open the app here: https://premisave.com/call/CODE
+      GoRoute(path: '/call/:code', redirect: (_, s) => '/messages/calls/join/${Uri.encodeComponent(s.pathParameters['code'] ?? '')}'),
       GoRoute(path: '/join/:code', redirect: (_, s) => '/messages/join/${Uri.encodeComponent(s.pathParameters['code'] ?? '')}'),
       GoRoute(path: '/splash', pageBuilder: (_, s) => fadePage(s, const SplashScreen())),
       GoRoute(path: '/welcome', pageBuilder: (_, s) => fadePage(s, const WelcomeScreen())),
@@ -165,6 +168,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(path: 'notifications', pageBuilder: (_, s) => detailPage(s, const NotificationsScreen())),
               GoRoute(path: 'settings', pageBuilder: (_, s) => detailPage(s, const MessengerSettingsScreen())),
               GoRoute(path: 'settings/downloads', pageBuilder: (_, s) => detailPage(s, const DownloadedFilesScreen())),
+              GoRoute(path: 'calls/join/:code', pageBuilder: (_, s) => detailPage(s, CallLinkScreen(code: s.pathParameters['code'] ?? ''))),
               GoRoute(path: 'join', pageBuilder: (_, s) => detailPage(s, const JoinGroupScreen())),
               GoRoute(path: 'join/:code', pageBuilder: (_, s) => detailPage(s, JoinGroupScreen(code: s.pathParameters['code']))),
               GoRoute(path: 'status/new', pageBuilder: (_, s) => detailPage(s, const StatusComposerScreen())),

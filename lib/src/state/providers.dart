@@ -6,6 +6,7 @@ import '../core/storage/token_store.dart';
 import '../data/repositories/admin_repository.dart';
 import '../data/repositories/application_repository.dart';
 import '../data/repositories/auth_repository.dart';
+import '../data/repositories/call_repository.dart';
 import '../data/repositories/contact_repository.dart';
 import '../data/repositories/messenger_repository.dart';
 import '../data/repositories/place_repository.dart';
@@ -47,3 +48,5 @@ final messengerApiClientProvider = Provider<ApiClient>((ref) {
 
 final messengerRepositoryProvider =
     Provider<MessengerRepository>((ref) => MessengerRepository(ref.watch(messengerApiClientProvider)));
+
+final callRepositoryProvider = Provider<CallRepository>((ref) => CallRepository(ref.watch(messengerApiClientProvider)));

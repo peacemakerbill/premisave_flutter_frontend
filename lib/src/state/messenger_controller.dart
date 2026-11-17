@@ -170,16 +170,26 @@ class MessengerController extends Notifier<MessengerState> {
   bool _wasDown = false;
   DateTime _lastTypingSent = DateTime.fromMillisecondsSinceEpoch(0);
   final Map<String, Timer> _typingTimers = <String, Timer>{};
+  final StreamController<Map<String, dynamic>> _callEvents = StreamController<Map<String, dynamic>>.broadcast();
   final Map<String, Future<MMessage> Function(MMessage local)> _jobs = <String, Future<MMessage> Function(MMessage local)>{};
 
   MessengerRepository get _repo => ref.read(messengerRepositoryProvider);
+
+  /// Live call events from the server (/user/queue/calls), for the call controller.
+  Stream<Map<String, dynamic>> get callEvents => _callEvents.stream;
+
+  /// Tells the server this phone is ringing for [callId]. Returns false when the live line is down.
+  bool sendCallRinging(String callId) => _socket?.sendCallRinging(callId) ?? false;
 
   /// The signed-in person's id as the messenger service knows it.
   String get meId => state.me?.id ?? ref.read(sessionProvider).user?.id ?? '';
 
   @override
   MessengerState build() {
-    ref.onDispose(_stop);
+    ref.onDispose(() {
+      _stop();
+      _callEvents.close();
+    });
     ref.listen<bool>(sessionProvider.select((s) => s.isSignedIn), (prev, next) {
       if (next) {
         _begin();
@@ -674,6 +684,9 @@ class MessengerController extends Notifier<MessengerState> {
         break;
       case '/user/queue/notifications':
         _onNotification(d);
+        break;
+      case '/user/queue/calls':
+        if (!_callEvents.isClosed) _callEvents.add(d);
         break;
       case '/topic/presence':
         _onPresence(d);

@@ -9,10 +9,11 @@ import '../../core/network/messenger_socket.dart';
 import '../../data/models/messenger_models.dart';
 import '../../state/messenger_controller.dart';
 import '../../state/messenger_providers.dart';
+import '../calls/calls_tab.dart';
 import 'messenger_common.dart';
 import 'status_tab.dart';
 
-enum _Section { chats, status }
+enum _Section { chats, calls, status }
 
 /// The list of chats with a Status tab beside it. On a wide screen it sits to the left of the open chat.
 class ChatListPane extends ConsumerStatefulWidget {
@@ -112,7 +113,9 @@ class _ChatListPaneState extends ConsumerState<ChatListPane> {
         backgroundColor: Colors.transparent,
         floatingActionButton: _section == _Section.chats
             ? FloatingActionButton(heroTag: 'new-chat', tooltip: 'New chat or group', onPressed: _newMenu, child: const Icon(Icons.edit_outlined))
-            : FloatingActionButton(heroTag: 'new-status', tooltip: 'Add status', onPressed: () => context.push('/messages/status/new'), child: const Icon(Icons.add_a_photo_outlined)),
+            : _section == _Section.calls
+                ? FloatingActionButton(heroTag: 'new-call', tooltip: 'New call', onPressed: () => showNewCallSheet(context, ref), child: const Icon(Icons.add_call))
+                : FloatingActionButton(heroTag: 'new-status', tooltip: 'Add status', onPressed: () => context.push('/messages/status/new'), child: const Icon(Icons.add_a_photo_outlined)),
         body: SafeArea(
           bottom: false,
           child: Column(
@@ -122,7 +125,7 @@ class _ChatListPaneState extends ConsumerState<ChatListPane> {
               Expanded(
                 child: _section == _Section.status
                     ? const StatusTab()
-                    : _chats(context, s, chats, query),
+                    : (_section == _Section.calls ? const CallsTab() : _chats(context, s, chats, query)),
               ),
             ],
           ),
@@ -214,6 +217,8 @@ class _ChatListPaneState extends ConsumerState<ChatListPane> {
       padding: const EdgeInsets.fromLTRB(14, 8, 14, 6),
       child: Row(children: <Widget>[
         tab(_Section.chats, 'Chats', badge: unread),
+        const SizedBox(width: 6),
+        tab(_Section.calls, 'Calls'),
         const SizedBox(width: 6),
         tab(_Section.status, 'Status'),
       ]),

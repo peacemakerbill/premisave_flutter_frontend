@@ -136,6 +136,8 @@ class _NotificationTile extends StatelessWidget {
         return (Icons.alternate_email_rounded, pal.accent);
       case 'MENTIONED_ALL':
         return (Icons.campaign_outlined, pal.accent);
+      case 'MISSED_CALL':
+        return (Icons.phone_missed_rounded, pal.bad);
       default:
         return (Icons.notifications_none_rounded, pal.accent);
     }

@@ -9,6 +9,7 @@ import '../../data/models/file_ref.dart';
 import '../../data/models/messenger_models.dart';
 import 'file_preview.dart';
 import 'file_viewer_screen.dart';
+import '../calls/call_bubble.dart';
 import 'messenger_common.dart';
 
 /// One message as a bubble: reply preview, text or file, reactions, time and delivery ticks.
@@ -88,6 +89,8 @@ class MessageBubble extends StatelessWidget {
           Text('This message was deleted', style: TextStyle(fontStyle: FontStyle.italic, color: soft, fontSize: 14)),
         ],
       ));
+    } else if (m.type == MType.call && m.call != null) {
+      children.add(CallLineBody(line: m.call!, chatId: m.chatId, mine: mine, myId: myId, fg: fg, soft: soft));
     } else {
       if (m.hasFile) children.add(m.type == MType.image ? _ImageBody(message: m) : FileAttachment(message: m, mine: mine, fg: fg, soft: soft));
       if (m.content.trim().isNotEmpty) {

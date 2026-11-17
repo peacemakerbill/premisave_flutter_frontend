@@ -47,6 +47,12 @@ dependencies:
   audioplayers: ^6.1.0
   video_player: ^2.9.0
   pdfrx: ^2.0.0
+  # Audio and video calls. LiveKit is the media engine. flutter_webrtc is pulled in by livekit_client; it is listed
+  # here because the call screen uses its screen capture helpers directly.
+  livekit_client: ^2.13.1
+  flutter_webrtc: any
+  # Keeps Android screen sharing alive while the app is in the background.
+  flutter_background: ^1.3.0+1
 
 dev_dependencies:
   flutter_test:
@@ -56,6 +62,9 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  assets:
+    - assets/sounds/
 
   fonts:
     - family: PlusJakartaSans

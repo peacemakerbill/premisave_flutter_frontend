@@ -40,6 +40,7 @@ class MessengerSocket {
     '/user/queue/status',
     '/user/queue/groups',
     '/user/queue/notifications',
+    '/user/queue/calls',
     '/topic/presence',
   ];
 
@@ -108,6 +109,9 @@ class MessengerSocket {
 
   /// Tells the sender you read a message. Returns false when the line is down.
   bool sendRead(String messageId, String chatId) => _send('/app/chat.read', <String, dynamic>{'id': messageId, 'chatId': chatId});
+
+  /// Tells the server this phone is ringing for a call, so the caller's screen can say "Ringing".
+  bool sendCallRinging(String callId) => _send('/app/call.ringing', <String, dynamic>{'callId': callId});
 
   /// Returns false when the line is down, so the caller can use REST instead.
   bool _send(String destination, Map<String, dynamic> body) {

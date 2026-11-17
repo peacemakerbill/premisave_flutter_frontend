@@ -85,3 +85,38 @@ A bell in the Messages header opens the notifications. It shows how many are unr
 New ones arrive live on the `/user/queue/notifications` channel, so the bell updates and a short message appears on screen right away. The messenger service also stores them, so ones that came while you were offline are waiting in the list, and it emails them through auth-service (see the messenger README for `INTERNAL_API_KEY`).
 
 Nothing is sent to the person who did the action themselves.
+
+## Calls
+
+Voice and video calls live inside Messenger. The messenger service (see its `docs/CALLS.md`) decides who is in a call and hands out tokens. The audio, video and screen share travel between the app and a LiveKit server, using the `livekit_client` package. Nothing about calls works until LiveKit is running and the messenger service has `LIVEKIT_API_KEY` and `LIVEKIT_API_SECRET` set.
+
+What the app does:
+
+- **Call from a chat.** A video and a voice button sit in every chat header. In a group, everyone is rung at once. If a call is already running in the chat, the same buttons join it, and a green strip above the messages says "Call in progress, Join".
+- **Incoming calls.** They ring over whatever screen is open, with a ringtone, and over the call screen as a small banner when someone is already on a call.
+- **In the call.** Mute, camera on and off, flip camera and speaker on phones, share screen, raise hand, reactions, a chat that only the people in the call see, and a People list. A host can mute people, mute everyone, make a co-host, hand over hosting, remove someone, lock the call and add people while it runs. Anyone in the call can add people.
+- **Layouts.** A grid, a speaker view, and a presentation view that fills the stage when someone shares a screen. In a one to one call the other person fills the screen and your own camera floats in a corner (tap to swap). Tap a tile to pin it.
+- **Minimise.** The down arrow shrinks the call to a green bar above the app. Tap the bar to come back. The Android back button also minimises.
+- **Calls tab.** The Messages screen has a Calls tab: create a call link, join with a link, and the list of calls made and missed with a call back button. A call also appears in the chat as a line (Missed video call, Voice call, 3 min).
+- **Call links.** `https://premisave.com/call/CODE` opens `/call/CODE`, which shows who is on the call and a Join button. Pasting a link on the Calls tab does the same.
+
+| Folder or file | Job |
+| --- | --- |
+| `lib/src/state/call_controller.dart` | Rings, owns the call being joined (the LiveKit room, microphone, camera, screen share, hand, reactions, call chat) |
+| `lib/src/state/call_providers.dart` | Call history and the call running in a chat |
+| `lib/src/data/repositories/call_repository.dart` | Every call REST call |
+| `lib/src/data/models/call_models.dart` | Calls, people, events, call chat |
+| `lib/src/features/calls/` | The call screen, incoming call card, minimised bar, Calls tab, call link screen |
+| `assets/sounds/` | Ringtone, ringback tone, join and leave sounds. `tool/call_sounds.py` makes them again |
+
+### Platform notes
+
+- **Android**: camera, microphone, Bluetooth and foreground service permissions are in `AndroidManifest.xml`. Screen sharing shows a notification while it runs (that is Android's rule). On the emulator the app swaps `localhost` for `10.0.2.2` in the media server address.
+- **iPhone and iPad**: camera and microphone texts and background audio are in `Info.plist`. Sharing the screen from iOS needs a broadcast extension and is not in the app, so the share button is hidden there.
+- **macOS**: camera, microphone and network entitlements are added. The first call asks for permission.
+- **Linux and Windows**: the share button opens a picker of screens and windows. On Linux with Wayland, capturing may be limited; the X11 session works best.
+- **Web**: needs HTTPS or localhost for the camera and microphone. The browser's own screen picker opens when sharing.
+
+### Not included
+
+Calls ring only while the app is open or running in the background. There is no push ringing when the app is closed (that needs FCM and APNs, and CallKit on iPhone). There is no recording and no waiting room.

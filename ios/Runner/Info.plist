@@ -34,7 +34,13 @@
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Premisave uses your location only when you choose to set it on your profile.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>This app needs access to the camera to take profile pictures</string>
+	<string>Premisave uses the camera for profile pictures and for video calls.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Premisave uses the microphone for voice and video calls and for voice messages.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app needs access to the photo library to select profile pictures</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>

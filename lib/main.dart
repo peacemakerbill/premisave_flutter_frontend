@@ -5,6 +5,7 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 
 import 'src/core/theme/app_theme.dart';
 import 'src/core/widgets/theme_reveal.dart';
+import 'src/features/calls/call_host.dart';
 import 'src/data/social_auth_service.dart';
 import 'src/router/app_router.dart';
 import 'src/state/appearance_controller.dart';
@@ -36,20 +37,26 @@ class PremisaveApp extends ConsumerStatefulWidget {
   ConsumerState<PremisaveApp> createState() => _PremisaveAppState();
 }
 
-class _PremisaveAppState extends ConsumerState<PremisaveApp> {
+class _PremisaveAppState extends ConsumerState<PremisaveApp> with WidgetsBindingObserver {
   final GlobalKey<ThemeRevealState> _reveal = GlobalKey<ThemeRevealState>();
 
   @override
   void initState() {
     super.initState();
     HardwareKeyboard.instance.addHandler(_onKey);
+    // Registered before the router's own listener, so the back button can shrink an open call first.
+    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
   void dispose() {
     HardwareKeyboard.instance.removeHandler(_onKey);
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
+
+  @override
+  Future<bool> didPopRoute() => handleCallBackButton(ref);
 
   /// T steps to the next theme and Shift+T to the previous one, as in the console.
   /// Ignored while typing in a field or when another modifier key is held.
@@ -85,7 +92,7 @@ class _PremisaveAppState extends ConsumerState<PremisaveApp> {
       themeMode: palette == null ? ThemeMode.system : (palette.dark ? ThemeMode.dark : ThemeMode.light),
       themeAnimationDuration: Duration.zero,
       routerConfig: router,
-      builder: (context, child) => ThemeReveal(key: _reveal, child: child ?? const SizedBox.shrink()),
+      builder: (context, child) => ThemeReveal(key: _reveal, child: CallHost(child: child ?? const SizedBox.shrink())),
     );
   }
 }

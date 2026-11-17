@@ -1,3 +1,4 @@
+import 'call_models.dart';
 import 'json_utils.dart';
 
 // Plain Dart objects for the messenger service. Every reader is forgiving, so a missing field never crashes a screen.
@@ -81,7 +82,7 @@ class MUser {
 
 // ---------------------------------------------------------------- messages
 
-enum MType { text, image, video, voice, document, other }
+enum MType { text, image, video, voice, document, other, call }
 
 MType mTypeOf(Object? v) {
   switch (strOr(v).toUpperCase()) {
@@ -97,6 +98,8 @@ MType mTypeOf(Object? v) {
     case 'DOCUMENT':
     case 'FILE':
       return MType.document;
+    case 'CALL':
+      return MType.call;
     default:
       return MType.other;
   }
@@ -115,6 +118,7 @@ String mTypeApi(MType t) {
     case MType.document:
       return 'DOCUMENT';
     case MType.other:
+    case MType.call:
       return 'TEXT';
   }
 }
@@ -178,6 +182,7 @@ class MMessage {
     this.fileSize,
     this.mimeType,
     this.attachmentId,
+    this.call,
     this.status = MDelivery.sent,
     this.readBy = const <String>[],
     required this.createdAt,
@@ -206,6 +211,9 @@ class MMessage {
   final int? fileSize;
   final String? mimeType;
   final String? attachmentId;
+
+  /// For a call line (type [MType.call]): how the call went.
+  final CallLine? call;
   final MDelivery status;
   final List<String> readBy;
   final DateTime createdAt;
@@ -242,6 +250,7 @@ class MMessage {
       fileSize: intOrNull(j['fileSize']),
       mimeType: str(j['mimeType']),
       attachmentId: str(j['attachmentId']),
+      call: j['call'] is Map ? CallLine.fromJson(asMap(j['call'])) : (str(j['callId']) == null ? null : CallLine(callId: strOr(j['callId']))),
       status: mStatusOf(j['status']),
       readBy: stringList(j['readBy']),
       createdAt: _when(j['createdAt'] ?? j['timestamp']) ?? DateTime.now(),
@@ -287,6 +296,7 @@ class MMessage {
         fileSize: fileSize,
         mimeType: mimeType,
         attachmentId: attachmentId ?? this.attachmentId,
+        call: call,
         status: status ?? this.status,
         readBy: readBy ?? this.readBy,
         createdAt: createdAt,
@@ -328,7 +338,7 @@ class MMessage {
         progress: type == MType.text ? null : 0,
       );
 
-  bool get hasFile => type != MType.text && type != MType.other;
+  bool get hasFile => type != MType.text && type != MType.other && type != MType.call;
   bool get isPending => localId != null && (status == MDelivery.sending || status == MDelivery.failed);
 
   /// Everyone's reaction count for one emoji.
@@ -905,7 +915,7 @@ class MNotification {
 
   final String id;
 
-  /// MADE_ADMIN, REMOVED_ADMIN, BECAME_OWNER, ADDED_TO_GROUP, REMOVED_FROM_GROUP, MENTIONED or MENTIONED_ALL.
+  /// MADE_ADMIN, REMOVED_ADMIN, BECAME_OWNER, ADDED_TO_GROUP, REMOVED_FROM_GROUP, MENTIONED, MENTIONED_ALL or MISSED_CALL.
   final String type;
   final String title;
   final String body;

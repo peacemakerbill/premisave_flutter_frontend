@@ -10,8 +10,11 @@ import '../../core/network/messenger_socket.dart';
 import '../../data/models/file_ref.dart';
 import '../../data/models/messenger_models.dart';
 import '../../data/repositories/messenger_repository.dart';
+import '../../data/models/call_models.dart';
+import '../../state/call_controller.dart';
 import '../../state/messenger_controller.dart';
 import '../../state/messenger_providers.dart';
+import '../calls/active_call_banner.dart';
 import 'emoji_panel.dart';
 import 'file_actions.dart';
 import 'message_bubble.dart';
@@ -379,6 +382,7 @@ class _ConversationPaneState extends ConsumerState<ConversationPane> with Widget
     return Column(
       children: <Widget>[
         _header(context, chat, subtitle, typing || presence.online),
+        ActiveCallBanner(chatId: chat.id),
         if (s.connection != SocketState.open && s.chatsLoaded)
           Container(
             width: double.infinity,
@@ -485,8 +489,10 @@ class _ConversationPaneState extends ConsumerState<ConversationPane> with Widget
                   ),
                 ),
               ),
-              IconButton(tooltip: 'Search', onPressed: () => setState(() => _searching = true), icon: const Icon(Icons.search_rounded)),
-              IconButton(tooltip: 'More', onPressed: () => _chatMenu(chat), icon: const Icon(Icons.more_vert_rounded)),
+              IconButton(visualDensity: VisualDensity.compact, tooltip: 'Video call', onPressed: () => ref.read(callProvider.notifier).startCall(chat.id, CallMedia.video), icon: const Icon(Icons.videocam_outlined)),
+              IconButton(visualDensity: VisualDensity.compact, tooltip: 'Voice call', onPressed: () => ref.read(callProvider.notifier).startCall(chat.id, CallMedia.audio), icon: const Icon(Icons.call_outlined)),
+              IconButton(visualDensity: VisualDensity.compact, tooltip: 'Search', onPressed: () => setState(() => _searching = true), icon: const Icon(Icons.search_rounded)),
+              IconButton(visualDensity: VisualDensity.compact, tooltip: 'More', onPressed: () => _chatMenu(chat), icon: const Icon(Icons.more_vert_rounded)),
             ],
           ),
         ),

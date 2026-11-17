@@ -86,6 +86,8 @@ String typeLabel(MType t) {
       return 'Audio';
     case MType.document:
       return 'File';
+    case MType.call:
+      return 'Call';
     case MType.text:
     case MType.other:
       return 'Message';
@@ -102,6 +104,8 @@ IconData typeIcon(MType t) {
       return Icons.mic_none_rounded;
     case MType.document:
       return Icons.insert_drive_file_outlined;
+    case MType.call:
+      return Icons.call_outlined;
     case MType.text:
     case MType.other:
       return Icons.chat_bubble_outline_rounded;
