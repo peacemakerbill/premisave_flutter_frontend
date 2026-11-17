@@ -54,7 +54,7 @@ On a real phone use your computer's address on the network, for example `--dart-
 
 1. Start the auth-service on port 8080.
 2. Start the messenger service on port 8081. It needs MongoDB and Redis, and it must use the same `JWT_SECRET` as the auth-service so the token is accepted.
-3. For calls, start LiveKit (and the recorder, for recording) from `deploy/livekit` in the messenger repository, and set `LIVEKIT_API_KEY` and `LIVEKIT_API_SECRET` for the messenger.
+3. For calls, start LiveKit (and the recorder, for recording) from `deploy/livekit` in the messenger repository, and set `LIVEKIT_API_KEY` and `LIVEKIT_API_SECRET` for the messenger. The steps, with the commands to check and stop it, are in [Set up and run LiveKit](https://github.com/peacemakerbill/premisave-messenger-service#set-up-and-run-livekit).
 4. Run the app as usual.
 
 Both services ship with a Docker setup, so on a development machine this is two commands, one in each repository, with no Java or databases to install:

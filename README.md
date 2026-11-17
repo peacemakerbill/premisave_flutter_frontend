@@ -146,6 +146,8 @@ The two backends ship with a Docker setup, so a full development system is a few
 (cd premisave_flutter_frontend && ./run.sh)                                                 # 4. the app
 ```
 
+The first time you want calls, make the key, the secret and the recordings folder, and have a Redis on port 6379, before step 3. Each step is in [Set up and run LiveKit](https://github.com/peacemakerbill/premisave-messenger-service#set-up-and-run-livekit) in the messenger README. Starting LiveKit does not change anything else: chat works with or without it.
+
 Check the backends with `curl http://localhost:8080/health` and `curl http://localhost:8081/health`. Stop them with `docker compose down` in each folder. The data stays in Docker volumes, and `docker compose down -v` wipes it.
 
 | Where the backends run | What to tell the app |
