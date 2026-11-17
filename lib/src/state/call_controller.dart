@@ -1097,6 +1097,12 @@ class CallSession extends ChangeNotifier {
           lk.ScreenShareCaptureOptions(sourceId: sourceId, maxFrameRate: 15),
         );
         await lp.publishVideoTrack(track);
+      } else if (kIsWeb) {
+        // Keep this app's own tab out of the browser's list, so nobody shares the call by accident.
+        await lp.setScreenShareEnabled(
+          true,
+          screenShareCaptureOptions: const lk.ScreenShareCaptureOptions(selfBrowserSurface: 'exclude'),
+        );
       } else {
         await lp.setScreenShareEnabled(true);
       }

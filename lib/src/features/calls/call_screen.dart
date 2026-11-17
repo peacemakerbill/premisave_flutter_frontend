@@ -205,9 +205,6 @@ class _CallScreenState extends ConsumerState<CallScreen> {
     for (final t in tiles) {
       if (t.isScreen && !t.isLocal) return t;
     }
-    for (final t in tiles) {
-      if (t.isScreen) return t;
-    }
     if (_speakerView) {
       for (final t in tiles) {
         if (t.speaking && !t.isLocal && !t.isScreen) {
@@ -550,10 +547,53 @@ class _CallScreenState extends ConsumerState<CallScreen> {
       msgs.add(_pill(Icons.wifi_off_rounded, 'Connection is weak. Trying to reconnect', CallColors.hand));
     }
     if (_s.sharing) {
-      msgs.add(_pill(Icons.screen_share_rounded, 'You are sharing your screen', CallColors.speaking));
+      msgs.add(_presenting());
     }
     if (msgs.isEmpty) return const SizedBox.shrink();
     return Padding(padding: const EdgeInsets.only(bottom: 6), child: Wrap(spacing: 8, runSpacing: 6, alignment: WrapAlignment.center, children: msgs));
+  }
+
+  /// Shown to the person who is presenting, in place of their own screen, which is never drawn back to them.
+  Widget _presenting() {
+    return Semantics(
+      button: true,
+      label: 'You are presenting your screen. Tap to stop.',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: _toggleShare,
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(12, 6, 6, 6),
+            decoration: BoxDecoration(
+              color: CallColors.speaking.withValues(alpha: 0.16),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: CallColors.speaking, width: 1),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                const Icon(Icons.screen_share_rounded, size: 16, color: CallColors.speaking),
+                const SizedBox(width: 8),
+                const Flexible(
+                  child: Text(
+                    'You are presenting your screen',
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: CallColors.text, fontSize: 12.5, fontWeight: FontWeight.w600),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(color: CallColors.speaking, borderRadius: BorderRadius.circular(14)),
+                  child: const Text('Stop', style: TextStyle(color: CallColors.bg, fontSize: 12, fontWeight: FontWeight.w800)),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   /// Tells this person, and nobody else, that they are talking while muted. Tapping it unmutes.
@@ -613,7 +653,9 @@ class _CallScreenState extends ConsumerState<CallScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final tiles = _s.tiles();
+    // Your own shared screen is never drawn back to you. Showing it would put the call inside the call, over and over,
+    // like two mirrors facing each other. Everyone else still sees it, and you see a note that you are presenting.
+    final tiles = _s.tiles().where((t) => !(t.isScreen && t.isLocal)).toList();
     final side = _wide && _panel != _Panel.none;
     return Scaffold(
       backgroundColor: CallColors.bg,
