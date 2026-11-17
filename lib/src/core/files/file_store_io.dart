@@ -5,7 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart' show FilePicker;
 import 'package:open_filex/open_filex.dart' show OpenFilex, ResultType;
 import 'package:path_provider/path_provider.dart' show getApplicationDocumentsDirectory, getDownloadsDirectory, getExternalStorageDirectory;
-import 'package:permission_handler/permission_handler.dart' show Permission;
+import 'package:permission_handler/permission_handler.dart';
 
 import 'file_kinds.dart';
 
