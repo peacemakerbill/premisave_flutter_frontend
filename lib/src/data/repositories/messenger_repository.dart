@@ -140,21 +140,21 @@ class MessengerRepository {
 
   Future<MGroup> group(String groupId) async => MGroup.fromJson(asMap(await _api.get('/api/groups/${_id(groupId)}')));
 
-  Future<void> addMembers(String groupId, List<String> userIds) => _api.post('/api/groups/${_id(groupId)}/members/bulk', body: userIds);
+  Future<void> addMembers(String groupId, List<String> userIds) => _api.postPlain('/api/groups/${_id(groupId)}/members/bulk', body: userIds);
 
-  Future<void> removeMember(String groupId, String userId) => _api.delete('/api/groups/${_id(groupId)}/members/${_id(userId)}');
+  Future<void> removeMember(String groupId, String userId) => _api.deletePlain('/api/groups/${_id(groupId)}/members/${_id(userId)}');
 
   Future<void> addAdmin(String groupId, String userId) =>
-      _api.post('/api/groups/${_id(groupId)}/admins', query: <String, dynamic>{'userId': userId});
+      _api.postPlain('/api/groups/${_id(groupId)}/admins', query: <String, dynamic>{'userId': userId});
 
-  Future<void> removeAdmin(String groupId, String userId) => _api.delete('/api/groups/${_id(groupId)}/admins/${_id(userId)}');
+  Future<void> removeAdmin(String groupId, String userId) => _api.deletePlain('/api/groups/${_id(groupId)}/admins/${_id(userId)}');
 
   /// Makes someone else the owner. The old owner stays on as an admin.
   Future<void> transferOwnership(String groupId, String newOwnerId) =>
       _api.post('/api/groups/${_id(groupId)}/transfer-admin', query: <String, dynamic>{'newAdminId': newOwnerId});
 
   /// An owner with other members must name [newOwnerId]: that member takes over as the owner leaves.
-  Future<void> leaveGroup(String groupId, {String? newOwnerId}) => _api.post(
+  Future<void> leaveGroup(String groupId, {String? newOwnerId}) => _api.postPlain(
         '/api/groups/${_id(groupId)}/leave',
         query: newOwnerId == null ? null : <String, dynamic>{'newOwnerId': newOwnerId},
       );
@@ -190,7 +190,7 @@ class MessengerRepository {
     }
   }
 
-  Future<void> revokeInvite(String groupId) => _api.delete('/api/groups/${_id(groupId)}/invite');
+  Future<void> revokeInvite(String groupId) => _api.deletePlain('/api/groups/${_id(groupId)}/invite');
 
   Future<MInvitePreview> previewInvite(String code) async =>
       MInvitePreview.fromJson(asMap(await _api.get('/api/group-invites/${_id(code)}')));

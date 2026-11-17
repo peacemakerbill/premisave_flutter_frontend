@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
@@ -59,7 +61,13 @@ class ApiException implements Exception {
     }
 
     final status = e.response?.statusCode;
-    final data = e.response?.data;
+    Object? data = e.response?.data;
+    // A call made with a plain reply (see ApiClient.postPlain) hands back the error as JSON text. Read it as JSON.
+    if (data is String && data.trimLeft().startsWith('{')) {
+      try {
+        data = jsonDecode(data);
+      } catch (_) {}
+    }
     String? message;
     var fields = <String, String>{};
 

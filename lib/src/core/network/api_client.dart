@@ -185,6 +185,17 @@ class ApiClient {
   Future<dynamic> delete(String path, {Object? body, Map<String, dynamic>? query}) =>
       _run(() => dio.delete<dynamic>(path, data: body, queryParameters: query));
 
+  /// For endpoints that answer with a plain sentence such as "Invite link revoked", sometimes labelled as JSON.
+  /// The reply is not decoded, so a sentence cannot make a call that worked look like a failure.
+  Future<void> postPlain(String path, {Object? body, Map<String, dynamic>? query}) => _run(
+        () => dio.post<dynamic>(path, data: body, queryParameters: query, options: Options(responseType: ResponseType.plain)),
+      );
+
+  /// Same as [postPlain], for DELETE.
+  Future<void> deletePlain(String path, {Map<String, dynamic>? query}) => _run(
+        () => dio.delete<dynamic>(path, queryParameters: query, options: Options(responseType: ResponseType.plain)),
+      );
+
   /// multipart/form-data upload. [onProgress] gets the bytes sent so far and the total.
   Future<dynamic> upload(String path, FormData form, {void Function(int sent, int total)? onProgress}) => _run(
         () => dio.post<dynamic>(
