@@ -216,6 +216,7 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
       });
     } catch (e) {
       if (!mounted || turn != _turn) return;
+      if (kDebugMode) debugPrint('Address lookup failed: $e');
       setState(() {
         _place = Place.point(point.latitude, point.longitude);
         _resolving = false;

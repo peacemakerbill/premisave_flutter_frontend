@@ -14,6 +14,26 @@ struct _MyApplication {
 
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
 
+// Gives the window its icon, in several sizes so the window manager can pick the sharpest one. The files ship next to
+// the program in data/icons. Without them the window simply has no icon.
+static void set_window_icons(GtkWindow* window) {
+  g_autofree gchar* exe = g_file_read_link("/proc/self/exe", nullptr);
+  if (exe == nullptr) return;
+  g_autofree gchar* dir = g_path_get_dirname(exe);
+  GList* icons = nullptr;
+  const int sizes[] = {16, 24, 32, 48, 64, 128, 256, 512};
+  for (int size : sizes) {
+    g_autofree gchar* name = g_strdup_printf("premisave_%d.png", size);
+    g_autofree gchar* path = g_build_filename(dir, "data", "icons", name, nullptr);
+    GdkPixbuf* pixbuf = gdk_pixbuf_new_from_file(path, nullptr);
+    if (pixbuf != nullptr) icons = g_list_append(icons, pixbuf);
+  }
+  if (icons != nullptr) {
+    gtk_window_set_icon_list(window, icons);
+    g_list_free_full(icons, g_object_unref);
+  }
+}
+
 // Implements GApplication::activate.
 static void my_application_activate(GApplication* application) {
   MyApplication* self = MY_APPLICATION(application);
@@ -40,13 +60,14 @@ static void my_application_activate(GApplication* application) {
   if (use_header_bar) {
     GtkHeaderBar* header_bar = GTK_HEADER_BAR(gtk_header_bar_new());
     gtk_widget_show(GTK_WIDGET(header_bar));
-    gtk_header_bar_set_title(header_bar, "premisave_frontend");
+    gtk_header_bar_set_title(header_bar, "Premisave");
     gtk_header_bar_set_show_close_button(header_bar, TRUE);
     gtk_window_set_titlebar(window, GTK_WIDGET(header_bar));
   } else {
-    gtk_window_set_title(window, "premisave_frontend");
+    gtk_window_set_title(window, "Premisave");
   }
 
+  set_window_icons(window);
   gtk_window_set_default_size(window, 1280, 720);
   gtk_widget_show(GTK_WIDGET(window));
 

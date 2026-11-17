@@ -63,6 +63,7 @@ class PlaceSearcher extends ChangeNotifier {
         failed = false;
       } catch (e) {
         if (turn != _turn || (e is DioException && CancelToken.isCancel(e))) return;
+        if (kDebugMode) debugPrint('Address search failed: $e');
         results = const <PlaceSuggestion>[];
         failed = true;
       }

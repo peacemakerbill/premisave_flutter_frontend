@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import '../../core/config/app_config.dart';
 import '../../core/network/api_client.dart';
@@ -23,6 +24,8 @@ class PlaceRepository {
               connectTimeout: const Duration(seconds: 8),
               receiveTimeout: const Duration(seconds: 8),
               responseType: ResponseType.json,
+              // The free geocoder asks apps to say who they are. A browser sets its own and does not allow this header.
+              headers: kIsWeb ? null : <String, dynamic>{'User-Agent': 'Premisave-App/1.0'},
             ));
 
   final ApiClient _api;
