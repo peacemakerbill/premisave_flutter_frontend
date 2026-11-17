@@ -43,11 +43,36 @@ class CallRepository {
 
   // ---------------------------------------------------------------- call chat
 
-  Future<List<CallChatMsg>> messages(String callId) async =>
-      mapList(await _api.get('/api/calls/${_id(callId)}/messages')).map(CallChatMsg.fromJson).toList();
+  /// The call's chat, oldest first. It is kept after the call, so anyone who was in the call can read it later.
+  Future<List<CallChatMsg>> messages(String callId, {int limit = 100}) async => mapList(
+        await _api.get('/api/calls/${_id(callId)}/messages', query: <String, dynamic>{'limit': limit}),
+      ).map(CallChatMsg.fromJson).toList();
 
   Future<CallChatMsg> sendMessage(String callId, String text) async =>
       CallChatMsg.fromJson(asMap(await _api.post('/api/calls/${_id(callId)}/messages', body: <String, dynamic>{'text': text})));
+
+  // --------------------------------------------------------------- recording
+
+  /// A host or co-host starts recording the call.
+  Future<CallRecording> startRecording(String callId) async =>
+      CallRecording.fromJson(asMap(await _api.post('/api/calls/${_id(callId)}/recording/start')));
+
+  Future<CallRecording> stopRecording(String callId) async =>
+      CallRecording.fromJson(asMap(await _api.post('/api/calls/${_id(callId)}/recording/stop')));
+
+  /// The recordings of a call, newest first. Empty when recording is switched off.
+  Future<List<CallRecording>> recordings(String callId) async =>
+      mapList(await _api.get('/api/calls/${_id(callId)}/recordings')).map(CallRecording.fromJson).toList();
+
+  Future<void> deleteRecording(String callId, String recordingId) =>
+      _api.delete('/api/calls/${_id(callId)}/recordings/${_id(recordingId)}');
+
+  /// The switches the administrators control (recording on or off).
+  Future<CallSettings> settings() async => CallSettings.fromJson(asMap(await _api.get('/api/call-settings')));
+
+  /// Administrators only.
+  Future<CallSettings> setRecordingEnabled(bool enabled) async =>
+      CallSettings.fromJson(asMap(await _api.put('/api/call-settings/recording', body: <String, dynamic>{'enabled': enabled})));
 
   // ------------------------------------------------------------------ history
 

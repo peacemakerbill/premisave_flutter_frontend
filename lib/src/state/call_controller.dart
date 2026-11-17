@@ -486,6 +486,33 @@ class CallController extends Notifier<CallState> {
         }
         break;
 
+      case CallPushType.recordingStarted:
+        if (call != null) {
+          final wasRecording = mine?.call.recording ?? false;
+          _applyCall(call);
+          if (mine != null && !wasRecording && call.recording) _notice('This call is being recorded.');
+        }
+        state = state.copyWith(revision: state.revision + 1);
+        break;
+
+      case CallPushType.recordingStopped:
+        if (call != null) {
+          final wasRecording = mine?.call.recording ?? false;
+          _applyCall(call);
+          if (mine != null && wasRecording && !call.recording) _notice('Recording stopped. It will be in the call details soon.');
+        }
+        state = state.copyWith(revision: state.revision + 1);
+        break;
+
+      case CallPushType.recordingSetting:
+        if (call != null) {
+          final could = mine?.call.recordingEnabled ?? false;
+          _applyCall(call);
+          if (mine != null && could && !call.recordingEnabled) _notice('Call recording was switched off by an administrator.');
+        }
+        state = state.copyWith(revision: state.revision + 1);
+        break;
+
       case CallPushType.unknown:
         break;
     }
@@ -1276,6 +1303,35 @@ class CallSession extends ChangeNotifier {
   Future<void> removeOther(String userId) => _owner._repo.remove(callId, userId);
   Future<void> setRole(String userId, CallRole role) => _owner._repo.setRole(callId, userId, role);
   Future<void> setLocked(bool locked) => _owner._repo.setLocked(callId, locked);
+
+  // --------------------------------------------------------------- recording
+
+  bool recordBusy = false;
+
+  /// Whether this person may start or stop recording: a host or co-host, in a call that can be recorded.
+  bool get canRecord => isManager && _call.recordingEnabled && _call.isOpen;
+
+  /// Whether a recording is running. Everyone in the call sees the red "Recording" sign.
+  bool get recording => _call.recordingEnabled && _call.recording;
+
+  Future<void> startRecording() => _recordJob(() => _owner._repo.startRecording(callId));
+  Future<void> stopRecording() async {
+    await _recordJob(() => _owner._repo.stopRecording(callId));
+    _owner._notice('Recording stopped. It will be in the call details soon.');
+  }
+
+  Future<void> _recordJob(Future<CallRecording> Function() job) async {
+    if (recordBusy) return;
+    recordBusy = true;
+    _notify();
+    try {
+      await job();
+      await _refreshCall();
+    } finally {
+      recordBusy = false;
+      _notify();
+    }
+  }
 
   // --------------------------------------------------------------- shutting down
 

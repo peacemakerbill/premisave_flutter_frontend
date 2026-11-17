@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -165,6 +164,12 @@ class _CallRow extends ConsumerWidget {
         Icon(out.icon, size: 15, color: out.bad ? pal.bad : context.mutedColor),
         const SizedBox(width: 5),
         Flexible(child: Text('${out.text}$extra, ${callWhen(call.createdAt)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.mutedColor))),
+        if (call.recordingEnabled && call.recordingCount > 0) ...<Widget>[
+          const SizedBox(width: 8),
+          Icon(Icons.videocam_rounded, size: 15, color: pal.accent),
+          const SizedBox(width: 3),
+          Text(call.recordingCount == 1 ? 'Recording' : '${call.recordingCount} recordings', style: TextStyle(color: pal.accent, fontSize: 12.5, fontWeight: FontWeight.w700)),
+        ],
       ]),
       trailing: call.isOpen
           ? PButton(label: 'Join', small: true, onPressed: () => ref.read(callProvider.notifier).joinCall(call.id))
@@ -175,91 +180,8 @@ class _CallRow extends ConsumerWidget {
                   onPressed: () => ref.read(callProvider.notifier).startCall(call.chatId!, call.media),
                 )
               : null),
-      onTap: () => _details(context, ref, out),
+      onTap: () => context.push('/messages/calls/details/${Uri.encodeComponent(call.id)}'),
     );
-  }
-
-  Future<void> _details(BuildContext context, WidgetRef ref, CallOutcome out) async {
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      builder: (ctx) => SafeArea(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxHeight: MediaQuery.of(ctx).size.height * 0.75),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 18, 20, 2),
-                child: Text(chat?.title ?? call.titleFor(me), style: ctx.display(size: 20, weight: FontWeight.w800)),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-                child: Text('${call.isVideo ? 'Video' : 'Voice'} call, ${out.text}, ${callWhen(call.createdAt)}', style: TextStyle(color: ctx.mutedColor)),
-              ),
-              Flexible(
-                child: ListView(
-                  shrinkWrap: true,
-                  children: <Widget>[
-                    for (final p in call.people)
-                      ListTile(
-                        dense: true,
-                        leading: UserAvatar(initials: p.initials, imageUrl: p.picture, size: 34),
-                        title: Text(p.userId == me ? 'You' : p.name, style: const TextStyle(fontWeight: FontWeight.w700)),
-                        subtitle: Text(_stateText(p)),
-                      ),
-                  ],
-                ),
-              ),
-              if (call.linkUrl != null && call.isOpen)
-                ListTile(
-                  leading: const Icon(Icons.link_rounded),
-                  title: const Text('Copy call link'),
-                  onTap: () async {
-                    await Clipboard.setData(ClipboardData(text: call.linkUrl!));
-                    if (ctx.mounted) Navigator.of(ctx).pop();
-                    if (context.mounted) showToast(context, 'Call link copied');
-                  },
-                ),
-              if (!call.isOpen)
-                ListTile(
-                  leading: Icon(Icons.delete_outline_rounded, color: ctx.pal.bad),
-                  title: Text('Remove from history', style: TextStyle(color: ctx.pal.bad)),
-                  onTap: () async {
-                    Navigator.of(ctx).pop();
-                    try {
-                      await ref.read(callRepositoryProvider).removeFromHistory(call.id);
-                      ref.invalidate(callHistoryProvider);
-                    } catch (e) {
-                      if (context.mounted) showApiError(context, e);
-                    }
-                  },
-                ),
-              const SizedBox(height: 6),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  String _stateText(CallPerson p) {
-    switch (p.state) {
-      case PersonState.joined:
-        return 'In the call';
-      case PersonState.left:
-        return p.joinedAt == null ? 'Did not join' : 'Joined and left';
-      case PersonState.declined:
-        return 'Declined';
-      case PersonState.missed:
-        return 'Did not answer';
-      case PersonState.removed:
-        return 'Removed';
-      case PersonState.invited:
-        return 'Ringing';
-    }
   }
 }
 

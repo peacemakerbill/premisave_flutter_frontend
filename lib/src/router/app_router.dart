@@ -10,6 +10,7 @@ import '../features/account/location_screen.dart';
 import '../features/account/profile_screen.dart';
 import '../features/account/profile_views_screen.dart';
 import '../features/account/settings_screen.dart';
+import '../features/admin/admin_call_settings_screen.dart';
 import '../features/admin/admin_edit_user_screen.dart';
 import '../features/admin/admin_user_detail_screen.dart';
 import '../features/admin/admin_users_screen.dart';
@@ -29,6 +30,7 @@ import '../features/home/home_screen.dart';
 import '../features/home/module_pages.dart';
 import '../features/overview/role_overview_page.dart';
 import '../features/explore/explore_content.dart';
+import '../features/calls/call_details_screen.dart';
 import '../features/calls/call_link_screen.dart';
 import '../features/messenger/downloaded_files_screen.dart';
 import '../features/messenger/group_info_screen.dart';
@@ -170,6 +172,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(path: 'settings', pageBuilder: (_, s) => detailPage(s, const MessengerSettingsScreen())),
               GoRoute(path: 'settings/downloads', pageBuilder: (_, s) => detailPage(s, const DownloadedFilesScreen())),
               GoRoute(path: 'settings/sounds', pageBuilder: (_, s) => detailPage(s, const SoundSettingsScreen())),
+              GoRoute(path: 'calls/details/:id', pageBuilder: (_, s) => detailPage(s, CallDetailsScreen(callId: s.pathParameters['id'] ?? ''))),
               GoRoute(path: 'calls/join/:code', pageBuilder: (_, s) => detailPage(s, CallLinkScreen(code: s.pathParameters['code'] ?? ''))),
               GoRoute(path: 'join', pageBuilder: (_, s) => detailPage(s, const JoinGroupScreen())),
               GoRoute(path: 'join/:code', pageBuilder: (_, s) => detailPage(s, JoinGroupScreen(code: s.pathParameters['code']))),
@@ -239,6 +242,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
+          GoRoute(path: '/admin/calls', pageBuilder: (_, s) => detailPage(s, const AdminCallSettingsScreen())),
           GoRoute(path: '/admin/audit', pageBuilder: (_, s) => tabPage(s, AuditScreen(userId: s.uri.queryParameters['userId']))),
         ],
       ),

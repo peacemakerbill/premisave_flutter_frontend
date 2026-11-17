@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/theme/palette.dart';
 import '../../data/models/call_models.dart';
@@ -49,7 +50,7 @@ class CallLineBody extends ConsumerWidget {
     }
 
     final accent = bad ? pal.bad : fg;
-    return Row(
+    final row = Row(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
         Container(
@@ -87,6 +88,13 @@ class CallLineBody extends ConsumerWidget {
             onPressed: () => ref.read(callProvider.notifier).startCall(chatId, line.media),
           ),
       ],
+    );
+    // A finished call opens its details: the people, the recordings and the chat written during the call.
+    if (line.isOpen) return row;
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: () => context.push('/messages/calls/details/${Uri.encodeComponent(line.callId)}'),
+      child: row,
     );
   }
 }

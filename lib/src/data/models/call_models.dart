@@ -157,6 +157,9 @@ class CallInfo {
     this.endedAt,
     this.durationSeconds = 0,
     this.endReason,
+    this.recordingEnabled = false,
+    this.recording = false,
+    this.recordingCount = 0,
     this.people = const <CallPerson>[],
   });
 
@@ -182,6 +185,15 @@ class CallInfo {
   final DateTime? endedAt;
   final int durationSeconds;
   final String? endReason;
+
+  /// Whether the administrators switched recording on. When false the app shows no recording controls at all.
+  final bool recordingEnabled;
+
+  /// A recording is starting or running in this call right now.
+  final bool recording;
+
+  /// How many finished recordings this call has.
+  final int recordingCount;
   final List<CallPerson> people;
 
   factory CallInfo.fromJson(Map<String, dynamic> j) => CallInfo(
@@ -203,6 +215,9 @@ class CallInfo {
         endedAt: _when(j['endedAt']),
         durationSeconds: intOr(j['durationSeconds']),
         endReason: str(j['endReason']),
+        recordingEnabled: boolOr(j['recordingEnabled']),
+        recording: boolOr(j['recording']),
+        recordingCount: intOr(j['recordingCount']),
         people: mapList(j['participants']).map(CallPerson.fromJson).toList(),
       );
 
@@ -342,6 +357,9 @@ enum CallPushType {
   roleChanged,
   lockChanged,
   chat,
+  recordingStarted,
+  recordingStopped,
+  recordingSetting,
   unknown,
 }
 
@@ -373,6 +391,12 @@ CallPushType callPushTypeOf(Object? v) {
       return CallPushType.lockChanged;
     case 'CHAT':
       return CallPushType.chat;
+    case 'RECORDING_STARTED':
+      return CallPushType.recordingStarted;
+    case 'RECORDING_STOPPED':
+      return CallPushType.recordingStopped;
+    case 'RECORDING_SETTING':
+      return CallPushType.recordingSetting;
     default:
       return CallPushType.unknown;
   }
@@ -459,5 +483,85 @@ class CallLinkPreview {
         locked: boolOr(j['locked']),
         full: boolOr(j['full']),
         joinable: boolOr(j['joinable']),
+      );
+}
+
+// ---------------------------------------------------------------------------- recordings
+
+enum RecState { starting, recording, stopping, ready, failed }
+
+RecState recStateOf(Object? v) {
+  switch (strOr(v).toUpperCase()) {
+    case 'STARTING':
+      return RecState.starting;
+    case 'RECORDING':
+      return RecState.recording;
+    case 'STOPPING':
+      return RecState.stopping;
+    case 'READY':
+      return RecState.ready;
+    default:
+      return RecState.failed;
+  }
+}
+
+/// One recording of a call. Watchable once [state] is ready: [playUrl] then plays or downloads the video.
+class CallRecording {
+  const CallRecording({
+    required this.id,
+    required this.callId,
+    this.state = RecState.starting,
+    this.startedBy = '',
+    this.startedByName = '',
+    this.createdAt,
+    this.durationSeconds = 0,
+    this.sizeBytes = 0,
+    this.playUrl,
+    this.error,
+    this.canDelete = false,
+  });
+
+  final String id;
+  final String callId;
+  final RecState state;
+  final String startedBy;
+  final String startedByName;
+  final DateTime? createdAt;
+  final int durationSeconds;
+  final int sizeBytes;
+  final String? playUrl;
+  final String? error;
+  final bool canDelete;
+
+  bool get isReady => state == RecState.ready && (playUrl ?? '').isNotEmpty;
+  bool get isBusy => state == RecState.starting || state == RecState.recording || state == RecState.stopping;
+
+  factory CallRecording.fromJson(Map<String, dynamic> j) => CallRecording(
+        id: strOr(j['id']),
+        callId: strOr(j['callId']),
+        state: recStateOf(j['status']),
+        startedBy: strOr(j['startedBy']),
+        startedByName: strOr(j['startedByName']),
+        createdAt: _when(j['createdAt']),
+        durationSeconds: intOr(j['durationSeconds']),
+        sizeBytes: intOr(j['sizeBytes']),
+        playUrl: str(j['playUrl']),
+        error: str(j['error']),
+        canDelete: boolOr(j['canDelete']),
+      );
+}
+
+/// The call switches the administrators control.
+class CallSettings {
+  const CallSettings({this.recordingEnabled = false, this.canManage = false});
+
+  final bool recordingEnabled;
+
+  /// True for an administrator, who may change the switches.
+  final bool canManage;
+
+  factory CallSettings.fromJson(Map<String, dynamic> j) => CallSettings(
+        recordingEnabled: boolOr(j['recordingEnabled']),
+        canManage: boolOr(j['canManage']),
       );
 }

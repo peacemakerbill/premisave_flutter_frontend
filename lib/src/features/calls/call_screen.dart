@@ -181,6 +181,9 @@ class _CallScreenState extends ConsumerState<CallScreen> {
       case 'lock':
         await _guard(() => _s.setLocked(!_s.call.locked));
         break;
+      case 'record':
+        await _toggleRecording();
+        break;
       case 'muteAll':
         await _guard(() async {
           await _s.muteAll();
@@ -549,8 +552,68 @@ class _CallScreenState extends ConsumerState<CallScreen> {
     if (_s.sharing) {
       msgs.add(_presenting());
     }
+    if (_s.recording) {
+      msgs.add(_recordingSign());
+    }
     if (msgs.isEmpty) return const SizedBox.shrink();
     return Padding(padding: const EdgeInsets.only(bottom: 6), child: Wrap(spacing: 8, runSpacing: 6, alignment: WrapAlignment.center, children: msgs));
+  }
+
+  /// The red "Recording" sign everyone in the call sees. A host or co-host can tap it to stop.
+  Widget _recordingSign() {
+    final canStop = _s.canRecord;
+    return Semantics(
+      button: canStop,
+      label: canStop ? 'This call is being recorded. Tap to stop.' : 'This call is being recorded.',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: canStop ? _toggleRecording : null,
+          child: Container(
+            padding: EdgeInsets.fromLTRB(12, 6, canStop ? 6 : 12, 6),
+            decoration: BoxDecoration(
+              color: CallColors.danger.withValues(alpha: 0.16),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: CallColors.danger, width: 1),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Container(width: 9, height: 9, decoration: const BoxDecoration(color: CallColors.danger, shape: BoxShape.circle)),
+                const SizedBox(width: 8),
+                const Text('Recording', style: TextStyle(color: CallColors.text, fontSize: 12.5, fontWeight: FontWeight.w700)),
+                if (canStop) ...<Widget>[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(color: CallColors.danger, borderRadius: BorderRadius.circular(14)),
+                    child: const Text('Stop', style: TextStyle(color: CallColors.text, fontSize: 12, fontWeight: FontWeight.w800)),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// A host or co-host starts or stops recording, after being told what that means for everyone in the call.
+  Future<void> _toggleRecording() async {
+    if (_s.recordBusy) return;
+    final stopping = _s.recording;
+    final ok = await confirmDialog(
+      context,
+      title: stopping ? 'Stop recording?' : 'Record this call?',
+      message: stopping
+          ? 'The video is saved and shows up in the call details a few moments after you stop.'
+          : 'Everyone in the call will see that it is being recorded. Everyone who is in the call can watch the recording afterwards from Calls.',
+      confirmLabel: stopping ? 'Stop recording' : 'Start recording',
+      danger: stopping,
+    );
+    if (!ok || !mounted) return;
+    await _guard(stopping ? _s.stopRecording : _s.startRecording);
   }
 
   /// Shown to the person who is presenting, in place of their own screen, which is never drawn back to them.
@@ -765,6 +828,7 @@ class _MoreSheet extends StatelessWidget {
                 if (s.canFlipCamera && s.camOn) item(Icons.cameraswitch_rounded, 'Flip camera', 'flip'),
                 if (s.canPickSpeaker) item(s.speakerOn ? Icons.volume_up_rounded : Icons.hearing_rounded, s.speakerOn ? 'Speaker on' : 'Earpiece', 'speaker', active: s.speakerOn),
                 if (call.linkUrl != null) item(Icons.link_rounded, 'Copy link', 'link'),
+                if (s.canRecord) item(s.recording ? Icons.stop_circle_rounded : Icons.fiber_manual_record_rounded, s.recording ? 'Stop recording' : 'Record', 'record', active: s.recording, danger: s.recording),
                 if (s.isManager) item(call.locked ? Icons.lock_open_rounded : Icons.lock_rounded, call.locked ? 'Unlock call' : 'Lock call', 'lock', active: call.locked),
                 if (s.isManager && call.isGroupLike) item(Icons.mic_off_rounded, 'Mute everyone', 'muteAll'),
               ],
