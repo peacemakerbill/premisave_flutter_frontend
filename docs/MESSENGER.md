@@ -125,6 +125,10 @@ What the app does:
 | `lib/src/features/admin/admin_call_settings_screen.dart` | The recording switch and the storage status, for administrators |
 | `assets/sounds/` | Ringtone, ringback tone, join and leave sounds. `tool/call_sounds.py` makes them again |
 
+### Storage settings
+
+Administrators open **Settings, Storage** (or the Storage icon in the admin user list, route `/admin/storage`). The screen has three parts, each loaded on its own so one service being down does not hide the others: home owner documents (auth-service, `/admin/storage-settings`), chat files and call recordings (messenger, `/api/storage-settings`). Each part shows the source (From .env or Set in dashboard), the folder in use, free space and any problem. **Try it** creates the folder and writes a test file without saving, **Save** makes the dashboard value win, and **Reset to .env** goes back. For recordings only a folder inside the recorder's folder and the free-space limit can be chosen.
+
 ### Call settings
 
 Recording is controlled by the administrators, and the app asks the messenger service (`GET /api/call-settings`) so it can hide recording completely while it is off.

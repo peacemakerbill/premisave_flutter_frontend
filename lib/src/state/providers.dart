@@ -7,6 +7,7 @@ import '../data/repositories/admin_repository.dart';
 import '../data/repositories/application_repository.dart';
 import '../data/repositories/auth_repository.dart';
 import '../data/repositories/call_repository.dart';
+import '../data/repositories/storage_repository.dart';
 import '../data/repositories/contact_repository.dart';
 import '../data/repositories/messenger_repository.dart';
 import '../data/repositories/place_repository.dart';
@@ -50,3 +51,8 @@ final messengerRepositoryProvider =
     Provider<MessengerRepository>((ref) => MessengerRepository(ref.watch(messengerApiClientProvider)));
 
 final callRepositoryProvider = Provider<CallRepository>((ref) => CallRepository(ref.watch(messengerApiClientProvider)));
+
+final storageRepositoryProvider = Provider<StorageRepository>((ref) => StorageRepository(ref.watch(messengerApiClientProvider)));
+
+final documentStorageRepositoryProvider =
+    Provider<DocumentStorageRepository>((ref) => DocumentStorageRepository(ref.watch(apiClientProvider)));

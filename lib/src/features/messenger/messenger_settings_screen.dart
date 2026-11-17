@@ -131,6 +131,19 @@ class MessengerSettingsScreen extends ConsumerWidget {
                 trailing: calls.canManage ? null : const SizedBox.shrink(),
               ),
             ),
+            if (calls.canManage) ...<Widget>[
+              const SectionHeader('Storage'),
+              PCard(
+                padding: EdgeInsets.zero,
+                child: MenuTile(
+                  icon: Icons.storage_outlined,
+                  title: 'Where files are saved',
+                  subtitle: 'Choose where home owner documents, chat files and call recordings are saved. '
+                      'The server\'s .env values apply until you save something here.',
+                  onTap: () => context.push('/admin/storage'),
+                ),
+              ),
+            ],
           ],
           const SectionHeader('Messages'),
           PCard(

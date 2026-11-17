@@ -11,6 +11,7 @@ import '../features/account/profile_screen.dart';
 import '../features/account/profile_views_screen.dart';
 import '../features/account/settings_screen.dart';
 import '../features/admin/admin_call_settings_screen.dart';
+import '../features/admin/admin_storage_settings_screen.dart';
 import '../features/admin/admin_edit_user_screen.dart';
 import '../features/admin/admin_user_detail_screen.dart';
 import '../features/admin/admin_users_screen.dart';
@@ -243,6 +244,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             ],
           ),
           GoRoute(path: '/admin/calls', pageBuilder: (_, s) => detailPage(s, const AdminCallSettingsScreen())),
+          GoRoute(path: '/admin/storage', pageBuilder: (_, s) => detailPage(s, const AdminStorageSettingsScreen())),
           GoRoute(path: '/admin/audit', pageBuilder: (_, s) => tabPage(s, AuditScreen(userId: s.uri.queryParameters['userId']))),
         ],
       ),
