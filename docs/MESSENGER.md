@@ -14,6 +14,8 @@ The Messages tab talks to the **premisave-messenger-service**. It is a second ba
 | Groups | Create, picture, name, description, add and remove members, admins, make someone the owner, leave. An owner must choose a new owner before leaving |
 | Invites | Invite link and QR code with an expiry and a use limit, revoke, join by link, join by scanning a QR code, tap an invite link inside a message |
 | Statuses | Text, photo, video and audio statuses for up to a day, view, like, react, comment, who saw it, past statuses |
+| Calls | Voice and video calls from any chat, group calls, call links, screen share, a chat inside the call, host controls, call history |
+| Call recording | A host or co-host records a call. Everyone who was in it can watch the video afterwards. An administrator switches it on or off and sees where the videos are stored |
 
 ## Files and downloads
 
@@ -50,7 +52,17 @@ On a real phone use your computer's address on the network, for example `--dart-
 
 1. Start the auth-service on port 8080.
 2. Start the messenger service on port 8081. It needs MongoDB and Redis, and it must use the same `JWT_SECRET` as the auth-service so the token is accepted.
-3. Run the app as usual.
+3. For calls, start LiveKit (and the recorder, for recording) from `deploy/livekit` in the messenger repository, and set `LIVEKIT_API_KEY` and `LIVEKIT_API_SECRET` for the messenger.
+4. Run the app as usual.
+
+Both services ship with a Docker setup, so on a development machine this is two commands, one in each repository, with no Java or databases to install:
+
+```bash
+cd premisave_auth_service       && docker compose up --build   # port 8080, with its own MongoDB and Redis
+cd premisave-messenger-service  && docker compose up --build   # port 8081, reaches the auth-service on your machine
+```
+
+Staging and production use the same image with their own settings (`SPRING_PROFILES_ACTIVE=staging` or `prod`), and each repository has ready files for Docker Compose, Coolify, Render, Heroku, Fly.io and Railway. See `deploy/README.md` in each. Staging pairs with the staging auth-service and production with the production one.
 
 The messenger service must also allow the app's origin when you run on the web (CORS and the STOMP endpoint `/ws-messenger`). On the web the socket cannot send headers, so the app sends the token in the STOMP CONNECT frame, which is what the service reads.
 
@@ -97,6 +109,7 @@ What the app does:
 - **In the call.** Mute, camera on and off, flip camera and speaker on phones, share screen, raise hand, reactions, a chat that only the people in the call see, and a People list. A host can mute people, mute everyone, make a co-host, hand over hosting, remove someone, lock the call and add people while it runs. Anyone in the call can add people.
 - **Layouts.** A grid, a speaker view, and a presentation view that fills the stage when someone shares a screen. In a one to one call the other person fills the screen and your own camera floats in a corner (tap to swap). Tap a tile to pin it.
 - **Minimise.** The down arrow shrinks the call to a green bar above the app. Tap the bar to come back. The Android back button also minimises.
+- **Recording.** While recording is on, a host or co-host sees a Record button in the call and everyone sees a red Recording sign. The video is ready a few seconds after it stops. It appears under the call in the Calls tab (open the call), where anyone who was in it can watch, download or, for the person who started it and hosts, delete it. If the server's storage is not ready, Record answers with the reason and nothing is lost.
 - **Calls tab.** The Messages screen has a Calls tab: create a call link, join with a link, and the list of calls made and missed with a call back button. A call also appears in the chat as a line (Missed video call, Voice call, 3 min).
 - **Call links.** `https://premisave.com/call/CODE` opens `/call/CODE`, which shows who is on the call and a Join button. Pasting a link on the Calls tab does the same.
 
@@ -106,8 +119,18 @@ What the app does:
 | `lib/src/state/call_providers.dart` | Call history and the call running in a chat |
 | `lib/src/data/repositories/call_repository.dart` | Every call REST call |
 | `lib/src/data/models/call_models.dart` | Calls, people, events, call chat |
-| `lib/src/features/calls/` | The call screen, incoming call card, minimised bar, Calls tab, call link screen |
+| `lib/src/features/calls/` | The call screen, incoming call card, minimised bar, Calls tab, call details with recordings, call link screen |
+| `lib/src/features/admin/admin_call_settings_screen.dart` | The recording switch and the storage status, for administrators |
 | `assets/sounds/` | Ringtone, ringback tone, join and leave sounds. `tool/call_sounds.py` makes them again |
+
+### Call settings
+
+Recording is controlled by the administrators, and the app asks the messenger service (`GET /api/call-settings`) so it can hide recording completely while it is off.
+
+- **Messages, Settings, Calls** (the gear in the chat list) shows whether recording is on. A person who is not an administrator only reads it. An administrator opens the entry to reach the full screen.
+- **The full screen** (also the Call settings icon in the admin user list, route `/admin/calls`) has the switch, and shows where the videos are stored (this server or a network share), whether the storage is ready, the folder, the free space and any problem, for example a share that is not mounted.
+- A change reaches every open app straight away through the `RECORDING_SETTING` event, so the Record button appears or disappears without restarting.
+- Where the videos are kept is a server setting (`CALLS_RECORDINGS_MODE`, `LOCAL` or `NETWORK`), described in the messenger service's `docs/CALLS.md`. The app only shows it.
 
 ### Platform notes
 
@@ -119,4 +142,4 @@ What the app does:
 
 ### Not included
 
-Calls ring only while the app is open or running in the background. There is no push ringing when the app is closed (that needs FCM and APNs, and CallKit on iPhone). There is no recording and no waiting room.
+Calls ring only while the app is open or running in the background. There is no push ringing when the app is closed (that needs FCM and APNs, and CallKit on iPhone). There is no waiting room.

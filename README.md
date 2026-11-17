@@ -43,7 +43,7 @@ Everyone signs in to the **same app**. What they see after that depends on their
 | **Security you can see** | Sessions, devices, sign-in history and security events are all on screen, and a person can end any session. |
 | **Real maps** | Google Maps on Android, iOS and the web, OpenStreetMap everywhere else, one `PlaceMapView` in front of both. |
 | **14 themes, 11 textures** | Light, dark, high contrast, nine fonts and three corner styles, saved per device. |
-| **Small to learn** | 146 Dart files, about 22 thousand lines, one rule per layer. See [how it works](#how-it-works). |
+| **Small to learn** | 209 Dart files, about 36 thousand lines, one rule per layer. See [how it works](#how-it-works). |
 
 <img src="docs/assets/divider.svg" alt="" width="100%"/>
 
@@ -86,7 +86,14 @@ cp .env.example .env        # then fill it in, see the backend README
 sh ./mvnw spring-boot:run
 ```
 
-When it is up, `http://localhost:8080/health` answers with a status banner.
+Or run it from its Docker setup, with its own MongoDB and Redis, no Java needed:
+
+```bash
+cd premisave_auth_service
+docker compose up --build
+```
+
+When it is up, `http://localhost:8080/health` answers with a status banner. The **Messages** tab also needs the [messenger service](https://github.com/peacemakerbill/premisave-messenger-service) on port 8081 (`docker compose up --build` there, after the auth-service is up), and calls need a LiveKit server. [docs/MESSENGER.md](docs/MESSENGER.md) has the steps.
 
 **3. Get the app.**
 
@@ -141,8 +148,16 @@ Everything marked **live** talks to the real auth-service. The rest shows sample
 | Staff review | live | Queue and decisions on submitted applications |
 | Administration | live | User list and details, role changes, platform wide audit trail, final approval of applications |
 | Places | live | Address search and "what is here", through the auth-service when it has a Google key, free Photon search otherwise |
-| Messages | live | Chats, groups, replies, reactions, files, typing and online status, statuses, group invite links and QR codes, voice and video calls (one to one, group, call links, screen share), through the messenger service. See [docs/MESSENGER.md](docs/MESSENGER.md) |
+| Messages | live | Chats, groups, replies, reactions, files, typing and online status, statuses, group invite links and QR codes, voice and video calls (one to one, group, call links, screen share) that a host can record, through the messenger service. See [docs/MESSENGER.md](docs/MESSENGER.md) |
 | Bookings, payments, transactions, wishlists | sample | Screens are built, the services behind them are not |
+
+### Calls and recording
+
+<img src="docs/assets/calls.svg" alt="The app asks the messenger service for a call and a token, joins LiveKit directly, starts recording through the messenger and reads the call settings." width="100%"/>
+
+A call starts from the phone or video button in a chat. The messenger service decides who is in it and signs the token, and the audio and video go straight to a LiveKit server. A host or co-host can record the call while an administrator has recording switched on. The video is saved on the server's disk or on a network share, and everyone who was in the call can watch it afterwards from **Calls**.
+
+**Call settings** are in **Messages, Settings, Calls**. Everyone sees whether recording is on. An administrator opens the entry to switch it on or off and to see where the videos are stored, how much space is free and any problem with the storage. The same screen is reached from the Call settings icon in the admin user list.
 
 <img src="docs/assets/divider.svg" alt="" width="100%"/>
 
@@ -329,6 +344,7 @@ After changing a `--dart-define` value, **stop the app and start it again**. Flu
 | **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** | You want to understand the layers, or add a feature |
 | **[docs/ROLES_AND_ACCESS.md](docs/ROLES_AND_ACCESS.md)** | You are adding a role, a capability or a guarded page |
 | **[docs/SIGN_IN_PROVIDERS.md](docs/SIGN_IN_PROVIDERS.md)** | You are setting up Google, Facebook or GitHub sign in |
+| **[docs/MESSENGER.md](docs/MESSENGER.md)** | You are working on chats, calls or recording, or running the messenger service and LiveKit |
 | **[docs/MAPS_AND_PLACES.md](docs/MAPS_AND_PLACES.md)** | You are creating Google Maps keys, or maps and search misbehave |
 | **[docs/THEMING.md](docs/THEMING.md)** | You are adding a theme, a texture or a font |
 | **[config/env/README.md](config/env/README.md)** | You are filling in an environment file |
@@ -343,6 +359,7 @@ Being straight about what is not finished saves everyone a debugging session.
 - **Bookings, payments, transactions and wishlists** show sample data. The screens exist, the services do not.
 - **Native social sign in on Android, iOS and macOS** needs each platform's own app registration (Google services files, Facebook app configuration, URL schemes). The Dart side is written, the native files are not in the repository.
 - **Sign in with Apple** is not implemented yet.
+- **Calls only ring while the app is open or in the background.** There is no push ringing when the app is closed, and no waiting room. Sharing the screen from iOS is not included.
 - **There are no automated tests.** `flutter analyze` is the safety net today.
 - **Google Maps on Android and iOS** needs a key and, for iOS, a small local file. Without them those platforms fall back to OpenStreetMap. See [docs/MAPS_AND_PLACES.md](docs/MAPS_AND_PLACES.md).
 - Before a production release, set `SUPPORT_EMAIL`, add your production domain and release signing SHA-1 to the map keys, and use your own address search and tile servers if you expect real traffic.

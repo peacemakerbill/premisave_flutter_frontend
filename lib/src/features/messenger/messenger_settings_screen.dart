@@ -6,10 +6,11 @@ import '../../core/files/file_kinds.dart';
 import '../../core/files/file_store.dart';
 import '../../core/theme/brand.dart';
 import '../../core/widgets/widgets.dart';
+import '../../state/call_providers.dart';
 import '../../state/file_downloads.dart';
 import '../../state/messenger_providers.dart';
 
-/// Messenger settings: where downloaded files are saved, the files already saved, and how message editing works.
+/// Messenger settings: where downloaded files are saved, the files already saved, sounds, calls (recording) and how message editing works.
 class MessengerSettingsScreen extends ConsumerWidget {
   const MessengerSettingsScreen({super.key});
 
@@ -18,6 +19,7 @@ class MessengerSettingsScreen extends ConsumerWidget {
     final settings = ref.watch(fileSettingsProvider);
     final controller = ref.read(fileSettingsProvider.notifier);
     final editWindow = ref.watch(editWindowProvider);
+    final calls = ref.watch(callSettingsProvider).valueOrNull;
     final anyCustom = settings.root != null || settings.folders.isNotEmpty;
 
     Future<void> choose(Future<void> Function(String path) save) async {
@@ -111,6 +113,25 @@ class MessengerSettingsScreen extends ConsumerWidget {
               onTap: () => context.push('/messages/settings/sounds'),
             ),
           ),
+          if (calls != null) ...<Widget>[
+            const SectionHeader('Calls'),
+            PCard(
+              padding: EdgeInsets.zero,
+              child: MenuTile(
+                icon: Icons.video_call_outlined,
+                title: 'Call recording',
+                subtitle: calls.canManage
+                    ? (calls.recordingEnabled
+                        ? 'On. Hosts and co-hosts can record calls. Open to turn it off or to see where the videos are stored.'
+                        : 'Off. Open to turn it on and to see where the videos are stored.')
+                    : (calls.recordingEnabled
+                        ? 'On. A host or co-host can record a call, and everyone who was in the call can watch it afterwards.'
+                        : 'Off. An administrator has switched call recording off.'),
+                onTap: calls.canManage ? () => context.push('/admin/calls') : null,
+                trailing: calls.canManage ? null : const SizedBox.shrink(),
+              ),
+            ),
+          ],
           const SectionHeader('Messages'),
           PCard(
             padding: EdgeInsets.zero,

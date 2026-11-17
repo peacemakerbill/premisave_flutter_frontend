@@ -394,14 +394,24 @@ def divider():
 
 # ---------------------------------------------------------------------------------------- architecture
 
+def count_dirs(rel):
+    base = os.path.join(ROOT, *rel.split('/'))
+    return sum(1 for n in os.listdir(base) if os.path.isdir(os.path.join(base, n)))
+
+
+def count_files(rel, ending):
+    base = os.path.join(ROOT, *rel.split('/'))
+    return sum(1 for n in os.listdir(base) if n.endswith(ending))
+
+
 def architecture():
     w, h = 1200, 520
     nw, nh, ny = 200, 150, 116
     xs = [36 + i * 234 for i in range(5)]
     mains = [
-        ('Screens', 'lib/src/features', ('19 folders, one per', 'part of the product')),
+        ('Screens', 'lib/src/features', (f"{count_dirs('lib/src/features')} folders, one per", 'part of the product')),
         ('State', 'lib/src/state', ('Riverpod providers and', 'the session controller')),
-        ('Repositories', 'lib/src/data', ('8 classes that turn', 'endpoints into objects')),
+        ('Repositories', 'lib/src/data', (f"{count_files('lib/src/data/repositories', '_repository.dart')} classes that turn", 'endpoints into objects')),
         ('ApiClient', 'lib/src/core/network', ('Dio, tokens, refresh,', 'readable errors')),
         ('auth-service', 'Spring Boot', ('accounts, sessions,', 'profiles and places')),
     ]
@@ -881,6 +891,80 @@ def setup():
                           ('cond7', 'sans4', 'sans6', 'mono4', 'mono6')))
 
 
+# ---------------------------------------------------------------------------------------- calls
+
+def lanes_picture(fname, title, note, lanes, steps, foot, h, alt, top=168, gap=66, cycle=16.0):
+    """A sequence diagram: lanes across, one step per row, a packet that crosses each arrow in turn.
+
+    lanes: [(name, x)], steps: [(from, to, label, note, is_answer)]. A step whose from equals to is shown as work done
+    inside one lane.
+    """
+    w = 1200
+    css, drawn, marks = '.cur, .pk { opacity: 0; }\n', [], []
+    lane_svg = ''
+    for n, x in lanes:
+        lane_svg += (f'<text class="cond" x="{x}" y="104" text-anchor="middle" font-size="20">{esc(n)}</text>'
+                     f'<line x1="{x - 74}" y1="116" x2="{x + 74}" y2="116" stroke="{INK}" stroke-width="1.5"/>'
+                     f'<line x1="{x}" y1="116" x2="{x}" y2="{h - 96}" stroke="{INK2}" stroke-width="1" stroke-dasharray="3 5"/>')
+    total = len(steps) + 0.6
+    for i, (a, b, label, sub, back) in enumerate(steps):
+        y = top + i * gap
+        xa, xb = lanes[a][1], lanes[b][1]
+        if a == b:
+            body = (f'<rect x="{xa - 6}" y="{y - 24}" width="12" height="54" fill="{PAPER}" stroke="{INK}" stroke-width="1.4"/>'
+                    f'<path d="M{xa + 6} {y - 4}h24v22h-24" fill="none" stroke="{INK}" stroke-width="1.4"/><path d="M{xa + 11} {y + 14}l-5 4" stroke="{INK}" stroke-width="1.4"/>'
+                    f'<text class="mono" x="{xa + 42}" y="{y + 2}" font-size="13" font-weight="600">{esc(label)}</text>'
+                    f'<text x="{xa + 42}" y="{y + 21}" font-size="12.5" class="soft">{esc(sub)}</text>')
+        else:
+            d = 1 if xb > xa else -1
+            mid = (xa + xb) / 2
+            dash = ' stroke-dasharray="6 4"' if back else ''
+            body = (f'<path d="M{xa + 8 * d} {y}H{xb - 12 * d}" stroke="{INK}" stroke-width="1.6"{dash}/>'
+                    f'<path d="M{xb - 14 * d} {y - 6}L{xb - 2 * d} {y}L{xb - 14 * d} {y + 6}" fill="none" stroke="{INK}" stroke-width="1.6"/>'
+                    f'<text class="mono" x="{mid}" y="{y - 10}" text-anchor="middle" font-size="13" font-weight="600">{esc(label)}</text>'
+                    f'<text x="{mid}" y="{y + 22}" text-anchor="middle" font-size="12.5" class="soft">{esc(sub)}</text>')
+        drawn.append(f'<g class="s{i}">{num(40, y, i + 1)}{body}</g>')
+        on = i / total * 100
+        css += f'.s{i} {{ animation: st{i} {cycle}s infinite; }}\n@keyframes st{i} {{ 0%,{on:.1f}% {{ opacity: 0; }} {on + 3.0:.1f}%,93% {{ opacity: 1; }} 98%,100% {{ opacity: 0; }} }}\n'
+        nxt = (i + 1) / total * 100 if i + 1 < len(steps) else 96.0
+        marks.append(f'<g class="cur" style="animation: cur{i} {cycle}s infinite">{num(40, y, i + 1, 11, AMBER, INK)}</g>')
+        css += f'@keyframes cur{i} {{ 0%,{on:.2f}% {{ opacity: 0; }} {on + 1.5:.2f}%,{nxt:.2f}% {{ opacity: 1; }} {nxt + 1.5:.2f}%,100% {{ opacity: 0; }} }}\n'
+        if a != b:
+            d = 1 if xb > xa else -1
+            dist = (xb - 12 * d) - (xa + 8 * d)
+            marks.append(f'<rect class="pk" x="{xa + 8 * d - 4}" y="{y - 4}" width="8" height="8" fill="{AMBER}" stroke="{INK}" stroke-width="1" style="animation: apk{i} {cycle}s infinite"/>')
+            span = 100 / total * 0.85
+            css += (f'@keyframes apk{i} {{ 0%,{on + 1.5:.2f}% {{ opacity: 0; transform: translateX(0px); }} '
+                    f'{on + 1.9:.2f}% {{ opacity: 1; transform: translateX(0px); animation-timing-function: cubic-bezier(.55,0,.35,1); }} '
+                    f'{on + span:.2f}% {{ opacity: 1; transform: translateX({dist}px); }} {on + span + 0.4:.2f}%,100% {{ opacity: 0; transform: translateX({dist}px); }} }}\n')
+    rule = f'<line x1="32" y1="{h - 78}" x2="{w - 32}" y2="{h - 78}" stroke="{INK}" stroke-width="1.5"/>'
+    foots = ''
+    for k, t in enumerate(foot):
+        cls = '' if k == 0 else ' class="soft"'
+        foots += f'<text x="32" y="{h - 50 + k * 22}" font-size="14.5"{cls}>{esc(t)}</text>'
+    body = sheet(w, h, title, note) + lane_svg + ''.join(drawn) + ''.join(marks) + rule + foots
+    save(fname, svg(w, h, body, css, '', title, alt, ('cond7', 'sans4', 'sans6', 'mono4', 'mono6')))
+
+
+def calls_flow():
+    lanes = [('The app', 120), ('Messenger service', 440), ('LiveKit', 770), ('Storage', 1090)]
+    steps = [
+        (0, 1, 'POST /api/calls', 'the phone or video button in a chat', False),
+        (1, 0, 'the call, a url and a token', 'who is in it, and where to connect', True),
+        (0, 2, 'audio, video and screen', 'livekit_client talks to LiveKit directly', False),
+        (0, 1, 'POST .../recording/start', 'Record, for a host or co-host, when it is on', False),
+        (2, 3, 'the video file', 'a folder on the server or a network share', False),
+        (0, 1, 'GET /api/call-settings', 'Messenger settings, Calls: on or off, storage ready', False),
+        (0, 1, 'PUT /api/call-settings/recording', 'administrators only: switch recording on or off', False),
+        (1, 0, 'RECORDING_SETTING on /user/queue/calls', 'every open app hides or shows Record', True),
+    ]
+    foot = ['A person who was in the call can watch the recording from Calls, then the call, as long as recording is on.',
+            'If the storage is not ready, Record answers "Recording storage is not available right now".']
+    lanes_picture('calls.svg', 'Calls and recording in the app', 'what the app asks, and who answers', lanes, steps, foot, 740,
+                  'The app asks the messenger service for a call and a token, joins LiveKit directly, starts recording through the messenger and reads the call settings.',
+                  gap=62, cycle=19.0)
+
+
 if __name__ == '__main__':
     banner()
     divider()
@@ -893,3 +977,4 @@ if __name__ == '__main__':
     stats()
     stack()
     setup()
+    calls_flow()
