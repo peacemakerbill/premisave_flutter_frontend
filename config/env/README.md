@@ -18,7 +18,7 @@ flutter run -d chrome --web-port=3000 --dart-define-from-file=config/env/dev.loc
 flutter run --dart-define-from-file=config/env/staging.json
 flutter build apk --release --dart-define-from-file=config/env/production.json
 flutter build web --release --dart-define-from-file=config/env/production.json
-APP_ENV=staging ./run_web.sh        # web on port 3000, with the file named by APP_ENV
+./run.sh --platform web --env staging   # web on port 3000 with staging.json; leave the flags off to pick from menus
 ```
 
 > **Restart after every change.** Flutter reads these values only when the app launches. Hot reload and hot restart do not see an edited file: stop the app and run the command again.

@@ -108,7 +108,16 @@ cp config/env/development.json config/env/dev.local.json
 flutter run -d chrome --web-port=3000 --dart-define-from-file=config/env/dev.local.json
 ```
 
-Keep the web port at 3000: the GitHub sign in callback in development points at `http://localhost:3000/auth.html`. On Linux you can also run `./run_web.sh`, and on Windows `run_web.ps1`.
+Keep the web port at 3000: the GitHub sign in callback in development points at `http://localhost:3000/auth.html`.
+
+**Or let the launcher ask.** It lists every device Flutter can see (a browser, this computer's desktop, a plugged in phone, an emulator or simulator), then asks which settings file and which mode, and runs the app.
+
+```bash
+./run.sh           # Linux, macOS, WSL and Git Bash
+run.bat            # Windows, double click it or type it in a terminal
+```
+
+Skip the questions with flags, for example `./run.sh --platform linux --env development.local --mode debug`. `./run.sh --help` lists them all.
 
 **6. Sign in.** Create an account on the welcome screen, open the activation link from the email, and you are in. To see the staff and administrator screens, sign in with one of the administrator accounts the backend creates from its `.env`.
 
@@ -258,7 +267,7 @@ premisave_flutter_frontend/
 |-- docs/                          the guides, and the pictures used in them
 |-- tool/readme_assets.py          redraws the pictures in docs/assets
 |-- android/ ios/ web/ linux/ windows/ macos/
-`-- run_web.sh, run_web.ps1        run the web build on port 3000
+`-- run.sh, run.bat, run.ps1       pick a platform or device, then run the app
 ```
 
 <img src="docs/assets/divider.svg" alt="" width="100%"/>
@@ -296,7 +305,8 @@ dart format lib                                   # format the code
 flutter run -d chrome --web-port=3000 --dart-define-from-file=config/env/dev.local.json
 flutter run -d linux   --dart-define-from-file=config/env/dev.local.json
 flutter run            --dart-define-from-file=config/env/dev.local.json     # connected phone or emulator
-APP_ENV=staging ./run_web.sh                      # web on port 3000 with config/env/staging.json
+./run.sh                                          # asks which platform, settings file and mode
+./run.sh --platform web --env staging             # web on port 3000 with config/env/staging.json
 
 # build
 flutter build web --release --dart-define-from-file=config/env/production.json

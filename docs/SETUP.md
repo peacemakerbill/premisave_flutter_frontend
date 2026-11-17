@@ -187,7 +187,15 @@ flutter run -d chrome --web-port=3000 --dart-define-from-file=config/env/dev.loc
 
 Use port **3000**. The GitHub sign in callback in development points at `http://localhost:3000/auth.html`, and the backend puts the same address in its email links. A different port works for everything except those two.
 
-On Linux, `./run_web.sh` does the same and picks Chrome or Chromium for you. Choose an environment with `APP_ENV=staging ./run_web.sh`. On Windows use `powershell -ExecutionPolicy Bypass -File run_web.ps1`.
+The launcher does the same and asks you where to run: `./run.sh` on Linux, macOS, WSL and Git Bash, and `run.bat` on Windows. It lists a browser, this computer's desktop, any plugged in phone and any emulator or simulator, and picks Chrome or Chromium for you. Skip the questions with flags:
+
+```bash
+./run.sh --platform web --env staging
+./run.sh --device emulator-5554 --mode release
+./run.sh --devices        # only list what Flutter can see
+```
+
+`APP_ENV=staging ./run.sh` still works. On Windows the same options are written `run.bat -Platform web -Env staging`.
 
 ### Android
 
