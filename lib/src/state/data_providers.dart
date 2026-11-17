@@ -38,6 +38,7 @@ class AuditFilter {
   const AuditFilter({
     this.q,
     this.type,
+    this.staff = false,
     this.userId,
     this.severity,
     this.outcome,
@@ -49,6 +50,9 @@ class AuditFilter {
   /// Free text: a name, username, email, address, device, event or anything else in the event.
   final String? q;
   final String? type;
+
+  /// Only the changes administrators make: accounts, roles, applications and settings.
+  final bool staff;
   final String? userId;
   final String? severity;
   final String? outcome;
@@ -59,6 +63,7 @@ class AuditFilter {
   AuditFilter onPage(int p) => AuditFilter(
         q: q,
         type: type,
+        staff: staff,
         userId: userId,
         severity: severity,
         outcome: outcome,
@@ -68,13 +73,14 @@ class AuditFilter {
       );
 
   /// True when something other than the person is narrowing the list.
-  bool get narrowed => q != null || type != null || severity != null || outcome != null || ip != null || from != null;
+  bool get narrowed => q != null || type != null || staff || severity != null || outcome != null || ip != null || from != null;
 
   @override
   bool operator ==(Object other) =>
       other is AuditFilter &&
       other.q == q &&
       other.type == type &&
+      other.staff == staff &&
       other.userId == userId &&
       other.severity == severity &&
       other.outcome == outcome &&
@@ -83,7 +89,7 @@ class AuditFilter {
       other.page == page;
 
   @override
-  int get hashCode => Object.hash(q, type, userId, severity, outcome, ip, from, page);
+  int get hashCode => Object.hash(q, type, staff, userId, severity, outcome, ip, from, page);
 }
 
 const int auditPageSize = 50;
@@ -92,6 +98,7 @@ final auditEventsProvider = FutureProvider.autoDispose.family<List<SecurityEvent
   (ref, f) => ref.watch(securityRepositoryProvider).adminEvents(
         q: f.q,
         type: f.type,
+        staff: f.staff,
         userId: f.userId,
         severity: f.severity,
         outcome: f.outcome,

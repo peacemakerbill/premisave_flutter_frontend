@@ -260,6 +260,8 @@ final routerProvider = Provider<GoRouter>((ref) {
                 type: s.uri.queryParameters['type'],
                 ip: s.uri.queryParameters['ip'],
                 severity: s.uri.queryParameters['severity'],
+                staff: s.uri.queryParameters['group'] == 'staff',
+                range: s.uri.queryParameters['range'],
               ),
             ),
             routes: <RouteBase>[

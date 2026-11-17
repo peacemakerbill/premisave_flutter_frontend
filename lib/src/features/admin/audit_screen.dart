@@ -65,14 +65,18 @@ DateTime? _since(String range) {
 
 /// Administrators: the account activity trail across the platform, optionally for one user or one address.
 class AuditScreen extends ConsumerStatefulWidget {
-  const AuditScreen({super.key, this.userId, this.q, this.type, this.ip, this.severity});
+  const AuditScreen({super.key, this.userId, this.q, this.type, this.ip, this.severity, this.staff = false, this.range});
 
-  /// Pre-filters, filled by the router from `?userId=`, `?q=`, `?type=`, `?ip=` and `?severity=`.
+  /// Pre-filters, filled by the router from `?userId=`, `?q=`, `?type=`, `?ip=`, `?severity=`, `?group=staff` and `?range=`.
   final String? userId;
   final String? q;
   final String? type;
   final String? ip;
   final String? severity;
+  final bool staff;
+
+  /// How far back to look: today, 24h, 7d or 30d. Anything else means any time.
+  final String? range;
 
   @override
   ConsumerState<AuditScreen> createState() => _AuditScreenState();
@@ -81,14 +85,15 @@ class AuditScreen extends ConsumerStatefulWidget {
 class _AuditScreenState extends ConsumerState<AuditScreen> {
   late String? _type = widget.type;
   late String? _severity = widget.severity;
+  late bool _staff = widget.staff;
   late String? _ip = widget.ip;
   late String? _userId = widget.userId;
   late String? _q = (widget.q == null || widget.q!.trim().isEmpty) ? null : widget.q!.trim();
   late final TextEditingController _search = TextEditingController(text: _q ?? '');
   Timer? _debounce;
   String? _outcome;
-  String _range = _any;
-  DateTime? _from;
+  late String _range = const <String>{'today', '24h', '7d', '30d'}.contains(widget.range) ? widget.range! : _any;
+  late DateTime? _from = _since(_range);
 
   /// How many pages of 50 are loaded.
   int _pages = 1;
@@ -117,6 +122,7 @@ class _AuditScreenState extends ConsumerState<AuditScreen> {
   AuditFilter _filterFor(int page) => AuditFilter(
         q: _q,
         type: _type,
+        staff: _staff,
         userId: _userId,
         severity: _severity,
         outcome: _outcome,
@@ -137,6 +143,7 @@ class _AuditScreenState extends ConsumerState<AuditScreen> {
         _search.clear();
         _q = null;
         _type = null;
+        _staff = false;
         _severity = null;
         _outcome = null;
         _ip = null;
@@ -223,9 +230,12 @@ class _AuditScreenState extends ConsumerState<AuditScreen> {
             }),
             onSeverity: (v) => _change(() => _severity = (v == null || v == _any) ? null : v),
             onOutcome: (v) => _change(() => _outcome = (v == null || v == _any) ? null : v),
-            onType: (v) => _change(() => _type = (v == null || v == _any) ? null : v),
+            onType: (v) => _change(() {
+              _type = (v == null || v == _any) ? null : v;
+              if (_type != null) _staff = false;
+            }),
           ),
-          if (_ip != null || _userId != null) ...<Widget>[
+          if (_ip != null || _userId != null || (_staff && _type == null)) ...<Widget>[
             const SizedBox(height: 10),
             Wrap(
               spacing: 8,
@@ -236,6 +246,12 @@ class _AuditScreenState extends ConsumerState<AuditScreen> {
                     avatar: const Icon(Icons.person_outline_rounded, size: 18),
                     label: const Text('One account'),
                     onDeleted: () => _change(() => _userId = null),
+                  ),
+                if (_staff && _type == null)
+                  InputChip(
+                    avatar: const Icon(Icons.admin_panel_settings_outlined, size: 18),
+                    label: const Text('Staff changes only'),
+                    onDeleted: () => _change(() => _staff = false),
                   ),
                 if (_ip != null)
                   InputChip(

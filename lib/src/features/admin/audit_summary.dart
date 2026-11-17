@@ -17,6 +17,9 @@ class AuditSummaryStrip extends ConsumerWidget {
 
   final int hours;
 
+  /// The tiles count one period, so the list they open covers the same period.
+  String get _range => hours == 24 ? 'range=24h' : '';
+
   String get _period => hours == 24 ? 'the last 24 hours' : 'the last ${plural(hours, 'hour')}';
 
   @override
@@ -25,16 +28,22 @@ class AuditSummaryStrip extends ConsumerWidget {
     return value.when(
       loading: () => const SkeletonList(count: 2, height: 92, shrink: true, padding: EdgeInsets.symmetric(vertical: 6)),
       error: (e, _) => ErrorState(error: e, onRetry: () => ref.invalidate(auditSummaryProvider(hours))),
-      data: (s) => _Body(summary: s, period: _period),
+      data: (s) => _Body(summary: s, period: _period, range: _range),
     );
   }
 }
 
 class _Body extends StatelessWidget {
-  const _Body({required this.summary, required this.period});
+  const _Body({required this.summary, required this.period, required this.range});
 
   final AuditSummary summary;
   final String period;
+
+  /// The `range=` query for the period the figures cover, or empty when it has no matching choice in the audit trail.
+  final String range;
+
+  /// The audit trail on [filter], limited to the period the figure was counted for.
+  String _open(String filter) => '/admin/audit?${<String>[filter, range].where((p) => p.isNotEmpty).join('&')}';
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +70,7 @@ class _Body extends StatelessWidget {
               icon: Icons.block_rounded,
               caption: 'Of ${plural(s.signIns + s.failedSignIns, 'attempt')}',
               tint: s.failedSignIns == 0 ? Brand.success : Brand.danger,
-              onTap: () => context.push('/admin/audit?type=SIGN_IN_FAILED'),
+              onTap: () => context.push(_open('type=SIGN_IN_FAILED')),
             ),
             StatTile(
               label: 'Accounts locked',
@@ -69,7 +78,7 @@ class _Body extends StatelessWidget {
               icon: Icons.lock_outline_rounded,
               caption: s.lockouts == 0 ? 'None locked' : 'After repeated failures',
               tint: s.lockouts == 0 ? Brand.success : Brand.danger,
-              onTap: () => context.push('/admin/audit?type=ACCOUNT_LOCKED'),
+              onTap: () => context.push(_open('type=ACCOUNT_LOCKED')),
             ),
             StatTile(
               label: 'Staff changes',
@@ -77,6 +86,7 @@ class _Body extends StatelessWidget {
               icon: Icons.admin_panel_settings_outlined,
               caption: 'Accounts, roles and settings',
               tint: Brand.info,
+              onTap: () => context.push(_open('group=staff')),
             ),
           ],
         ),
@@ -95,7 +105,7 @@ class _Body extends StatelessWidget {
                   title: auditLabel(t.key).title,
                   subtitle: auditLabel(t.key).category,
                   trailing: Text('${t.count}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
-                  onTap: () => context.push('/admin/audit?type=${Uri.encodeComponent(t.key)}'),
+                  onTap: () => context.push(_open('type=${Uri.encodeComponent(t.key)}')),
                 ),
             ],
           ),
