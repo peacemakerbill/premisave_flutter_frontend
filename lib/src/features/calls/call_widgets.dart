@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart' as lk;
@@ -149,8 +150,8 @@ class CallControl extends StatelessWidget {
   }
 }
 
-/// One person's picture, camera or shared screen, with their name, a muted microphone, a raised hand and a ring
-/// while they speak.
+/// One person's picture, camera or shared screen. It always carries their name, and it shows a muted microphone, a
+/// raised hand, a ring and a sound wave that moves with their voice while they speak.
 class CallTileView extends StatelessWidget {
   const CallTileView({
     super.key,
@@ -178,97 +179,328 @@ class CallTileView extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(radius),
-        child: Stack(
-          fit: StackFit.expand,
-          children: <Widget>[
-            const ColoredBox(color: CallColors.tile),
-            if (video != null)
-              lk.VideoTrackRenderer(video, key: ObjectKey(video))
-            else
-              LayoutBuilder(builder: (context, c) {
-                final side = (c.biggest.shortestSide * 0.42).clamp(36.0, 140.0);
-                return Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      UserAvatar(initials: initialsOf(tile.name), imageUrl: tile.picture, size: side),
-                      if (tile.status != null && !compact) ...<Widget>[
-                        const SizedBox(height: 10),
-                        Text(tile.status!, style: const TextStyle(color: CallColors.muted, fontSize: 13, fontWeight: FontWeight.w600)),
-                      ],
-                    ],
-                  ),
-                );
-              }),
-            if (tile.speaking)
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(radius),
-                      border: Border.all(color: CallColors.speaking, width: 3),
-                    ),
-                  ),
-                ),
-              ),
-            if (!compact)
-              Positioned(
-                left: 8,
-                bottom: 8,
-                right: 8,
-                child: Row(
-                  children: <Widget>[
-                    Flexible(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.55), borderRadius: BorderRadius.circular(8)),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: <Widget>[
-                            if (tile.micOff && tile.status == null) ...<Widget>[
-                              const Icon(Icons.mic_off_rounded, size: 14, color: CallColors.text),
-                              const SizedBox(width: 5),
-                            ],
-                            Flexible(
-                              child: Text(
-                                tile.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(color: CallColors.text, fontSize: 12.5, fontWeight: FontWeight.w600),
-                              ),
-                            ),
-                          ],
-                        ),
+        child: LayoutBuilder(builder: (context, c) {
+          // A roomy tile without a camera puts the name under the picture. Every other tile carries it on a label.
+          final roomy = video == null && !compact && c.biggest.shortestSide >= 200;
+          return Stack(
+            fit: StackFit.expand,
+            children: <Widget>[
+              const ColoredBox(color: CallColors.tile),
+              if (video != null) lk.VideoTrackRenderer(video, key: ObjectKey(video)) else _pictureBody(c, roomy),
+              if (tile.speaking)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(radius),
+                        border: Border.all(color: CallColors.speaking, width: 3),
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            if (tile.handUp)
-              Positioned(
-                top: 8,
-                right: 8,
-                child: Container(
-                  padding: EdgeInsets.all(compact ? 3 : 6),
-                  decoration: const BoxDecoration(color: CallColors.hand, shape: BoxShape.circle),
-                  child: Icon(Icons.back_hand_rounded, size: compact ? 12 : 16, color: CallColors.bg),
+              if (!roomy)
+                Positioned(
+                  left: compact ? 5 : 8,
+                  right: compact ? 5 : 8,
+                  bottom: compact ? 5 : 8,
+                  child: Row(children: <Widget>[Flexible(child: _nameLabel())]),
                 ),
-              ),
-            if (pinned)
-              const Positioned(
-                top: 8,
-                left: 8,
-                child: Icon(Icons.push_pin_rounded, size: 16, color: CallColors.text),
-              ),
-            if (compact && tile.micOff && tile.status == null)
-              const Positioned(
-                bottom: 6,
-                left: 6,
-                child: Icon(Icons.mic_off_rounded, size: 14, color: CallColors.text),
-              ),
+              if (tile.handUp)
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    padding: EdgeInsets.all(compact ? 3 : 6),
+                    decoration: const BoxDecoration(color: CallColors.hand, shape: BoxShape.circle),
+                    child: Icon(Icons.back_hand_rounded, size: compact ? 12 : 16, color: CallColors.bg),
+                  ),
+                ),
+              if (pinned)
+                const Positioned(
+                  top: 8,
+                  left: 8,
+                  child: Icon(Icons.push_pin_rounded, size: 16, color: CallColors.text),
+                ),
+            ],
+          );
+        }),
+      ),
+    );
+  }
+
+  /// What fills the tile when there is no camera: the picture, with the name and state under it on a roomy tile.
+  Widget _pictureBody(BoxConstraints c, bool roomy) {
+    final side = (c.biggest.shortestSide * (roomy ? 0.3 : 0.42)).clamp(36.0, roomy ? 150.0 : 140.0);
+    final picture = SpeakingHalo(
+      active: tile.speaking,
+      level: tile.level,
+      size: side,
+      child: UserAvatar(initials: initialsOf(tile.name), imageUrl: tile.picture, size: side),
+    );
+    if (!roomy) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            picture,
+            if (tile.status != null && !compact) ...<Widget>[
+              const SizedBox(height: 10),
+              Text(tile.status!, style: const TextStyle(color: CallColors.muted, fontSize: 13, fontWeight: FontWeight.w600)),
+            ],
+          ],
+        ),
+      );
+    }
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            picture,
+            const SizedBox(height: 18),
+            Text(
+              tile.name,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: CallColors.text, fontSize: 22, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(height: 22, child: Center(child: _stateLine())),
           ],
         ),
       ),
+    );
+  }
+
+  /// Under the name on a roomy tile: the wave while they speak, otherwise whether they are muted or still ringing.
+  Widget _stateLine() {
+    if (tile.status != null) {
+      return Text(tile.status!, style: const TextStyle(color: CallColors.muted, fontSize: 13, fontWeight: FontWeight.w600));
+    }
+    if (tile.speaking) {
+      return SpeakingWave(active: true, level: tile.level, height: 20, bars: 5, barWidth: 4);
+    }
+    if (tile.micOff) {
+      final color = tile.mutedSpeaking ? CallColors.hand : CallColors.muted;
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon(Icons.mic_off_rounded, size: 16, color: color),
+          const SizedBox(width: 6),
+          Text('Muted', style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w700)),
+        ],
+      );
+    }
+    return const SizedBox.shrink();
+  }
+
+  /// The name on a dark label at the bottom of the tile, led by the wave while they speak or a muted microphone.
+  Widget _nameLabel() {
+    final small = compact;
+    Widget? lead;
+    if (tile.speaking) {
+      lead = SpeakingWave(active: true, level: tile.level, height: small ? 10 : 13, bars: 3, barWidth: small ? 2 : 2.5);
+    } else if (tile.micOff && tile.status == null) {
+      lead = Icon(Icons.mic_off_rounded, size: small ? 12 : 14, color: tile.mutedSpeaking ? CallColors.hand : CallColors.text);
+    }
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: small ? 6 : 8, vertical: small ? 3 : 4),
+      decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.6), borderRadius: BorderRadius.circular(small ? 6 : 8)),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          if (lead != null) ...<Widget>[lead, SizedBox(width: small ? 4 : 6)],
+          Flexible(
+            child: Text(
+              tile.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: CallColors.text, fontSize: small ? 11 : 12.5, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Bars that move while someone speaks, like the sound wave on Teams and Meet. [level] is how loud they are, 0 to 1:
+/// louder voices make taller bars. When [active] is false the bars rest as small dots.
+class SpeakingWave extends StatefulWidget {
+  const SpeakingWave({
+    super.key,
+    required this.active,
+    this.level = 0.5,
+    this.color = CallColors.speaking,
+    this.height = 14,
+    this.bars = 4,
+    this.barWidth = 3,
+  });
+
+  final bool active;
+  final double level;
+  final Color color;
+  final double height;
+  final int bars;
+  final double barWidth;
+
+  @override
+  State<SpeakingWave> createState() => _SpeakingWaveState();
+}
+
+class _SpeakingWaveState extends State<SpeakingWave> with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 1100));
+
+  @override
+  void initState() {
+    super.initState();
+    _sync();
+  }
+
+  @override
+  void didUpdateWidget(SpeakingWave old) {
+    super.didUpdateWidget(old);
+    _sync();
+  }
+
+  void _sync() {
+    if (widget.active) {
+      if (!_c.isAnimating) unawaited(_c.repeat());
+    } else {
+      _c.stop();
+    }
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  double _barHeight(int i, double amp, bool still) {
+    // Whole-number speeds keep the loop seamless; each bar has its own speed and offset so they do not move together.
+    final wave = still ? 0.6 : (math.sin(_c.value * 2 * math.pi * (1 + i % 3) + i * 1.9) + 1) / 2;
+    final rest = widget.barWidth;
+    return rest + (widget.height - rest) * amp * (0.2 + 0.8 * wave);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final still = MediaQuery.of(context).disableAnimations;
+    final target = widget.active ? 0.4 + 0.6 * widget.level.clamp(0.0, 1.0) : 0.0;
+    final gap = widget.barWidth * 0.7;
+    return RepaintBoundary(
+      child: TweenAnimationBuilder<double>(
+        tween: Tween<double>(end: target),
+        duration: const Duration(milliseconds: 260),
+        builder: (context, amp, _) => AnimatedBuilder(
+          animation: _c,
+          builder: (context, _) => SizedBox(
+            height: widget.height,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                for (var i = 0; i < widget.bars; i++) ...<Widget>[
+                  if (i > 0) SizedBox(width: gap),
+                  Container(
+                    width: widget.barWidth,
+                    height: _barHeight(i, amp, still),
+                    decoration: BoxDecoration(color: widget.color, borderRadius: BorderRadius.circular(widget.barWidth)),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Rings that ripple out from a person's picture while they speak. The picture keeps its size and place either way.
+class SpeakingHalo extends StatefulWidget {
+  const SpeakingHalo({
+    super.key,
+    required this.active,
+    required this.size,
+    required this.child,
+    this.level = 0.5,
+  });
+
+  final bool active;
+  final double size;
+  final Widget child;
+  final double level;
+
+  @override
+  State<SpeakingHalo> createState() => _SpeakingHaloState();
+}
+
+class _SpeakingHaloState extends State<SpeakingHalo> with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 1500));
+
+  @override
+  void initState() {
+    super.initState();
+    _sync();
+  }
+
+  @override
+  void didUpdateWidget(SpeakingHalo old) {
+    super.didUpdateWidget(old);
+    _sync();
+  }
+
+  void _sync() {
+    if (widget.active) {
+      if (!_c.isAnimating) unawaited(_c.repeat());
+    } else {
+      _c.stop();
+    }
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  Widget _ring(int k, bool still) {
+    return AnimatedBuilder(
+      animation: _c,
+      builder: (context, _) {
+        final t = still ? 0.35 : (_c.value + k * 0.5) % 1.0;
+        final reach = 0.18 + 0.28 * widget.level.clamp(0.0, 1.0);
+        return Opacity(
+          opacity: (1 - t) * 0.6,
+          child: Transform.scale(
+            scale: 1 + reach * t,
+            child: Container(
+              width: widget.size,
+              height: widget.size,
+              decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: CallColors.speaking, width: 2.5)),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final still = MediaQuery.of(context).disableAnimations;
+    // The two ring slots stay in the list even when idle, so the picture keeps its place in the tree and never reloads.
+    return Stack(
+      alignment: Alignment.center,
+      clipBehavior: Clip.none,
+      children: <Widget>[
+        widget.active ? _ring(0, still) : const SizedBox.shrink(),
+        widget.active ? _ring(1, still) : const SizedBox.shrink(),
+        widget.child,
+      ],
     );
   }
 }

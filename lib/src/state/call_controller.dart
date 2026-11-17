@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
@@ -89,7 +90,9 @@ class CallTile {
     this.isLocal = false,
     this.isScreen = false,
     this.speaking = false,
+    this.level = 0,
     this.micOff = false,
+    this.mutedSpeaking = false,
     this.handUp = false,
     this.status,
   });
@@ -103,7 +106,14 @@ class CallTile {
   final bool isLocal;
   final bool isScreen;
   final bool speaking;
+
+  /// How loud this person is, from 0 (silent) to 1 (loudest), as LiveKit measures it. It drives the speaking wave.
+  final double level;
   final bool micOff;
+
+  /// True only on this person's own tile, while they talk with the microphone muted. It is worked out on this device
+  /// and never sent to anyone, so only they see the hint to unmute.
+  final bool mutedSpeaking;
   final bool handUp;
 
   /// Set for people who were invited and have not joined, for example "Ringing".
@@ -589,6 +599,10 @@ class CallSession extends ChangeNotifier {
   bool speakerOn = false;
   bool frontCamera = true;
 
+  /// True while this person talks with their microphone muted. The call screen then tells them, and only them, to
+  /// unmute. It is measured on this device and nothing about it is sent over the network.
+  bool mutedSpeaking = false;
+
   /// The tile id someone chose to look at in large. Null lets the app follow whoever is speaking.
   String? pinnedId;
 
@@ -674,6 +688,7 @@ class CallSession extends ChangeNotifier {
         debugPrint('Calls: speaker route failed: $e');
       }
     }
+    _devicesOpened = true;
     _ping();
   }
 
@@ -762,6 +777,7 @@ class CallSession extends ChangeNotifier {
     camOn = _cameraTrack(lp) != null;
     sharing = _screenTrack(lp) != null;
     handUp = _hands.contains(identity);
+    _syncWatcher();
   }
 
   void _updateCall(CallInfo call) {
@@ -831,7 +847,9 @@ class CallSession extends ChangeNotifier {
         video: _cameraTrack(p),
         isLocal: local,
         speaking: p.isSpeaking,
+        level: p.audioLevel,
         micOff: !_audioOn(p),
+        mutedSpeaking: local && mutedSpeaking,
         handUp: _hands.contains(uid),
       ));
     }
@@ -855,12 +873,173 @@ class CallSession extends ChangeNotifier {
   Future<void> toggleMic() async {
     final lp = _room?.localParticipant;
     if (lp == null) return;
+    final turningOn = !micOn;
+    if (turningOn) {
+      // Let go of the private listening capture first, so the real microphone has the device to itself.
+      _watchPaused = true;
+      await _stopWatcher();
+    }
     try {
-      await lp.setMicrophoneEnabled(!micOn);
+      await lp.setMicrophoneEnabled(turningOn);
     } catch (e) {
       _owner._notice('The microphone could not be changed.');
+    } finally {
+      _watchPaused = false;
     }
     _ping();
+  }
+
+  // ------------------------------------------------- talking while muted
+
+  // While the microphone is muted the app keeps a second capture that never leaves this device and is never published.
+  // It only measures loudness, so a person who starts talking while muted can be told to unmute, and nobody else is.
+  // The operating system shows its "microphone in use" indicator for as long as it runs. Set this to false to release
+  // the microphone completely while muted; the hint is then not shown.
+  static const bool _listenWhileMuted = true;
+
+  // Loudness is on the visualizer's 0 to 1 scale. Speech has to rise this far above the room's background level, and
+  // be at least [_speechFloor] in absolute terms, to count. The margin grows while someone else is talking, because
+  // their voice from the speakers can leak into the microphone.
+  static const double _speechMargin = 0.2;
+  static const double _speechFloor = 0.45;
+  static const Duration _speechHold = Duration(milliseconds: 400);
+  static const Duration _speechGap = Duration(milliseconds: 250);
+  static const Duration _hintLinger = Duration(milliseconds: 2500);
+
+  lk.LocalAudioTrack? _watchTrack;
+  lk.AudioVisualizer? _watchViz;
+  lk.EventsListener<lk.AudioVisualizerEvent>? _watchListener;
+  bool _devicesOpened = false;
+  bool _watchStarting = false;
+  bool _watchFailed = false;
+  bool _watchPaused = false;
+  double _floor = 1;
+  DateTime? _floorAt;
+  DateTime? _activeSince;
+  DateTime? _lastActive;
+
+  bool get _wantWatch =>
+      _listenWhileMuted && _devicesOpened && !micOn && !_watchPaused && !_watchFailed && !_closing && !_disposed && phase == CallPhase.live;
+
+  void _syncWatcher() {
+    if (_wantWatch) {
+      if (_watchTrack == null && !_watchStarting) unawaited(_startWatcher());
+    } else if (_watchTrack != null) {
+      unawaited(_stopWatcher());
+    }
+  }
+
+  Future<void> _startWatcher() async {
+    if (_watchStarting) return;
+    _watchStarting = true;
+    lk.LocalAudioTrack? track;
+    lk.AudioVisualizer? viz;
+    lk.EventsListener<lk.AudioVisualizerEvent>? listener;
+    try {
+      track = await lk.LocalAudioTrack.create();
+      if (!_wantWatch) {
+        await _releaseWatcher(track, null, null);
+        return;
+      }
+      viz = lk.createVisualizer(track, options: const lk.AudioVisualizerOptions(centeredBands: false, barCount: 7, smoothTransition: true));
+      listener = viz.createListener();
+      listener.on<lk.AudioVisualizerEvent>(_onWatchLevel);
+      await viz.start();
+      if (!_wantWatch) {
+        await _releaseWatcher(track, viz, listener);
+        return;
+      }
+      _watchTrack = track;
+      _watchViz = viz;
+      _watchListener = listener;
+    } catch (e) {
+      // No microphone, no permission, or a platform without the visualizer. The call carries on without the hint.
+      debugPrint('Calls: cannot listen for speech while muted: $e');
+      _watchFailed = true;
+      await _releaseWatcher(track, viz, listener);
+    } finally {
+      _watchStarting = false;
+      // The mute button may have been pressed again while this was starting.
+      if (!_disposed) _syncWatcher();
+    }
+  }
+
+  Future<void> _stopWatcher() async {
+    // A start that is still in flight ends quickly, because it checks again once the capture exists.
+    for (var i = 0; i < 60 && _watchStarting; i++) {
+      await Future<void>.delayed(const Duration(milliseconds: 30));
+    }
+    final track = _watchTrack;
+    final viz = _watchViz;
+    final listener = _watchListener;
+    _watchTrack = null;
+    _watchViz = null;
+    _watchListener = null;
+    _floor = 1;
+    _floorAt = null;
+    _activeSince = null;
+    _lastActive = null;
+    if (mutedSpeaking) {
+      mutedSpeaking = false;
+      _notify();
+    }
+    await _releaseWatcher(track, viz, listener);
+  }
+
+  Future<void> _releaseWatcher(lk.LocalAudioTrack? track, lk.AudioVisualizer? viz, lk.EventsListener<lk.AudioVisualizerEvent>? listener) async {
+    try {
+      await viz?.stop();
+    } catch (_) {}
+    try {
+      await viz?.dispose();
+    } catch (_) {}
+    try {
+      await listener?.dispose();
+    } catch (_) {}
+    try {
+      await track?.stop();
+    } catch (_) {}
+    try {
+      await track?.dispose();
+    } catch (_) {}
+  }
+
+  void _onWatchLevel(lk.AudioVisualizerEvent e) {
+    if (_disposed || micOn || _watchTrack == null) return;
+    var level = 0.0;
+    for (final v in e.event) {
+      if (v is num && v > level) level = v.toDouble();
+    }
+    final now = DateTime.now();
+
+    // The room's background level: it drops at once and creeps up slowly, so a few seconds of talking do not raise it.
+    final before = _floorAt;
+    _floorAt = now;
+    if (level <= _floor) {
+      _floor = level;
+    } else if (before != null) {
+      _floor = math.min(level, _floor + 0.05 * now.difference(before).inMilliseconds / 1000);
+    }
+
+    var margin = _speechMargin;
+    final room = _room;
+    if (room != null && room.remoteParticipants.values.any((p) => p.isSpeaking)) margin *= 1.6;
+
+    if (level >= _speechFloor && level - _floor > margin) {
+      _lastActive = now;
+      _activeSince ??= now;
+    } else if (_lastActive != null && now.difference(_lastActive!) > _speechGap) {
+      _activeSince = null;
+    }
+
+    final talking = _activeSince != null && now.difference(_activeSince!) >= _speechHold;
+    if (talking && !mutedSpeaking) {
+      mutedSpeaking = true;
+      _notify();
+    } else if (!talking && mutedSpeaking && _lastActive != null && now.difference(_lastActive!) > _hintLinger) {
+      mutedSpeaking = false;
+      _notify();
+    }
   }
 
   Future<void> toggleCamera() async {
@@ -1071,6 +1250,7 @@ class CallSession extends ChangeNotifier {
       await listener?.dispose();
     } catch (_) {}
     await _stopBackground();
+    await _stopWatcher();
     try {
       await room?.disconnect();
     } catch (_) {}

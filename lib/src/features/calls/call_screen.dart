@@ -556,6 +556,49 @@ class _CallScreenState extends ConsumerState<CallScreen> {
     return Padding(padding: const EdgeInsets.only(bottom: 6), child: Wrap(spacing: 8, runSpacing: 6, alignment: WrapAlignment.center, children: msgs));
   }
 
+  /// Tells this person, and nobody else, that they are talking while muted. Tapping it unmutes.
+  Widget _mutedNudge() {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 180),
+      child: !_s.mutedSpeaking
+          ? const SizedBox.shrink(key: ValueKey<String>('nudge-off'))
+          : Semantics(
+              key: const ValueKey<String>('nudge-on'),
+              liveRegion: true,
+              button: true,
+              label: 'You are muted. Tap to unmute.',
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(22),
+                  onTap: _s.toggleMic,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                    decoration: BoxDecoration(
+                      color: CallColors.bg.withValues(alpha: 0.92),
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(color: CallColors.hand, width: 1.5),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        Icon(Icons.mic_off_rounded, size: 18, color: CallColors.hand),
+                        SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            'You are muted. Tap to unmute.',
+                            style: TextStyle(color: CallColors.text, fontSize: 13.5, fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+    );
+  }
+
   Widget _pill(IconData icon, String text, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -584,9 +627,21 @@ class _CallScreenState extends ConsumerState<CallScreen> {
                   child: Row(
                     children: <Widget>[
                       Expanded(
-                        child: tiles.isEmpty
-                            ? const Center(child: CircularProgressIndicator(color: CallColors.speaking))
-                            : Padding(padding: const EdgeInsets.symmetric(horizontal: 2), child: _stage(context, tiles)),
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: <Widget>[
+                            tiles.isEmpty
+                                ? const Center(child: CircularProgressIndicator(color: CallColors.speaking))
+                                : Padding(padding: const EdgeInsets.symmetric(horizontal: 2), child: _stage(context, tiles)),
+                            // Floats over the stage so it never resizes the tiles. Shown to this person only.
+                            Positioned(
+                              top: 8,
+                              left: 12,
+                              right: 12,
+                              child: Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[Flexible(child: _mutedNudge())]),
+                            ),
+                          ],
+                        ),
                       ),
                       if (side)
                         Container(
