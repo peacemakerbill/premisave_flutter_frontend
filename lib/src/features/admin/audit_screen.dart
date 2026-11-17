@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -63,10 +65,11 @@ DateTime? _since(String range) {
 
 /// Administrators: the account activity trail across the platform, optionally for one user or one address.
 class AuditScreen extends ConsumerStatefulWidget {
-  const AuditScreen({super.key, this.userId, this.type, this.ip, this.severity});
+  const AuditScreen({super.key, this.userId, this.q, this.type, this.ip, this.severity});
 
-  /// Pre-filters, filled by the router from `?userId=`, `?type=`, `?ip=` and `?severity=`.
+  /// Pre-filters, filled by the router from `?userId=`, `?q=`, `?type=`, `?ip=` and `?severity=`.
   final String? userId;
+  final String? q;
   final String? type;
   final String? ip;
   final String? severity;
@@ -80,6 +83,9 @@ class _AuditScreenState extends ConsumerState<AuditScreen> {
   late String? _severity = widget.severity;
   late String? _ip = widget.ip;
   late String? _userId = widget.userId;
+  late String? _q = (widget.q == null || widget.q!.trim().isEmpty) ? null : widget.q!.trim();
+  late final TextEditingController _search = TextEditingController(text: _q ?? '');
+  Timer? _debounce;
   String? _outcome;
   String _range = _any;
   DateTime? _from;
@@ -89,7 +95,27 @@ class _AuditScreenState extends ConsumerState<AuditScreen> {
 
   late final List<PChoice<String>> _eventOptions = _eventChoices();
 
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _search.dispose();
+    super.dispose();
+  }
+
+  /// Searches as the person types, a moment after they stop, so each key does not send a request.
+  void _onSearchChanged(String text) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 450), () => _applySearch(text));
+  }
+
+  void _applySearch(String text) {
+    if (!mounted) return;
+    final clean = text.trim();
+    _change(() => _q = clean.isEmpty ? null : clean);
+  }
+
   AuditFilter _filterFor(int page) => AuditFilter(
+        q: _q,
         type: _type,
         userId: _userId,
         severity: _severity,
@@ -107,6 +133,9 @@ class _AuditScreenState extends ConsumerState<AuditScreen> {
       });
 
   void _clear() => _change(() {
+        _debounce?.cancel();
+        _search.clear();
+        _q = null;
         _type = null;
         _severity = null;
         _outcome = null;
@@ -155,6 +184,33 @@ class _AuditScreenState extends ConsumerState<AuditScreen> {
             const AuditSummaryStrip(),
             const SectionHeader('All events'),
           ],
+          PTextField(
+            // The key keeps the field, and its focus, when the summary above it appears or goes away while typing.
+            key: const ValueKey<String>('audit-search'),
+            label: 'Search',
+            controller: _search,
+            hint: 'Name, username, email, IP address, device, event, anything',
+            prefixIcon: Icons.search_rounded,
+            textInputAction: TextInputAction.search,
+            onChanged: _onSearchChanged,
+            onSubmitted: (v) {
+              _debounce?.cancel();
+              _applySearch(v);
+            },
+            suffix: _search.text.isEmpty
+                ? null
+                : IconButton(
+                    tooltip: 'Clear search',
+                    icon: const Icon(Icons.close_rounded),
+                    onPressed: () {
+                      _debounce?.cancel();
+                      _search.clear();
+                      _applySearch('');
+                    },
+                  ),
+            helper: 'Use several words to narrow it down, for example "john failed" or "nairobi chrome".',
+          ),
+          const SizedBox(height: 14),
           _Filters(
             range: _range,
             severity: _severity ?? _any,

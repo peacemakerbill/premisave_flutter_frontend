@@ -5,6 +5,7 @@ import '../../core/widgets/widgets.dart';
 import '../../roles/role.dart';
 import '../../roles/role_registry.dart';
 import '../../state/session_controller.dart';
+import 'admin/admin_overview.dart';
 import 'client/client_overview.dart';
 import 'finance/finance_overview.dart';
 import 'home_owner/home_owner_overview.dart';
@@ -35,11 +36,7 @@ class RoleOverviewPage extends ConsumerWidget {
       case Role.support:
         return const SupportOverview();
       case Role.admin:
-        return const EmptyState(
-          icon: Icons.dashboard_outlined,
-          title: 'No overview yet',
-          message: 'Use the Applications and Users tabs to manage the platform.',
-        );
+        return const AdminOverview();
     }
   }
 }

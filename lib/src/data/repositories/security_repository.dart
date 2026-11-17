@@ -47,6 +47,7 @@ class SecurityRepository {
 
   /// Administrator audit trail, newest first. Every filter is optional.
   Future<List<SecurityEventView>> adminEvents({
+    String? q,
     String? userId,
     String? actor,
     String? type,
@@ -60,6 +61,7 @@ class SecurityRepository {
   }) async {
     String? text(String? v) => (v == null || v.trim().isEmpty) ? null : v.trim();
     final res = await _api.get('/admin/security/events', query: {
+      if (text(q) != null) 'q': text(q),
       if (text(userId) != null) 'userId': text(userId),
       if (text(actor) != null) 'actor': text(actor),
       if (text(type) != null) 'type': text(type),

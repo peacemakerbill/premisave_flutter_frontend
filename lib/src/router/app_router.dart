@@ -256,6 +256,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               s,
               AuditScreen(
                 userId: s.uri.queryParameters['userId'],
+                q: s.uri.queryParameters['q'],
                 type: s.uri.queryParameters['type'],
                 ip: s.uri.queryParameters['ip'],
                 severity: s.uri.queryParameters['severity'],

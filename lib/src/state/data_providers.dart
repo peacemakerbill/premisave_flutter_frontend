@@ -36,6 +36,7 @@ final securityEventsProvider = FutureProvider.autoDispose<List<SecurityEventView
 /// What the audit trail is filtered by. [from] is a moment, so "last 7 days" is turned into a date when picked.
 class AuditFilter {
   const AuditFilter({
+    this.q,
     this.type,
     this.userId,
     this.severity,
@@ -45,6 +46,8 @@ class AuditFilter {
     this.page = 0,
   });
 
+  /// Free text: a name, username, email, address, device, event or anything else in the event.
+  final String? q;
   final String? type;
   final String? userId;
   final String? severity;
@@ -54,6 +57,7 @@ class AuditFilter {
   final int page;
 
   AuditFilter onPage(int p) => AuditFilter(
+        q: q,
         type: type,
         userId: userId,
         severity: severity,
@@ -64,11 +68,12 @@ class AuditFilter {
       );
 
   /// True when something other than the person is narrowing the list.
-  bool get narrowed => type != null || severity != null || outcome != null || ip != null || from != null;
+  bool get narrowed => q != null || type != null || severity != null || outcome != null || ip != null || from != null;
 
   @override
   bool operator ==(Object other) =>
       other is AuditFilter &&
+      other.q == q &&
       other.type == type &&
       other.userId == userId &&
       other.severity == severity &&
@@ -78,13 +83,14 @@ class AuditFilter {
       other.page == page;
 
   @override
-  int get hashCode => Object.hash(type, userId, severity, outcome, ip, from, page);
+  int get hashCode => Object.hash(q, type, userId, severity, outcome, ip, from, page);
 }
 
 const int auditPageSize = 50;
 
 final auditEventsProvider = FutureProvider.autoDispose.family<List<SecurityEventView>, AuditFilter>(
   (ref, f) => ref.watch(securityRepositoryProvider).adminEvents(
+        q: f.q,
         type: f.type,
         userId: f.userId,
         severity: f.severity,
@@ -98,6 +104,11 @@ final auditEventsProvider = FutureProvider.autoDispose.family<List<SecurityEvent
 
 final auditEventProvider = FutureProvider.autoDispose.family<SecurityEventView, String>(
   (ref, id) => ref.watch(securityRepositoryProvider).adminEvent(id),
+);
+
+/// The latest few events, for the administrator overview.
+final auditRecentProvider = FutureProvider.autoDispose<List<SecurityEventView>>(
+  (ref) => ref.watch(securityRepositoryProvider).adminEvents(size: 8),
 );
 
 final auditSummaryProvider = FutureProvider.autoDispose.family<AuditSummary, int>(
