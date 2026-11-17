@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/theme/brand.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/widgets.dart';
 import '../../data/models/security_models.dart';
@@ -41,10 +42,14 @@ class SecurityEventsScreen extends ConsumerWidget {
                       title: e.title,
                       subtitle: <String>[
                         whenLabel(e.createdAt),
-                        if (e.ipAddress != null) e.ipAddress!,
-                        if (e.reason != null) e.reason!,
-                      ].join(' · '),
-                      trailing: const SizedBox.shrink(),
+                        <String>[
+                          if (e.deviceLabel != null) e.deviceLabel!,
+                          if (e.ipAddress != null) e.ipAddress!,
+                          if (e.place.isNotEmpty) e.place,
+                        ].join(' · '),
+                        e.reason ?? e.description,
+                      ].where((l) => l.isNotEmpty).join('\n'),
+                      trailing: e.isFailure ? const StatusPill('Failed', dense: true, color: Brand.danger) : const SizedBox.shrink(),
                     ),
                 ],
               ),

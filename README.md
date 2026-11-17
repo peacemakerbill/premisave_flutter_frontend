@@ -173,7 +173,7 @@ Everything marked **live** talks to the real auth-service. The rest shows sample
 | People | live | Directory, follow, like, reviews and public profiles |
 | Home owner application | live | Guided form, document upload, status, withdraw and reapply |
 | Staff review | live | Queue and decisions on submitted applications |
-| Administration | live | User list and details, role changes, platform wide audit trail, final approval of applications |
+| Administration | live | User list and details, role changes, platform wide security summary and audit trail (filters, who and what, device, address and place, full event details), final approval of applications |
 | Places | live | Address search and "what is here", through the auth-service when it has a Google key, free Photon search otherwise |
 | Messages | live | Chats, groups, replies, reactions, files, typing and online status, statuses, group invite links and QR codes, voice and video calls (one to one, group, call links, screen share) that a host can record, through the messenger service. See [docs/MESSENGER.md](docs/MESSENGER.md) |
 | Bookings, payments, transactions, wishlists | sample | Screens are built, the services behind them are not |

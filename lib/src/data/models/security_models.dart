@@ -1,3 +1,4 @@
+import '../../core/utils/audit_labels.dart';
 import 'json_utils.dart';
 
 class SessionView {
@@ -118,10 +119,31 @@ class SecurityEventView {
       : id = str(j['id']),
         type = strOr(j['type']),
         severity = strOr(j['severity'], 'INFO'),
+        outcome = str(j['outcome']),
         userId = str(j['userId']),
+        userName = str(j['userName']),
+        userEmail = str(j['userEmail']),
         actor = str(j['actor']),
+        actorName = str(j['actorName']),
+        actorEmail = str(j['actorEmail']),
+        actorRole = str(j['actorRole']),
         subject = str(j['subjectMasked']),
         ipAddress = str(j['ipAddress']),
+        country = str(j['country']),
+        region = str(j['region']),
+        city = str(j['city']),
+        userAgent = str(j['userAgent']),
+        deviceLabel = str(j['deviceLabel']),
+        deviceType = str(j['deviceType']),
+        os = str(j['os']),
+        browser = str(j['browser']),
+        sessionId = str(j['sessionId']),
+        deviceId = str(j['deviceId']),
+        targetType = str(j['targetType']),
+        targetId = str(j['targetId']),
+        targetLabel = str(j['targetLabel']),
+        requestMethod = str(j['requestMethod']),
+        requestPath = str(j['requestPath']),
         reason = str(j['reason']),
         details = asMap(j['details']).map((k, v) => MapEntry(k, v.toString())),
         createdAt = dateOrNull(j['createdAt']);
@@ -129,22 +151,112 @@ class SecurityEventView {
   final String? id;
   final String type;
   final String severity;
+
+  /// SUCCESS or FAILURE. Older events have none.
+  final String? outcome;
+
+  /// The person it happened to, and who did it. Names and emails come from the admin trail only.
   final String? userId;
+  final String? userName;
+  final String? userEmail;
   final String? actor;
+  final String? actorName;
+  final String? actorEmail;
+  final String? actorRole;
   final String? subject;
   final String? ipAddress;
+  final String? country;
+  final String? region;
+  final String? city;
+  final String? userAgent;
+  final String? deviceLabel;
+  final String? deviceType;
+  final String? os;
+  final String? browser;
+  final String? sessionId;
+  final String? deviceId;
+  final String? targetType;
+  final String? targetId;
+  final String? targetLabel;
+  final String? requestMethod;
+  final String? requestPath;
   final String? reason;
   final Map<String, String> details;
   final DateTime? createdAt;
 
-  /// SIGN_IN_FAILED becomes "Sign in failed".
-  String get title {
-    final t = type.toLowerCase().replaceAll('_', ' ');
-    return t.isEmpty ? 'Event' : t[0].toUpperCase() + t.substring(1);
-  }
+  /// "Failed sign in" for SIGN_IN_FAILED. Kinds the app does not know are turned into a sentence.
+  String get title => auditLabel(type).title;
+
+  /// One sentence on what this kind of event means.
+  String get description => auditLabel(type).description;
+
+  String get category => auditLabel(type).category;
 
   bool get isWarning => severity == 'WARNING' || severity == 'WARN';
   bool get isCritical => severity == 'CRITICAL' || severity == 'ALERT' || severity == 'HIGH';
+  bool get isFailure => (outcome ?? '').toUpperCase() == 'FAILURE';
+
+  /// The person the event is about: their name, else their email, else the masked address kept with the event.
+  String? get personLabel => userName ?? userEmail ?? subject;
+
+  /// The person who did it. "System" and "Not signed in" stand in when no one was signed in.
+  String? get actorLabel {
+    if (actorName != null) return actorName;
+    if (actorEmail != null) return actorEmail;
+    final a = (actor ?? '').toUpperCase();
+    if (a == 'SYSTEM') return 'The system';
+    if (a == 'ANONYMOUS') return 'Not signed in';
+    return actor;
+  }
+
+  /// "Chrome on Linux", from what the sign in reported.
+  String get browserAndOs => browserAndSystem(browser, os);
+
+  String get place => placeLabel(city, region, country);
+}
+
+/// One row of the summary: an event type and how many times it happened.
+class EventCount {
+  EventCount(Map<String, dynamic> j)
+      : key = strOr(j['key']),
+        count = intOr(j['count']);
+
+  final String key;
+  final int count;
+}
+
+/// GET /admin/security/summary
+class AuditSummary {
+  AuditSummary(Map<String, dynamic> j)
+      : from = dateOrNull(j['from']),
+        to = dateOrNull(j['to']),
+        total = intOr(j['total']),
+        info = intOr(j['info']),
+        warning = intOr(j['warning']),
+        critical = intOr(j['critical']),
+        failures = intOr(j['failures']),
+        signIns = intOr(j['signIns']),
+        failedSignIns = intOr(j['failedSignIns']),
+        lockouts = intOr(j['lockouts']),
+        adminChanges = intOr(j['adminChanges']),
+        people = intOr(j['people']),
+        addresses = intOr(j['addresses']),
+        topTypes = mapList(j['topTypes']).map(EventCount.new).toList();
+
+  final DateTime? from;
+  final DateTime? to;
+  final int total;
+  final int info;
+  final int warning;
+  final int critical;
+  final int failures;
+  final int signIns;
+  final int failedSignIns;
+  final int lockouts;
+  final int adminChanges;
+  final int people;
+  final int addresses;
+  final List<EventCount> topTypes;
 }
 
 class CountResult {

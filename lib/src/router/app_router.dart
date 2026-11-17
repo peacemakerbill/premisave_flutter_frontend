@@ -17,6 +17,7 @@ import '../features/admin/admin_storage_settings_screen.dart';
 import '../features/admin/admin_edit_user_screen.dart';
 import '../features/admin/admin_user_detail_screen.dart';
 import '../features/admin/admin_users_screen.dart';
+import '../features/admin/audit_event_screen.dart';
 import '../features/admin/audit_screen.dart';
 import '../features/application/application_hub_screen.dart';
 import '../features/application/application_wizard_screen.dart';
@@ -249,7 +250,21 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/admin/settings', pageBuilder: (_, s) => tabPage(s, const AdminSettingsScreen())),
           GoRoute(path: '/admin/calls', pageBuilder: (_, s) => detailPage(s, const AdminCallSettingsScreen())),
           GoRoute(path: '/admin/storage', pageBuilder: (_, s) => detailPage(s, const AdminStorageSettingsScreen())),
-          GoRoute(path: '/admin/audit', pageBuilder: (_, s) => tabPage(s, AuditScreen(userId: s.uri.queryParameters['userId']))),
+          GoRoute(
+            path: '/admin/audit',
+            pageBuilder: (_, s) => tabPage(
+              s,
+              AuditScreen(
+                userId: s.uri.queryParameters['userId'],
+                type: s.uri.queryParameters['type'],
+                ip: s.uri.queryParameters['ip'],
+                severity: s.uri.queryParameters['severity'],
+              ),
+            ),
+            routes: <RouteBase>[
+              GoRoute(path: ':id', pageBuilder: (_, s) => detailPage(s, AuditEventScreen(eventId: s.pathParameters['id']!))),
+            ],
+          ),
         ],
       ),
     ],

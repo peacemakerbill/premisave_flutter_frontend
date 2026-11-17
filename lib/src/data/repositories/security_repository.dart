@@ -45,14 +45,40 @@ class SecurityRepository {
   Future<List<SecurityEventView>> events() async =>
       mapList(await _api.get('/security/events')).map(SecurityEventView.new).toList();
 
-  /// Administrator audit trail.
-  Future<List<SecurityEventView>> adminEvents({String? userId, String? type, int page = 0, int size = 50}) async {
+  /// Administrator audit trail, newest first. Every filter is optional.
+  Future<List<SecurityEventView>> adminEvents({
+    String? userId,
+    String? actor,
+    String? type,
+    String? severity,
+    String? outcome,
+    String? ip,
+    DateTime? from,
+    DateTime? to,
+    int page = 0,
+    int size = 50,
+  }) async {
+    String? text(String? v) => (v == null || v.trim().isEmpty) ? null : v.trim();
     final res = await _api.get('/admin/security/events', query: {
-      if (userId != null && userId.isNotEmpty) 'userId': userId,
-      if (type != null && type.isNotEmpty) 'type': type,
+      if (text(userId) != null) 'userId': text(userId),
+      if (text(actor) != null) 'actor': text(actor),
+      if (text(type) != null) 'type': text(type),
+      if (text(severity) != null) 'severity': text(severity),
+      if (text(outcome) != null) 'outcome': text(outcome),
+      if (text(ip) != null) 'ip': text(ip),
+      if (from != null) 'from': from.toUtc().toIso8601String(),
+      if (to != null) 'to': to.toUtc().toIso8601String(),
       'page': page,
       'size': size,
     });
     return mapList(res).map(SecurityEventView.new).toList();
   }
+
+  /// One audit event with everything recorded about it.
+  Future<SecurityEventView> adminEvent(String id) async =>
+      SecurityEventView(asMap(await _api.get('/admin/security/events/${_id(id)}')));
+
+  /// Counts for the last [hours] hours.
+  Future<AuditSummary> adminSummary({int hours = 24}) async =>
+      AuditSummary(asMap(await _api.get('/admin/security/summary', query: {'hours': hours})));
 }
