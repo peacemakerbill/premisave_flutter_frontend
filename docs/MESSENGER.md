@@ -50,6 +50,8 @@ On a real phone use your computer's address on the network, for example `--dart-
 
 ## Running it
 
+<img src="assets/whole-stack.svg" alt="Start the auth-service, then the messenger, then LiveKit if you want calls, then the Flutter app" width="100%"/>
+
 1. Start the auth-service on port 8080.
 2. Start the messenger service on port 8081. It needs MongoDB and Redis, and it must use the same `JWT_SECRET` as the auth-service so the token is accepted.
 3. For calls, start LiveKit (and the recorder, for recording) from `deploy/livekit` in the messenger repository, and set `LIVEKIT_API_KEY` and `LIVEKIT_API_SECRET` for the messenger.

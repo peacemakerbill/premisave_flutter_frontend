@@ -50,6 +50,7 @@ Everyone signs in to the **same app**. What they see after that depends on their
 ## Contents
 
 - [Quick start](#quick-start)
+- [Run the whole system with Docker](#run-the-whole-system-with-docker)
 - [What is connected](#what-is-connected)
 - [How it works](#how-it-works)
 - [Roles and access](#roles-and-access)
@@ -129,6 +130,30 @@ Skip the questions with flags, for example `./run.sh --platform linux --env deve
 **6. Sign in.** Create an account on the welcome screen, open the activation link from the email, and you are in. To see the staff and administrator screens, sign in with one of the administrator accounts the backend creates from its `.env`.
 
 > **Real phone or emulator?** The Android emulator reaches your computer at `10.0.2.2`, which the app already uses by default. A real phone needs your computer's address on the network, for example `--dart-define=BASE_URL=http://192.168.1.20:8080`.
+
+<img src="docs/assets/divider.svg" alt="" width="100%"/>
+
+## Run the whole system with Docker
+
+<img src="docs/assets/whole-stack.svg" alt="Start the auth-service, then the messenger, then LiveKit if you want calls, then the Flutter app" width="100%"/>
+
+The two backends ship with a Docker setup, so a full development system is a few commands and needs no Java, MongoDB or Redis. Put the three repositories side by side, then start them in this order:
+
+```bash
+(cd premisave_auth_service && docker compose up --build -d)                                 # 1. sign in, on :8080
+(cd premisave-messenger-service && docker compose up --build -d)                            # 2. messages, on :8081
+(cd premisave-messenger-service/deploy/livekit && docker compose --env-file ../../.env up -d)   # 3. only for calls
+(cd premisave_flutter_frontend && ./run.sh)                                                 # 4. the app
+```
+
+Check the backends with `curl http://localhost:8080/health` and `curl http://localhost:8081/health`. Stop them with `docker compose down` in each folder. The data stays in Docker volumes, and `docker compose down -v` wipes it.
+
+| Where the backends run | What to tell the app |
+| --- | --- |
+| On this computer, Docker as above | Nothing. The defaults are `http://localhost:8080` and `http://localhost:8081` (`10.0.2.2` on the Android emulator) |
+| A staging or production server | Set `BASE_URL` and `MESSENGER_URL` in a settings file under `config/env/`, or pass them with `--dart-define`. See [config/env/README.md](config/env/README.md) |
+
+Staging and production need an env file and a version tag. Each backend explains them, with pictures, in its own README: [auth-service](https://github.com/peacemakerbill/premisave_auth_service#run-it-with-docker-and-deploy-it) and [messenger service](https://github.com/peacemakerbill/premisave-messenger-service#run-it-with-docker-and-deploy-it).
 
 <img src="docs/assets/divider.svg" alt="" width="100%"/>
 
@@ -280,7 +305,7 @@ premisave_flutter_frontend/
 |-- config/env/                    development, staging and production settings
 |-- assets/                        brand images and the font families
 |-- docs/                          the guides, and the pictures used in them
-|-- tool/readme_assets.py          redraws the pictures in docs/assets
+|-- tool/readme_assets.py          redraws the pictures in docs/assets (deploy_pictures.py draws the Docker one)
 |-- android/ ios/ web/ linux/ windows/ macos/
 `-- run.sh, run.bat, run.ps1       pick a platform or device, then run the app
 ```

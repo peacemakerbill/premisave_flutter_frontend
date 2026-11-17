@@ -8,6 +8,7 @@ on:
     paths:
       - 'lib/**'
       - 'tool/readme_assets.py'
+      - 'tool/deploy_pictures.py'
       - '.github/workflows/readme-assets.yml'
   workflow_dispatch:
 
