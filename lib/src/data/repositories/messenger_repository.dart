@@ -79,6 +79,7 @@ class MessengerRepository {
     String? attachmentId,
     String? replyToMessageId,
     List<String> mentionedUserIds = const <String>[],
+    bool mentionAll = false,
   }) async {
     final body = <String, dynamic>{
       'chatId': chatId,
@@ -87,6 +88,7 @@ class MessengerRepository {
       if (attachmentId != null) 'attachmentId': attachmentId,
       if (replyToMessageId != null) 'replyToMessageId': replyToMessageId,
       if (mentionedUserIds.isNotEmpty) 'mentionedUserIds': mentionedUserIds,
+      if (mentionAll) 'mentionAll': true,
     };
     return MMessage.fromJson(asMap(await _api.post('/api/messages', body: body)));
   }
@@ -97,9 +99,9 @@ class MessengerRepository {
     return MAttachment.fromJson(asMap(await _api.upload('/api/attachments', form, onProgress: onProgress)));
   }
 
-  Future<MMessage> edit(String messageId, String content, {List<String>? mentionedUserIds}) async => MMessage.fromJson(asMap(await _api.put(
+  Future<MMessage> edit(String messageId, String content, {List<String>? mentionedUserIds, bool? mentionAll}) async => MMessage.fromJson(asMap(await _api.put(
         '/api/messages/${_id(messageId)}',
-        body: <String, dynamic>{'content': content, if (mentionedUserIds != null) 'mentionedUserIds': mentionedUserIds},
+        body: <String, dynamic>{'content': content, if (mentionedUserIds != null) 'mentionedUserIds': mentionedUserIds, if (mentionAll != null) 'mentionAll': mentionAll},
       )));
 
   Future<Map<String, List<String>>> react(String messageId, String emoji) async {

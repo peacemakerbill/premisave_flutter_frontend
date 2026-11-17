@@ -95,8 +95,17 @@ class _ConversationPaneState extends ConsumerState<ConversationPane> with Widget
 
   // ----------------------------------------------------------------- sending
 
-  void _send(String text, List<String> mentions) {
-    _controller.sendText(widget.chatId, text, replyTo: _replyTo, mentions: mentions);
+  /// Names of the people in this chat, so tagged names can be marked in messages.
+  Map<String, String> _mentionNameById = <String, String>{};
+
+  List<String> _mentionNamesOf(MMessage m) => <String>[
+        if (m.mentionAll) 'all',
+        for (final id in m.mentionedUserIds)
+          if ((_mentionNameById[id] ?? '').isNotEmpty) _mentionNameById[id]!,
+      ];
+
+  void _send(String text, List<String> mentions, bool mentionAll) {
+    _controller.sendText(widget.chatId, text, replyTo: _replyTo, mentions: mentions, mentionAll: mentionAll);
     setState(() => _replyTo = null);
     WidgetsBinding.instance.addPostFrameCallback((_) => _toLatest());
   }
@@ -111,12 +120,12 @@ class _ConversationPaneState extends ConsumerState<ConversationPane> with Widget
     WidgetsBinding.instance.addPostFrameCallback((_) => _toLatest());
   }
 
-  Future<void> _saveEdit(String text, List<String> mentions) async {
+  Future<void> _saveEdit(String text, List<String> mentions, bool mentionAll) async {
     final m = _editing;
     if (m == null) return;
     setState(() => _editing = null);
     try {
-      await _controller.edit(m, text, mentions: mentions);
+      await _controller.edit(m, text, mentions: mentions, mentionAll: mentionAll);
     } catch (e) {
       if (mounted) showApiError(context, e);
     }
@@ -342,14 +351,29 @@ class _ConversationPaneState extends ConsumerState<ConversationPane> with Widget
         : (chat.isGroup ? '${chat.memberCount} members' : presenceLabel(presence));
 
     List<MentionTarget> mentionTargets = const <MentionTarget>[];
+    _mentionNameById = <String, String>{if (s.me != null) s.me!.id: s.me!.name};
     if (chat.isGroup && chat.groupId != null) {
       final g = ref.watch(groupDetailsProvider(chat.groupId ?? '')).valueOrNull;
       if (g != null) {
         mentionTargets = <MentionTarget>[
+          const MentionTarget.everyone(),
           for (final mem in g.members)
-            if (mem.id != myId) MentionTarget(id: mem.id, name: mem.name, photo: mem.profilePictureUrl),
+            if (mem.id != myId)
+              MentionTarget(id: mem.id, name: mem.name, photo: mem.profilePictureUrl, username: mem.username, email: mem.email),
         ];
       }
+    } else if (!chat.isGroup && chat.otherUser != null) {
+      // In a private chat the only person who can be tagged is the other one.
+      final o = chat.otherUser!;
+      if (o.id.isNotEmpty && o.id != myId) {
+        mentionTargets = <MentionTarget>[
+          MentionTarget(id: o.id, name: o.name, photo: o.profilePictureUrl, username: o.username, email: o.email),
+        ];
+      }
+    }
+
+    for (final t in mentionTargets) {
+      if (!t.isAll) _mentionNameById[t.id] = t.name;
     }
 
     return Column(
@@ -519,6 +543,7 @@ class _ConversationPaneState extends ConsumerState<ConversationPane> with Widget
               myId: myId,
               showName: row.showName,
               highlight: query,
+              mentionNames: _mentionNamesOf(m),
               onLongPress: () => _showActions(m),
               onReact: (e) => _quickReact(m, e),
               onRetry: () => _controller.retry(m),

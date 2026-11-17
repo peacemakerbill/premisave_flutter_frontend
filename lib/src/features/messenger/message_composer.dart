@@ -12,11 +12,32 @@ import 'send_preview_dialog.dart';
 
 /// Someone who can be tagged with @ in this chat.
 class MentionTarget {
-  const MentionTarget({required this.id, required this.name, this.photo});
+  const MentionTarget({
+    required this.id,
+    required this.name,
+    this.photo,
+    this.username = '',
+    this.email = '',
+    this.isAll = false,
+  });
+
+  /// The "@all" entry, shown first in a group. It tags everyone in the group.
+  const MentionTarget.everyone()
+      : id = '@all',
+        name = 'all',
+        photo = null,
+        username = '',
+        email = '',
+        isAll = true;
 
   final String id;
   final String name;
   final String? photo;
+  final String username;
+  final String email;
+
+  /// True for the @all entry.
+  final bool isAll;
 }
 
 /// The message box: text, emoji, attachments, a reply or edit banner above it, and @ tagging.
@@ -34,8 +55,8 @@ class MessageComposer extends StatefulWidget {
     this.replyAuthor,
   });
 
-  /// Text and the ids of the people tagged in it.
-  final void Function(String text, List<String> mentionIds) onSend;
+  /// Text, the ids of the people tagged in it, and whether it tags everyone with @all.
+  final void Function(String text, List<String> mentionIds, bool mentionAll) onSend;
   final void Function(List<LocalFile> files, String caption) onSendFiles;
   final VoidCallback? onTyping;
   final MMessage? replyTo;
@@ -44,7 +65,7 @@ class MessageComposer extends StatefulWidget {
   /// The message being edited. The box shows its text, and sending saves the change.
   final MMessage? editing;
   final VoidCallback? onCancelContext;
-  final void Function(String text, List<String> mentionIds)? onSaveEdit;
+  final void Function(String text, List<String> mentionIds, bool mentionAll)? onSaveEdit;
   final List<MentionTarget> mentionTargets;
 
   @override
@@ -55,6 +76,7 @@ class _MessageComposerState extends State<MessageComposer> {
   final TextEditingController _text = TextEditingController();
   final FocusNode _focus = FocusNode();
   final Map<String, String> _tagged = <String, String>{}; // user id -> the name inserted after the @
+  bool _allTagged = false; // @all was picked from the list
   bool _emoji = false;
   bool _hasText = false;
   String? _mentionQuery;
@@ -126,7 +148,11 @@ class _MessageComposerState extends State<MessageComposer> {
 
   List<MentionTarget> get _matches {
     final q = (_mentionQuery ?? '').toLowerCase();
-    return widget.mentionTargets.where((t) => t.name.toLowerCase().contains(q)).take(5).toList();
+    // Search by name, username or email, so a person can be found by whichever they remember.
+    return widget.mentionTargets
+        .where((t) => q.isEmpty || t.name.toLowerCase().contains(q) || t.username.toLowerCase().contains(q) || t.email.toLowerCase().contains(q))
+        .take(6)
+        .toList();
   }
 
   void _insertMention(MentionTarget t) {
@@ -138,7 +164,11 @@ class _MessageComposerState extends State<MessageComposer> {
     if (at < 0) return;
     final inserted = '@${t.name} ';
     final next = text.substring(0, at) + inserted + text.substring(cursor);
-    _tagged[t.id] = t.name;
+    if (t.isAll) {
+      _allTagged = true;
+    } else {
+      _tagged[t.id] = t.name;
+    }
     _text.value = TextEditingValue(text: next, selection: TextSelection.collapsed(offset: at + inserted.length));
     setState(() => _mentionQuery = null);
   }
@@ -149,19 +179,49 @@ class _MessageComposerState extends State<MessageComposer> {
           if (text.contains('@${e.value}')) e.key,
       ];
 
+  /// True when the text still contains @all as a word of its own.
+  bool _mentionsAll(String text) => _allTagged && RegExp(r'(^|\s)@all(?=\s|$|[.,!?])').hasMatch(text);
+
   void _submit() {
     final text = _text.text.trim();
     final captionOnly = widget.editing?.hasFile ?? false; // a photo or file may have its caption cleared
     if (text.isEmpty && !captionOnly) return;
     final ids = _mentionIds(text);
+    final all = _mentionsAll(text);
     if (widget.editing != null) {
-      widget.onSaveEdit?.call(text, ids);
+      widget.onSaveEdit?.call(text, ids, all);
     } else {
-      widget.onSend(text, ids);
+      widget.onSend(text, ids, all);
     }
     _text.clear();
     _tagged.clear();
+    _allTagged = false;
     setState(() => _emoji = false);
+  }
+
+  /// One row of the @ list: name, then @username and email so people with the same name can be told apart.
+  Widget _mentionTile(MentionTarget t) {
+    final pal = context.pal;
+    if (t.isAll) {
+      return ListTile(
+        dense: true,
+        leading: CircleAvatar(radius: 15, backgroundColor: pal.accentSoft, child: Icon(Icons.groups_rounded, size: 18, color: pal.accent)),
+        title: const Text('@all', style: TextStyle(fontWeight: FontWeight.w700)),
+        subtitle: const Text('Notify everyone in this group'),
+        onTap: () => _insertMention(t),
+      );
+    }
+    final details = <String>[
+      if (t.username.isNotEmpty && !t.username.contains('@')) '@${t.username}',
+      if (t.email.isNotEmpty) t.email,
+    ];
+    return ListTile(
+      dense: true,
+      leading: MessengerAvatar(initials: t.name.isEmpty ? 'P' : t.name[0].toUpperCase(), imageUrl: t.photo, size: 30),
+      title: Text(t.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600)),
+      subtitle: details.isEmpty ? null : Text(details.join('  |  '), maxLines: 1, overflow: TextOverflow.ellipsis),
+      onTap: () => _insertMention(t),
+    );
   }
 
   void _toggleEmoji() {
@@ -250,18 +310,13 @@ class _MessageComposerState extends State<MessageComposer> {
             if (banner != null) banner,
             if (_mentionQuery != null && _matches.isNotEmpty)
               Container(
-                constraints: const BoxConstraints(maxHeight: 200),
+                constraints: const BoxConstraints(maxHeight: 300),
                 color: pal.panel2,
                 child: ListView(
                   shrinkWrap: true,
                   children: <Widget>[
                     for (final t in _matches)
-                      ListTile(
-                        dense: true,
-                        leading: MessengerAvatar(initials: t.name.isEmpty ? 'P' : t.name[0].toUpperCase(), imageUrl: t.photo, size: 30),
-                        title: Text(t.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                        onTap: () => _insertMention(t),
-                      ),
+                      _mentionTile(t),
                   ],
                 ),
               ),

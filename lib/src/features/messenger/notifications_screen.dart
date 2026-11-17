@@ -88,7 +88,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
             return const EmptyState(
               icon: Icons.notifications_none_rounded,
               title: 'No notifications',
-              message: 'You will see it here when someone makes you an admin or the owner of a group, or adds or removes you.',
+              message: 'You will see it here when someone tags you, makes you an admin or the owner of a group, or adds or removes you.',
             );
           }
           return RefreshIndicator(
@@ -132,6 +132,10 @@ class _NotificationTile extends StatelessWidget {
         return (Icons.group_add_outlined, pal.accent);
       case 'REMOVED_FROM_GROUP':
         return (Icons.person_remove_outlined, pal.bad);
+      case 'MENTIONED':
+        return (Icons.alternate_email_rounded, pal.accent);
+      case 'MENTIONED_ALL':
+        return (Icons.campaign_outlined, pal.accent);
       default:
         return (Icons.notifications_none_rounded, pal.accent);
     }

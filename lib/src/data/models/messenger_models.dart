@@ -186,6 +186,7 @@ class MMessage {
     this.deleted = false,
     this.deletedForEveryone = false,
     this.mentionedUserIds = const <String>[],
+    this.mentionAll = false,
     this.reactions = const <String, List<String>>{},
     this.replyToMessageId,
     this.reply,
@@ -213,6 +214,9 @@ class MMessage {
   final bool deleted;
   final bool deletedForEveryone;
   final List<String> mentionedUserIds;
+
+  /// True when the text tags everyone with @all (groups only).
+  final bool mentionAll;
   final Map<String, List<String>> reactions;
   final String? replyToMessageId;
   final MReply? reply;
@@ -246,6 +250,7 @@ class MMessage {
       deleted: boolOr(j['deleted'] ?? j['isDeleted']),
       deletedForEveryone: boolOr(j['deletedForEveryone'] ?? j['isDeletedForEveryone']),
       mentionedUserIds: stringList(j['mentionedUserIds']),
+      mentionAll: boolOr(j['mentionAll']),
       reactions: _reactions(j['reactions']),
       replyToMessageId: str(j['replyToMessageId']),
       reply: reply is Map ? MReply.fromJson(asMap(reply)) : null,
@@ -263,6 +268,7 @@ class MMessage {
     bool? deleted,
     bool? deletedForEveryone,
     List<String>? mentionedUserIds,
+    bool? mentionAll,
     Map<String, List<String>>? reactions,
     double? progress,
     bool clearProgress = false,
@@ -289,6 +295,7 @@ class MMessage {
         deleted: deleted ?? this.deleted,
         deletedForEveryone: deletedForEveryone ?? this.deletedForEveryone,
         mentionedUserIds: mentionedUserIds ?? this.mentionedUserIds,
+        mentionAll: mentionAll ?? this.mentionAll,
         reactions: reactions ?? this.reactions,
         replyToMessageId: replyToMessageId,
         reply: reply,
@@ -314,6 +321,7 @@ class MMessage {
         readBy: readBy,
         createdAt: createdAt,
         mentionedUserIds: mentionedUserIds,
+        mentionAll: mentionAll,
         replyToMessageId: replyToMessageId,
         reply: reply,
         localId: localKey,
@@ -897,7 +905,7 @@ class MNotification {
 
   final String id;
 
-  /// MADE_ADMIN, REMOVED_ADMIN, BECAME_OWNER, ADDED_TO_GROUP or REMOVED_FROM_GROUP.
+  /// MADE_ADMIN, REMOVED_ADMIN, BECAME_OWNER, ADDED_TO_GROUP, REMOVED_FROM_GROUP, MENTIONED or MENTIONED_ALL.
   final String type;
   final String title;
   final String body;

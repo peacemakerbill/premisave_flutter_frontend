@@ -478,7 +478,7 @@ class MessengerController extends Notifier<MessengerState> {
 
   // ----------------------------------------------------------------- sending
 
-  MMessage _local(String chatId, {required MType type, String content = '', String? fileName, int? fileSize, MMessage? replyTo, List<String> mentions = const <String>[]}) {
+  MMessage _local(String chatId, {required MType type, String content = '', String? fileName, int? fileSize, MMessage? replyTo, List<String> mentions = const <String>[], bool mentionAll = false}) {
     final me = state.me;
     final key = 'local-${DateTime.now().microsecondsSinceEpoch}';
     final base = MMessage(
@@ -492,6 +492,7 @@ class MessengerController extends Notifier<MessengerState> {
       fileSize: fileSize,
       createdAt: DateTime.now(),
       mentionedUserIds: mentions,
+      mentionAll: mentionAll,
       replyToMessageId: replyTo?.id,
       reply: replyTo == null
           ? null
@@ -508,13 +509,13 @@ class MessengerController extends Notifier<MessengerState> {
   }
 
   /// Sends text. The message shows at once and turns into the saved one when the server answers.
-  Future<void> sendText(String chatId, String text, {MMessage? replyTo, List<String> mentions = const <String>[]}) async {
+  Future<void> sendText(String chatId, String text, {MMessage? replyTo, List<String> mentions = const <String>[], bool mentionAll = false}) async {
     final trimmed = text.trim();
     if (trimmed.isEmpty) return;
-    final local = _local(chatId, type: MType.text, content: trimmed, replyTo: replyTo, mentions: mentions);
+    final local = _local(chatId, type: MType.text, content: trimmed, replyTo: replyTo, mentions: mentions, mentionAll: mentionAll);
     await _deliver(
       local,
-      (l) => _repo.send(chatId: chatId, content: trimmed, replyToMessageId: replyTo?.id, mentionedUserIds: mentions),
+      (l) => _repo.send(chatId: chatId, content: trimmed, replyToMessageId: replyTo?.id, mentionedUserIds: mentions, mentionAll: mentionAll),
     );
   }
 
@@ -602,13 +603,14 @@ class MessengerController extends Notifier<MessengerState> {
 
   // ------------------------------------------------------- message actions
 
-  Future<void> edit(MMessage m, String text, {List<String>? mentions}) async {
-    final saved = await _repo.edit(m.id, text.trim(), mentionedUserIds: mentions);
+  Future<void> edit(MMessage m, String text, {List<String>? mentions, bool? mentionAll}) async {
+    final saved = await _repo.edit(m.id, text.trim(), mentionedUserIds: mentions, mentionAll: mentionAll);
     _updateMessage(m.chatId, m.id, (old) => old.copyWith(
           content: saved.content,
           editedAt: saved.editedAt ?? DateTime.now(),
           editableUntil: saved.editableUntil,
           mentionedUserIds: saved.mentionedUserIds,
+          mentionAll: saved.mentionAll,
         ));
   }
 

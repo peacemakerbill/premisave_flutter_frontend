@@ -26,7 +26,11 @@ class MessageBubble extends StatelessWidget {
     this.onOpenReply,
     this.onOpenInvite,
     this.highlight = '',
+    this.mentionNames = const <String>[],
   });
+
+  /// The names of the people tagged in this message (and "all" for @all), so their @tags can be marked.
+  final List<String> mentionNames;
 
   final MMessage message;
   final bool mine;
@@ -89,7 +93,7 @@ class MessageBubble extends StatelessWidget {
       if (m.content.trim().isNotEmpty) {
         children.add(Padding(
           padding: EdgeInsets.only(top: m.hasFile ? 6 : 0),
-          child: _RichText(text: m.content, color: fg, linkColor: mine ? pal.accentInk : pal.accent, highlight: highlight, onInvite: onOpenInvite),
+          child: _RichText(text: m.content, color: fg, linkColor: mine ? pal.accentInk : pal.accent, highlight: highlight, onInvite: onOpenInvite, mentions: mentionNames),
         ));
       }
     }
@@ -336,13 +340,14 @@ class _ProgressRing extends StatelessWidget {
 
 /// Message text with links you can tap, invite links that open the join screen, and the words being searched marked.
 class _RichText extends StatefulWidget {
-  const _RichText({required this.text, required this.color, required this.linkColor, this.highlight = '', this.onInvite});
+  const _RichText({required this.text, required this.color, required this.linkColor, this.highlight = '', this.onInvite, this.mentions = const <String>[]});
 
   final String text;
   final Color color;
   final Color linkColor;
   final String highlight;
   final ValueChanged<String>? onInvite;
+  final List<String> mentions;
 
   @override
   State<_RichText> createState() => _RichTextState();
@@ -361,6 +366,25 @@ class _RichTextState extends State<_RichText> {
     super.dispose();
   }
 
+  /// Plain text with the @names of tagged people (and @all) in bold, in the link colour.
+  void _withMentions(String s, TextStyle base, List<InlineSpan> spans) {
+    final names = widget.mentions.where((n) => n.trim().isNotEmpty).map((n) => RegExp.escape(n.trim())).toList()
+      ..sort((a, b) => b.length.compareTo(a.length));
+    if (names.isEmpty) {
+      spans.add(TextSpan(text: s, style: base));
+      return;
+    }
+    final alternatives = names.join('|');
+    final tag = RegExp('@(?:$alternatives)(?![\\p{L}\\p{N}])', caseSensitive: false, unicode: true);
+    var i = 0;
+    for (final m in tag.allMatches(s)) {
+      if (m.start > i) spans.add(TextSpan(text: s.substring(i, m.start), style: base));
+      spans.add(TextSpan(text: m.group(0), style: base.copyWith(color: widget.linkColor, fontWeight: FontWeight.w700)));
+      i = m.end;
+    }
+    if (i < s.length) spans.add(TextSpan(text: s.substring(i), style: base));
+  }
+
   List<InlineSpan> _spans() {
     for (final r in _recognizers) {
       r.dispose();
@@ -374,7 +398,7 @@ class _RichTextState extends State<_RichText> {
       if (s.isEmpty) return;
       final q = widget.highlight.trim().toLowerCase();
       if (q.isEmpty) {
-        spans.add(TextSpan(text: s, style: base));
+        _withMentions(s, base, spans);
         return;
       }
       final lower = s.toLowerCase();
