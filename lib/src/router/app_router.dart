@@ -43,6 +43,7 @@ import '../features/messenger/past_statuses_screen.dart';
 import '../features/messenger/status_composer_screen.dart';
 import '../features/messenger/status_insights_screen.dart';
 import '../features/messenger/status_viewer_screen.dart';
+import '../features/messenger/sound_settings_screen.dart';
 import '../features/people/people_screen.dart';
 import '../features/people/public_profile_screen.dart';
 import '../features/security/device_detail_screen.dart';
@@ -168,6 +169,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(path: 'notifications', pageBuilder: (_, s) => detailPage(s, const NotificationsScreen())),
               GoRoute(path: 'settings', pageBuilder: (_, s) => detailPage(s, const MessengerSettingsScreen())),
               GoRoute(path: 'settings/downloads', pageBuilder: (_, s) => detailPage(s, const DownloadedFilesScreen())),
+              GoRoute(path: 'settings/sounds', pageBuilder: (_, s) => detailPage(s, const SoundSettingsScreen())),
               GoRoute(path: 'calls/join/:code', pageBuilder: (_, s) => detailPage(s, CallLinkScreen(code: s.pathParameters['code'] ?? ''))),
               GoRoute(path: 'join', pageBuilder: (_, s) => detailPage(s, const JoinGroupScreen())),
               GoRoute(path: 'join/:code', pageBuilder: (_, s) => detailPage(s, JoinGroupScreen(code: s.pathParameters['code']))),

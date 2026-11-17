@@ -10,6 +10,7 @@ import '../data/models/messenger_models.dart';
 import '../data/repositories/messenger_repository.dart';
 import 'providers.dart';
 import 'session_controller.dart';
+import 'sound_settings.dart';
 
 const Object _keep = Object();
 
@@ -732,6 +733,7 @@ class MessengerController extends Notifier<MessengerState> {
     final active = state.activeChatId == m.chatId;
     _upsert(m);
     _noteLast(m, unread: !mine && !active);
+    if (!mine && !active) _playNotificationSound();
     if (!mine && active) {
       final sent = _socket?.sendRead(m.id, m.chatId) ?? false;
       if (!sent) unawaited(_repo.markMessageRead(m.id).catchError((Object _) {}));
@@ -789,6 +791,16 @@ class MessengerController extends Notifier<MessengerState> {
     state = state.copyWith(notificationRevision: state.notificationRevision + 1);
     final text = n.body.isNotEmpty ? n.body : n.title;
     if (text.isNotEmpty) _notice(text);
+    _playNotificationSound();
+  }
+
+  /// The sound the person chose in Sounds, for a new message or notification. Sounds that come close together play once.
+  void _playNotificationSound() {
+    try {
+      unawaited(ref.read(soundServiceProvider).playNotification(ref.read(soundSettingsProvider).notification));
+    } catch (_) {
+      // A sound must never get in the way of a message arriving.
+    }
   }
 
   void _onGroup(Map<String, dynamic> d) {

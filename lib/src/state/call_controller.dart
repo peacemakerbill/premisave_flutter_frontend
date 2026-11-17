@@ -16,6 +16,7 @@ import 'messenger_controller.dart';
 import 'providers.dart';
 import 'session_controller.dart';
 import 'share_service.dart';
+import 'sound_settings.dart';
 
 // Audio and video calls. The messenger service decides who is in a call and hands out join tokens. The media itself
 // (voice, camera, screen) flows between the app and a LiveKit server, so none of it goes through the messenger service.
@@ -151,6 +152,8 @@ class CallController extends Notifier<CallState> {
       if (s != null) unawaited(s._dispose());
     });
     _push = ref.read(messengerProvider.notifier).callEvents.listen(_onPush);
+    // Load the chosen ringtone now, so it is ready before the first call comes in.
+    ref.read(soundSettingsProvider);
     ref.listen<bool>(sessionProvider.select((s) => s.isSignedIn), (prev, next) {
       if (!next) unawaited(_signedOut());
     });
@@ -546,7 +549,14 @@ class CallController extends Notifier<CallState> {
     try {
       final p = _loopPlayer ??= AudioPlayer();
       await p.setReleaseMode(ReleaseMode.loop);
-      await p.play(AssetSource('sounds/$asset'));
+      Source source = AssetSource('sounds/$asset');
+      if (asset == 'ringtone.wav') {
+        // The incoming call uses the ringtone the person chose in Sounds. The ringback tone stays as it is.
+        final chosen = await ref.read(soundServiceProvider).sourceFor(ref.read(soundSettingsProvider).ringtone, fallback: defaultRingtone);
+        if (chosen != null) source = chosen;
+      }
+      if (_loopPlaying != asset) return;
+      await p.play(source);
     } catch (e) {
       // Browsers refuse sound before the first tap. The screen still shows the call.
       debugPrint('Calls: could not play $asset: $e');

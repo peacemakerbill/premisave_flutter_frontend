@@ -101,6 +101,16 @@ class MessengerSettingsScreen extends ConsumerWidget {
               ),
             ),
           ],
+          const SectionHeader('Sounds'),
+          PCard(
+            padding: EdgeInsets.zero,
+            child: MenuTile(
+              icon: Icons.notifications_active_outlined,
+              title: 'Ringtone and sounds',
+              subtitle: 'Choose the ringtone for calls and the sound for new messages, or use a file of your own',
+              onTap: () => context.push('/messages/settings/sounds'),
+            ),
+          ),
           const SectionHeader('Messages'),
           PCard(
             padding: EdgeInsets.zero,
