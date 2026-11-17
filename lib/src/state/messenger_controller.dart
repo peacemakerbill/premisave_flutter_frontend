@@ -733,7 +733,12 @@ class MessengerController extends Notifier<MessengerState> {
     final active = state.activeChatId == m.chatId;
     _upsert(m);
     _noteLast(m, unread: !mine && !active);
-    if (!mine && !active) _playNotificationSound();
+    if (!mine && m.type == MType.call && (m.call?.isOpen ?? false)) {
+      // A call is ringing in this chat. Make sure this person's ringing screen is up, even if the live event was missed.
+      if (!_callEvents.isClosed) _callEvents.add(<String, dynamic>{'type': 'CHECK', 'callId': m.call!.callId});
+    } else if (!mine && !active) {
+      _playNotificationSound();
+    }
     if (!mine && active) {
       final sent = _socket?.sendRead(m.id, m.chatId) ?? false;
       if (!sent) unawaited(_repo.markMessageRead(m.id).catchError((Object _) {}));

@@ -391,6 +391,11 @@ class CallController extends Notifier<CallState> {
   // ------------------------------------------------------------- live events
 
   void _onPush(Map<String, dynamic> raw) {
+    // Not a server event: the messenger saw a call line arrive in a chat and asks whether that call is ringing for us.
+    if (raw['type'] == 'CHECK') {
+      unawaited(_checkRinging((raw['callId'] ?? '').toString()));
+      return;
+    }
     final CallPush p;
     try {
       p = CallPush.fromJson(raw);
@@ -405,7 +410,10 @@ class CallController extends Notifier<CallState> {
 
     switch (p.type) {
       case CallPushType.incoming:
-        if (call == null || !call.isOpen || call.stateOf(me) != PersonState.invited) return;
+        if (call == null || !call.isOpen || call.stateOf(me) != PersonState.invited) {
+          debugPrint('Calls: incoming call ignored. call=${call != null} open=${call?.isOpen} myState=${call?.stateOf(me)} me=$me people=${call?.people.map((x) => x.userId).toList()}');
+          return;
+        }
         if (mine != null) return;
         _addIncoming(call);
         if (s != null) unawaited(_beep('join.wav'));
@@ -482,6 +490,27 @@ class CallController extends Notifier<CallState> {
         break;
     }
     _updateSounds();
+  }
+
+  /// A call line arrived in a chat. If that call is ringing for this person and the live "incoming" event did not
+  /// bring up the ringing screen, ask the server and bring it up now.
+  Future<void> _checkRinging(String callId) async {
+    if (callId.isEmpty || state.session != null || state.incoming.any((c) => c.id == callId)) return;
+    try {
+      final call = await _repo.get(callId);
+      final me = _meId;
+      if (state.session != null || state.incoming.any((c) => c.id == call.id)) return;
+      if (!call.isOpen || call.stateOf(me) != PersonState.invited) {
+        debugPrint('Calls: call line checked, not ringing for me. open=${call.isOpen} myState=${call.stateOf(me)} me=$me');
+        return;
+      }
+      _addIncoming(call);
+      _ringBack(call.id);
+      state = state.copyWith(revision: state.revision + 1);
+      _updateSounds();
+    } catch (e) {
+      debugPrint('Calls: could not check call $callId: $e');
+    }
   }
 
   /// Takes a fresh copy of a call from the server into the session and the ringing list.
