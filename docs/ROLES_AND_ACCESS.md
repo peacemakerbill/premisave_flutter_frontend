@@ -150,6 +150,8 @@ Say you want a `landlord` role.
 3. **`features/overview/`.** Build the role's dashboard in its own folder, `overview/landlord/landlord_overview.dart`, and add one case to `RoleOverviewPage._bodyFor`. This is the only place that picks a dashboard. The switch has no default either, so the compiler reminds you.
 4. **The backend.** The auth-service has to know the role too, so it can be assigned and its permissions enforced there. See below.
 
+The dashboards for the other roles still show sample data (their hero says "Sample data"). The administrator's is built from live data and is the pattern to copy once a role's service exists: `features/overview/admin/admin_overview.dart` reads each part from its own provider (people, application statistics, the 24 hour security summary, recent audit events, and the three storage settings), passes `sampleData: false` to `OverviewHero`, and shows a skeleton, an error with a retry, or an empty state per section, so one service being down does not hide the rest. Pull down refreshes every part.
+
 Nothing else is needed: the tabs, the guards and the cards on Home follow from the spec.
 
 ## What the backend does
