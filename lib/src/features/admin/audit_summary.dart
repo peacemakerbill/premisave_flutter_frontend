@@ -13,9 +13,13 @@ import '../security/security_widgets.dart';
 /// What happened on the platform in the last day: totals, problems to look at, and the most common events.
 /// Tapping a figure opens the audit trail on the matching events.
 class AuditSummaryStrip extends ConsumerWidget {
-  const AuditSummaryStrip({super.key, this.hours = 24});
+  const AuditSummaryStrip({super.key, this.hours = 24, this.onEvents});
 
   final int hours;
+
+  /// What the Events tile does. Leave it null to open the audit trail on the same period. The audit trail passes its own,
+  /// because opening the page it is already on would look like nothing happened.
+  final VoidCallback? onEvents;
 
   /// The tiles count one period, so the list they open covers the same period.
   String get _range => hours == 24 ? 'range=24h' : '';
@@ -28,22 +32,26 @@ class AuditSummaryStrip extends ConsumerWidget {
     return value.when(
       loading: () => const SkeletonList(count: 2, height: 92, shrink: true, padding: EdgeInsets.symmetric(vertical: 6)),
       error: (e, _) => ErrorState(error: e, onRetry: () => ref.invalidate(auditSummaryProvider(hours))),
-      data: (s) => _Body(summary: s, period: _period, range: _range),
+      data: (s) => _Body(summary: s, period: _period, range: _range, onEvents: onEvents),
     );
   }
 }
 
 class _Body extends StatelessWidget {
-  const _Body({required this.summary, required this.period, required this.range});
+  const _Body({required this.summary, required this.period, required this.range, this.onEvents});
 
   final AuditSummary summary;
   final String period;
 
   /// The `range=` query for the period the figures cover, or empty when it has no matching choice in the audit trail.
   final String range;
+  final VoidCallback? onEvents;
 
   /// The audit trail on [filter], limited to the period the figure was counted for.
-  String _open(String filter) => '/admin/audit?${<String>[filter, range].where((p) => p.isNotEmpty).join('&')}';
+  String _open(String filter) {
+    final query = <String>[filter, range].where((p) => p.isNotEmpty).join('&');
+    return query.isEmpty ? '/admin/audit' : '/admin/audit?$query';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +70,7 @@ class _Body extends StatelessWidget {
               icon: Icons.fact_check_outlined,
               caption: attention == 0 ? 'Nothing needs attention' : '$attention need attention',
               tint: attention == 0 ? Brand.info : Brand.warning,
-              onTap: () => context.push('/admin/audit'),
+              onTap: onEvents ?? () => context.push(_open('')),
             ),
             StatTile(
               label: 'Failed sign ins',

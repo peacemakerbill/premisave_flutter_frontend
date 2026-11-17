@@ -188,7 +188,12 @@ class _AuditScreenState extends ConsumerState<AuditScreen> {
         onRefresh: _refresh,
         children: <Widget>[
           if (_userId == null && !_narrowed) ...<Widget>[
-            const AuditSummaryStrip(),
+            AuditSummaryStrip(
+              onEvents: () => _change(() {
+                _range = '24h';
+                _from = _since(_range);
+              }),
+            ),
             const SectionHeader('All events'),
           ],
           PTextField(
