@@ -33,6 +33,7 @@ import '../features/messenger/group_info_screen.dart';
 import '../features/messenger/group_invite_screen.dart';
 import '../features/messenger/join_group_screen.dart';
 import '../features/messenger/messenger_screen.dart';
+import '../features/messenger/notifications_screen.dart';
 import '../features/messenger/messenger_settings_screen.dart';
 import '../features/messenger/new_chat_screen.dart';
 import '../features/messenger/new_group_screen.dart';
@@ -160,6 +161,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(path: 'new-group', pageBuilder: (_, s) => detailPage(s, const NewGroupScreen())),
               GoRoute(path: 'group/:id', pageBuilder: (_, s) => detailPage(s, GroupInfoScreen(groupId: s.pathParameters['id'] ?? ''))),
               GoRoute(path: 'group/:id/invite', pageBuilder: (_, s) => detailPage(s, GroupInviteScreen(groupId: s.pathParameters['id'] ?? ''))),
+              GoRoute(path: 'notifications', pageBuilder: (_, s) => detailPage(s, const NotificationsScreen())),
               GoRoute(path: 'settings', pageBuilder: (_, s) => detailPage(s, const MessengerSettingsScreen())),
               GoRoute(path: 'settings/downloads', pageBuilder: (_, s) => detailPage(s, const DownloadedFilesScreen())),
               GoRoute(path: 'join', pageBuilder: (_, s) => detailPage(s, const JoinGroupScreen())),

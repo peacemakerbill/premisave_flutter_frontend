@@ -77,3 +77,11 @@ A link such as `https://premisave.com/join/CODE` opens `/join/CODE` in the app, 
 - **macOS**: add `NSCameraUsageDescription` to the macOS `Info.plist` and the camera entitlement if you want scanning there.
 - **Web**: needs HTTPS or localhost.
 - **Linux and Windows**: no camera scanner. The join screen asks for the pasted link instead.
+
+## Notifications
+
+A bell in the Messages header opens the notifications. It shows how many are unread. Each one says what happened to you in a group: you were made an admin or the owner, your admin role was removed, you were added to a group, or you were removed from one. Tap one to mark it read and open the group's chat. Use the menu on a row to delete it, or the icons in the top bar to mark everything as read or clear the list.
+
+New ones arrive live on the `/user/queue/notifications` channel, so the bell updates and a short message appears on screen right away. The messenger service also stores them, so ones that came while you were offline are waiting in the list, and it emails them through auth-service (see the messenger README for `INTERNAL_API_KEY`).
+
+Nothing is sent to the person who did the action themselves.

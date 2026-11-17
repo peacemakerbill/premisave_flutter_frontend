@@ -170,6 +170,22 @@ class MessengerRepository {
     await _api.upload('/api/groups/${_id(groupId)}/photo', form);
   }
 
+  // ----------------------------------------------------------- notifications
+
+  /// Made an admin or the owner, demoted, added to or removed from a group. Newest first.
+  Future<List<MNotification>> notifications({int limit = 50}) async =>
+      mapList(await _api.get('/api/notifications', query: <String, dynamic>{'limit': limit})).map(MNotification.fromJson).toList();
+
+  Future<int> unreadNotificationCount() async => intOr(asMap(await _api.get('/api/notifications/unread-count'))['count']);
+
+  Future<void> markNotificationRead(String id) => _api.post('/api/notifications/${_id(id)}/read');
+
+  Future<void> markAllNotificationsRead() => _api.post('/api/notifications/read-all');
+
+  Future<void> deleteNotification(String id) => _api.delete('/api/notifications/${_id(id)}');
+
+  Future<void> clearNotifications() => _api.delete('/api/notifications');
+
   // ------------------------------------------------------------ invite links
 
   Future<MInvite> createInvite(String groupId, {int? expiresInHours, int? maxUses}) async => MInvite.fromJson(asMap(await _api.post(

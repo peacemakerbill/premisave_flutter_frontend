@@ -58,3 +58,15 @@ final userStatusesProvider = FutureProvider.autoDispose.family<List<StatusPost>,
 
 /// How many hours a sender can still edit a message, as the server sets it. 0 means editing is off.
 final editWindowProvider = FutureProvider.autoDispose<int>((ref) => ref.watch(messengerRepositoryProvider).editWindowHours());
+
+/// The signed-in person's notifications. Reloads when a new one arrives on the live connection.
+final notificationsProvider = FutureProvider.autoDispose<List<MNotification>>((ref) {
+  ref.watch(messengerProvider.select((s) => s.notificationRevision));
+  return ref.watch(messengerRepositoryProvider).notifications();
+});
+
+/// How many notifications are unread, for the bell.
+final unreadNotificationsProvider = FutureProvider.autoDispose<int>((ref) {
+  ref.watch(messengerProvider.select((s) => s.notificationRevision));
+  return ref.watch(messengerRepositoryProvider).unreadNotificationCount();
+});

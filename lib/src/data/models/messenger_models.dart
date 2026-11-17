@@ -878,3 +878,66 @@ class StatusSettings {
         commentMaxLength: intOr(j['commentMaxLength'], 300),
       );
 }
+
+
+/// Something that happened to the signed-in person in a group: made an admin or the owner, demoted, added, removed.
+class MNotification {
+  const MNotification({
+    required this.id,
+    this.type = '',
+    this.title = '',
+    this.body = '',
+    this.groupId,
+    this.chatId,
+    this.actorId,
+    this.actorName = '',
+    this.createdAt,
+    this.read = false,
+  });
+
+  final String id;
+
+  /// MADE_ADMIN, REMOVED_ADMIN, BECAME_OWNER, ADDED_TO_GROUP or REMOVED_FROM_GROUP.
+  final String type;
+  final String title;
+  final String body;
+  final String? groupId;
+
+  /// The group's chat. Null when the person can no longer open it.
+  final String? chatId;
+  final String? actorId;
+  final String actorName;
+  final DateTime? createdAt;
+  final bool read;
+
+  bool get unread => !read;
+
+  /// True when there is a group chat the person can still open from this notification.
+  bool get canOpenChat => chatId != null && chatId!.isNotEmpty && type != 'REMOVED_FROM_GROUP';
+
+  MNotification copyWith({bool? read}) => MNotification(
+        id: id,
+        type: type,
+        title: title,
+        body: body,
+        groupId: groupId,
+        chatId: chatId,
+        actorId: actorId,
+        actorName: actorName,
+        createdAt: createdAt,
+        read: read ?? this.read,
+      );
+
+  factory MNotification.fromJson(Map<String, dynamic> j) => MNotification(
+        id: strOr(j['id']),
+        type: strOr(j['type']).toUpperCase(),
+        title: strOr(j['title']),
+        body: strOr(j['body']),
+        groupId: str(j['groupId']),
+        chatId: str(j['chatId']),
+        actorId: str(j['actorId']),
+        actorName: strOr(j['actorName']),
+        createdAt: _when(j['createdAt']),
+        read: boolOr(j['read']),
+      );
+}

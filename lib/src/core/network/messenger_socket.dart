@@ -39,6 +39,7 @@ class MessengerSocket {
     '/user/queue/reactions',
     '/user/queue/status',
     '/user/queue/groups',
+    '/user/queue/notifications',
     '/topic/presence',
   ];
 

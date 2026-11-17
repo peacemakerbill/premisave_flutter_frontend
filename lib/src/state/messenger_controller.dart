@@ -56,6 +56,7 @@ class MessengerState {
     this.activeChatId,
     this.statusRevision = 0,
     this.groupRevision = 0,
+    this.notificationRevision = 0,
     this.notice,
     this.noticeSeq = 0,
   });
@@ -79,6 +80,9 @@ class MessengerState {
   /// Goes up when a group changes, so group screens reload.
   final int groupRevision;
 
+  /// Goes up when a notification arrives, so the notification list and the bell reload.
+  final int notificationRevision;
+
   /// A short message the screens show once, for example a send that the server refused.
   final String? notice;
   final int noticeSeq;
@@ -96,6 +100,7 @@ class MessengerState {
     Object? activeChatId = _keep,
     int? statusRevision,
     int? groupRevision,
+    int? notificationRevision,
     Object? notice = _keep,
     int? noticeSeq,
   }) =>
@@ -112,6 +117,7 @@ class MessengerState {
         activeChatId: identical(activeChatId, _keep) ? this.activeChatId : activeChatId as String?,
         statusRevision: statusRevision ?? this.statusRevision,
         groupRevision: groupRevision ?? this.groupRevision,
+        notificationRevision: notificationRevision ?? this.notificationRevision,
         notice: identical(notice, _keep) ? this.notice : notice as String?,
         noticeSeq: noticeSeq ?? this.noticeSeq,
       );
@@ -664,6 +670,9 @@ class MessengerController extends Notifier<MessengerState> {
       case '/user/queue/groups':
         _onGroup(d);
         break;
+      case '/user/queue/notifications':
+        _onNotification(d);
+        break;
       case '/topic/presence':
         _onPresence(d);
         break;
@@ -757,6 +766,14 @@ class MessengerController extends Notifier<MessengerState> {
       });
     }
     _updateMessage(chatId, id, (m) => m.copyWith(reactions: reactions));
+  }
+
+  /// A notification arrived: reload the list and the bell, and say it once on screen.
+  void _onNotification(Map<String, dynamic> d) {
+    final n = MNotification.fromJson(d);
+    state = state.copyWith(notificationRevision: state.notificationRevision + 1);
+    final text = n.body.isNotEmpty ? n.body : n.title;
+    if (text.isNotEmpty) _notice(text);
   }
 
   void _onGroup(Map<String, dynamic> d) {

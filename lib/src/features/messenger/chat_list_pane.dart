@@ -8,6 +8,7 @@ import '../../core/widgets/widgets.dart';
 import '../../core/network/messenger_socket.dart';
 import '../../data/models/messenger_models.dart';
 import '../../state/messenger_controller.dart';
+import '../../state/messenger_providers.dart';
 import 'messenger_common.dart';
 import 'status_tab.dart';
 
@@ -176,6 +177,7 @@ class _ChatListPaneState extends ConsumerState<ChatListPane> {
               ),
             ]),
           ),
+          const _NotificationsBell(),
           IconButton(tooltip: 'Search', icon: const Icon(Icons.search_rounded), onPressed: () => setState(() => _searching = true)),
           IconButton(tooltip: 'Join a group', icon: const Icon(Icons.qr_code_scanner_rounded), onPressed: () => context.push('/messages/join')),
           IconButton(tooltip: 'Messenger settings', icon: const Icon(Icons.settings_outlined), onPressed: () => context.push('/messages/settings')),
@@ -356,6 +358,26 @@ class _ChatTile extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+
+/// The bell in the header: opens the notifications and shows how many are unread.
+class _NotificationsBell extends ConsumerWidget {
+  const _NotificationsBell();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unread = ref.watch(unreadNotificationsProvider).valueOrNull ?? 0;
+    return IconButton(
+      tooltip: unread > 0 ? 'Notifications, $unread unread' : 'Notifications',
+      onPressed: () => context.push('/messages/notifications'),
+      icon: Badge(
+        isLabelVisible: unread > 0,
+        label: Text(unread > 99 ? '99+' : '$unread'),
+        child: Icon(unread > 0 ? Icons.notifications_rounded : Icons.notifications_none_rounded),
       ),
     );
   }
