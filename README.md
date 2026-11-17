@@ -211,6 +211,7 @@ The app builds for all six targets. A few things differ because the platforms do
 
 - **Maps.** Google offers a map component for Android, iOS and the web only. On Linux, Windows and macOS the app uses OpenStreetMap, and Google's place data is not mixed in there, because Google's terms keep it off other companies' maps. See **[docs/MAPS_AND_PLACES.md](docs/MAPS_AND_PLACES.md)**.
 - **Sign in.** Linux and Windows cannot run Google's or Facebook's own sign in, so they open the browser, catch an authorization code on a local port and hand it to the backend. See **[docs/SIGN_IN_PROVIDERS.md](docs/SIGN_IN_PROVIDERS.md)**.
+- **Linux package.** `linux/flatpak/` builds a Flatpak that carries the libraries the app needs, so people install the app and nothing else. See `linux/flatpak/README.md`.
 - **Native setup.** Cells marked with a star need the platform's own app registration and native files, which this repository does not include yet. The code is in place.
 
 <img src="docs/assets/divider.svg" alt="" width="100%"/>

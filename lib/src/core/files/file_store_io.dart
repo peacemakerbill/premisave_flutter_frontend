@@ -2,11 +2,11 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
-import 'package:file_picker/file_picker.dart' show FilePicker;
 import 'package:open_filex/open_filex.dart' show OpenFilex, ResultType;
 import 'package:path_provider/path_provider.dart' show getApplicationDocumentsDirectory, getDownloadsDirectory, getExternalStorageDirectory;
 import 'package:permission_handler/permission_handler.dart';
 
+import 'file_chooser.dart';
 import 'file_kinds.dart';
 
 /// Phones and computers can save into real folders.
@@ -34,14 +34,8 @@ Future<String?> fileStoreDownloadsRoot() async {
   }
 }
 
-/// Lets the person choose a folder. Null when they cancel or the system has no folder picker.
-Future<String?> fileStorePickFolder() async {
-  try {
-    return await FilePicker.platform.getDirectoryPath(dialogTitle: 'Choose a folder');
-  } catch (_) {
-    return null;
-  }
-}
+/// Lets the person choose a folder. Null when they cancel or the system has no folder window.
+Future<String?> fileStorePickFolder() => chooseFolder();
 
 Future<String> _uniquePath(String folder, String fileName) async {
   var candidate = joinPath(folder, fileName);

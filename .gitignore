@@ -49,3 +49,9 @@ config/env/*.local.json
 .env
 .env.*
 ios/Flutter/Maps.xcconfig
+
+# Flatpak build output
+linux/flatpak/.flatpak-builder/
+linux/flatpak/build-dir/
+linux/flatpak/repo/
+*.flatpak

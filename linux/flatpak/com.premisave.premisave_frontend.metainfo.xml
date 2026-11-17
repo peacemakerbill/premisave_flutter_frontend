@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.premisave.premisave_frontend</id>
+  <name>Premisave</name>
+  <summary>Real estate marketplace with messaging</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <description>
+    <p>Premisave is a real estate app for finding, listing and renting property, with built in messaging, group chats and statuses.</p>
+  </description>
+  <launchable type="desktop-id">com.premisave.premisave_frontend.desktop</launchable>
+  <provides>
+    <binary>premisave</binary>
+  </provides>
+  <url type="homepage">https://github.com/peacemakerbill/premisave_flutter_frontend</url>
+  <releases>
+    <release version="1.0.0" date="2026-11-17"/>
+  </releases>
+  <content_rating type="oars-1.1"/>
+</component>

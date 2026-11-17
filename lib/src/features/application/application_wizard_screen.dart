@@ -1,10 +1,10 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../core/files/file_chooser.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/theme/brand.dart';
 import '../../core/utils/formatters.dart';
@@ -542,9 +542,9 @@ class _WizardBodyState extends ConsumerState<_WizardBody> {
         final exts = (limits.allowedExtensions.isEmpty ? <String>['pdf', 'jpg', 'jpeg', 'png'] : limits.allowedExtensions)
             .map((e) => e.replaceAll('.', '').toLowerCase())
             .toList();
-        final res = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: exts, withData: true);
-        if (res == null || res.files.isEmpty) return;
-        final f = res.files.single;
+        final res = await chooseFiles(extensions: exts, withData: true);
+        if (res.isEmpty) return;
+        final f = res.first;
         bytes = f.bytes ?? <int>[];
         name = f.name;
         if (bytes.isEmpty) throw ApiException('Could not read that file. Try another one.');

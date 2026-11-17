@@ -1,0 +1,59 @@
+# Flatpak recipe for the Premisave Linux app.
+# The app is built first with "flutter build linux", then packed here. The GNOME runtime supplies GTK, the web view,
+# GStreamer (audio), libsecret (saved sign-in) and the file windows, so the person who installs the Flatpak does not
+# install any of them. Run build_flatpak.sh instead of calling flatpak-builder by hand.
+app-id: com.premisave.premisave_frontend
+runtime: org.gnome.Platform
+runtime-version: '50'
+sdk: org.gnome.Sdk
+command: premisave
+
+# The bundle comes from "flutter build linux --release", so there is nothing to strip or split into debug files.
+# Skipping it also means building needs no elfutils package.
+build-options:
+  strip: false
+  no-debuginfo: true
+
+finish-args:
+  # Window and graphics
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --device=dri
+  # The messenger, sign in and every API call
+  - --share=network
+  # Playing audio from chats and statuses
+  - --socket=pulseaudio
+  # Saving downloads (Downloads/Premisave) and choosing other folders. Folders outside these are chosen
+  # through the system file window, which grants access to just that folder.
+  - --filesystem=xdg-download
+  - --filesystem=xdg-documents
+  - --filesystem=xdg-pictures
+  - --filesystem=xdg-music
+  - --filesystem=xdg-videos
+  # Remembering the sign in, and notifications
+  - --talk-name=org.freedesktop.secrets
+  - --talk-name=org.freedesktop.Notifications
+
+modules:
+  - name: premisave
+    buildsystem: simple
+    build-commands:
+      - mkdir -p /app/premisave
+      - cp -a bundle/. /app/premisave/
+      - install -Dm755 premisave.sh /app/bin/premisave
+      - install -Dm644 com.premisave.premisave_frontend.desktop /app/share/applications/com.premisave.premisave_frontend.desktop
+      - install -Dm644 com.premisave.premisave_frontend.metainfo.xml /app/share/metainfo/com.premisave.premisave_frontend.metainfo.xml
+      - install -Dm644 com.premisave.premisave_frontend.png /app/share/icons/hicolor/512x512/apps/com.premisave.premisave_frontend.png
+    sources:
+      - type: dir
+        path: ../../build/linux/x64/release/bundle
+        dest: bundle
+      - type: file
+        path: premisave.sh
+      - type: file
+        path: com.premisave.premisave_frontend.desktop
+      - type: file
+        path: com.premisave.premisave_frontend.metainfo.xml
+      - type: file
+        path: com.premisave.premisave_frontend.png

@@ -1,10 +1,10 @@
 
-import 'package:file_picker/file_picker.dart' show FilePicker, FileType;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart' show ImagePicker, ImageSource;
 
 import '../../core/config/app_config.dart';
+import '../../core/files/file_chooser.dart';
 import '../../core/theme/brand.dart';
 import '../../core/theme/palette.dart';
 import '../../core/utils/formatters.dart';
@@ -219,11 +219,10 @@ class CountBadge extends StatelessWidget {
 
 /// Chooses files from the device. Web returns bytes, other platforms return a path.
 Future<List<LocalFile>> pickAnyFiles() async {
-  final result = await FilePicker.platform.pickFiles(allowMultiple: true, withData: kIsWeb);
-  if (result == null) return const <LocalFile>[];
+  final files = await chooseFiles(multiple: true, withData: kIsWeb);
   return <LocalFile>[
-    for (final f in result.files)
-      if (f.bytes != null || f.path != null) LocalFile(name: f.name, bytes: f.bytes, path: kIsWeb ? null : f.path, size: f.size),
+    for (final f in files)
+      if (f.bytes != null || f.path != null) LocalFile(name: f.name, bytes: f.bytes, path: f.path, size: f.size),
   ];
 }
 
@@ -241,11 +240,11 @@ Future<LocalFile?> pickPhoto({required bool camera}) async {
 
 /// One image for a status or a group picture.
 Future<LocalFile?> pickImageFile() async {
-  final result = await FilePicker.platform.pickFiles(type: FileType.image, withData: kIsWeb);
-  if (result == null || result.files.isEmpty) return null;
-  final f = result.files.first;
+  final files = await chooseFiles(extensions: imageExtensions, withData: kIsWeb);
+  if (files.isEmpty) return null;
+  final f = files.first;
   if (f.bytes == null && f.path == null) return null;
-  return LocalFile(name: f.name, bytes: f.bytes, path: kIsWeb ? null : f.path, size: f.size);
+  return LocalFile(name: f.name, bytes: f.bytes, path: f.path, size: f.size);
 }
 
 /// The camera only exists on phones and tablets.
@@ -301,11 +300,11 @@ Color parseHexColor(String? value, Color fallback) {
 
 /// A photo, video or audio clip for a status.
 Future<LocalFile?> pickStatusMedia({required bool audio}) async {
-  final result = await FilePicker.platform.pickFiles(type: audio ? FileType.audio : FileType.media, withData: kIsWeb);
-  if (result == null || result.files.isEmpty) return null;
-  final f = result.files.first;
+  final files = await chooseFiles(extensions: audio ? audioExtensions : mediaExtensions, withData: kIsWeb);
+  if (files.isEmpty) return null;
+  final f = files.first;
   if (f.bytes == null && f.path == null) return null;
-  return LocalFile(name: f.name, bytes: f.bytes, path: kIsWeb ? null : f.path, size: f.size);
+  return LocalFile(name: f.name, bytes: f.bytes, path: f.path, size: f.size);
 }
 
 bool looksLikeImage(String name) {
