@@ -28,8 +28,12 @@ const NavDest _home = NavDest('/home', 'Home', Icons.home_outlined, Icons.home_r
 const NavDest _explore = NavDest('/explore', 'Explore', Icons.explore_outlined, Icons.explore_rounded);
 const NavDest _queue =
     NavDest('/staff', 'Applications', Icons.fact_check_outlined, Icons.fact_check_rounded);
-const NavDest _users = NavDest(
-    '/admin/users', 'Users', Icons.manage_accounts_outlined, Icons.manage_accounts_rounded, <String>['/admin/audit']);
+const NavDest _users =
+    NavDest('/admin/users', 'Users', Icons.manage_accounts_outlined, Icons.manage_accounts_rounded);
+
+/// Administrators: the security audit trail.
+const NavDest _security = NavDest(
+    '/admin/security', 'Security', Icons.shield_outlined, Icons.shield_rounded, <String>['/admin/audit']);
 
 /// Administrators: the switches for calls and the places where files are kept.
 const NavDest _settings = NavDest(
@@ -49,6 +53,8 @@ NavDest _destinationFor(AppTab tab) {
       return _queue;
     case AppTab.users:
       return _users;
+    case AppTab.security:
+      return _security;
     case AppTab.settings:
       return _settings;
     case AppTab.messages:

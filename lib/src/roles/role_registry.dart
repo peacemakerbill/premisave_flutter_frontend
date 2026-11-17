@@ -5,7 +5,7 @@ import 'role.dart';
 
 /// A destination in the bottom bar (phones) or side rail (wide screens). Only names the tab;
 /// `features/shell/nav.dart` owns how it looks and where it goes.
-enum AppTab { home, explore, applications, users, settings, messages, people, account }
+enum AppTab { home, explore, applications, users, security, settings, messages, people, account }
 
 /// Everything that differs between roles, in one place.
 @immutable
@@ -57,7 +57,7 @@ const RoleSpec _support = RoleSpec(
 );
 
 const RoleSpec _admin = RoleSpec(
-  tabs: <AppTab>[AppTab.home, AppTab.applications, AppTab.users, AppTab.settings, AppTab.messages, AppTab.people, AppTab.account],
+  tabs: <AppTab>[AppTab.home, AppTab.applications, AppTab.users, AppTab.security, AppTab.settings, AppTab.messages, AppTab.people, AppTab.account],
   capabilities: <Capability>{
     Capability.reviewApplications,
     Capability.approveApplications,

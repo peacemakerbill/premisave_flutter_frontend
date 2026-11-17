@@ -117,16 +117,6 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
                 PageTitle(
                   'Users',
                   subtitle: '${plural(all.length, 'account')} · $active active',
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      IconButton(
-                        tooltip: 'Audit trail',
-                        icon: const Icon(Icons.fact_check_outlined),
-                        onPressed: () => context.push('/admin/audit'),
-                      ),
-                    ],
-                  ),
                 ),
                 PTextField(
                   label: 'Search',

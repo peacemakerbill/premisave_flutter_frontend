@@ -110,7 +110,9 @@ class AppShell extends ConsumerWidget {
         child: NavigationBar(
           selectedIndex: index,
           onDestinationSelected: go,
-          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+          labelBehavior: dests.length > 5
+              ? NavigationDestinationLabelBehavior.onlyShowSelected
+              : NavigationDestinationLabelBehavior.alwaysShow,
           destinations: <NavigationDestination>[
             for (final d in dests)
               NavigationDestination(

@@ -8,14 +8,15 @@ import '../../state/data_providers.dart';
 import '../security/security_widgets.dart';
 
 const List<String> _types = <String>[
-  'SIGN_IN_SUCCEEDED',
+  'SIGN_IN_SUCCESS',
   'SIGN_IN_FAILED',
-  'SIGN_OUT',
   'NEW_DEVICE_SIGN_IN',
   'PASSWORD_CHANGED',
-  'PASSWORD_RESET_REQUESTED',
+  'PASSWORD_RESET',
   'ACCOUNT_LOCKED',
   'SESSION_REVOKED',
+  'ADMIN_ROLE_CHANGED',
+  'STORAGE_SETTINGS_CHANGED',
 ];
 
 /// Administrators: the account activity trail across the platform, optionally for one user.
@@ -39,7 +40,7 @@ class _AuditScreenState extends ConsumerState<AuditScreen> {
     final value = ref.watch(auditEventsProvider(_filter));
     return SubPage(
       title: widget.userId == null ? 'Audit trail' : 'User activity',
-      fallbackRoute: '/admin/users',
+      fallbackRoute: '/admin/security',
       body: PageBody(
         maxWidth: 820,
         onRefresh: () async {
