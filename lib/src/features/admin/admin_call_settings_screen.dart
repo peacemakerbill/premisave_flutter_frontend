@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/theme/brand.dart';
 import '../../core/widgets/widgets.dart';
@@ -84,6 +85,7 @@ class _AdminCallSettingsScreenState extends ConsumerState<AdminCallSettingsScree
               PCard(
                 padding: EdgeInsets.zero,
                 child: ListTile(
+                  onTap: () => context.push('/admin/storage'),
                   contentPadding: const EdgeInsets.fromLTRB(18, 10, 18, 10),
                   leading: Icon(
                     s.storageReady
@@ -102,15 +104,23 @@ class _AdminCallSettingsScreenState extends ConsumerState<AdminCallSettingsScree
                           ? <String>[
                               if ((s.storageLocation ?? '').isNotEmpty) s.storageLocation!,
                               if (s.storageFreeMb != null) '${_freeSpace(s.storageFreeMb!)} free',
+                              'Tap to choose the folder',
                             ].join('\n')
                           : 'New recordings cannot be saved right now. ${s.storageProblem ?? ''}'.trim(),
                       style: TextStyle(height: 1.45, color: s.storageReady ? context.mutedColor : Brand.danger),
                     ),
                   ),
-                  trailing: StatusPill(
-                    s.storageReady ? 'Ready' : 'Not available',
-                    dense: true,
-                    color: s.storageReady ? Brand.success : Brand.danger,
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      StatusPill(
+                        s.storageReady ? 'Ready' : 'Not available',
+                        dense: true,
+                        color: s.storageReady ? Brand.success : Brand.danger,
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(Icons.chevron_right_rounded, color: context.mutedColor),
+                    ],
                   ),
                 ),
               ),

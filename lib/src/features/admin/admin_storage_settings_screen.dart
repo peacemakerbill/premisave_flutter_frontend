@@ -6,6 +6,7 @@ import '../../core/widgets/widgets.dart';
 import '../../data/models/storage_models.dart';
 import '../../state/providers.dart';
 import '../../state/storage_providers.dart';
+import 'folder_picker.dart';
 
 /// Administrators: where files are kept. The sign-up service keeps the documents of Home Owner applications, and the
 /// messenger keeps chat files and call recordings. Each has its own settings. The values in the server's .env file apply
@@ -269,29 +270,36 @@ class _AttachmentsCardState extends ConsumerState<_AttachmentsCard> {
           ),
           const SizedBox(height: 12),
           if (!_network)
-            PTextField(
+            FolderField(
               label: 'Folder',
               controller: _root,
               enabled: !_busy,
               hint: '/srv/premisave/files',
-              helper: 'A full path inside one of the allowed folders. It is created if it does not exist.',
+              helper: 'Type a full path inside one of the allowed folders, or press the folder button to browse. It is created if it does not exist.',
+              browse: ref.read(storageRepositoryProvider).browse,
+              create: ref.read(storageRepositoryProvider).createFolder,
             )
           else ...<Widget>[
-            PTextField(
+            FolderField(
               label: 'Where the share is mounted',
               controller: _mount,
               enabled: !_busy,
               hint: '/mnt/premisave',
-              helper: 'The server never mounts anything itself. Mount the share first.',
+              helper: 'The server never mounts anything itself. Mount the share first, then pick or type where it is mounted.',
+              browse: ref.read(storageRepositoryProvider).browse,
+              create: ref.read(storageRepositoryProvider).createFolder,
             ),
             const SizedBox(height: 12),
-            PTextField(
+            FolderField(
               label: 'Folder inside the share',
               controller: _directory,
               enabled: !_busy,
               optional: true,
               hint: 'premisave-messenger',
-              helper: 'Letters, digits, dot, dash, underscore and space. Leave blank to use the share itself.',
+              helper: 'Pick or type a folder inside the share. Leave blank to use the share itself.',
+              relativeTo: () => _mount.text,
+              browse: ref.read(storageRepositoryProvider).browse,
+              create: ref.read(storageRepositoryProvider).createFolder,
             ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
@@ -449,18 +457,24 @@ class _RecordingsCardState extends ConsumerState<_RecordingsCard> {
             ],
           ),
           const SizedBox(height: 6),
+          InfoRow('Kept on', r.isNetwork ? 'A network share' : 'This server', icon: r.isNetwork ? Icons.lan_rounded : Icons.storage_rounded),
           InfoRow('Recorder folder', r.sharedFolder, icon: Icons.video_library_outlined),
           InfoRow('In use now', r.location, icon: Icons.folder_outlined),
           if (r.freeMb != null) InfoRow('Free space', _free(r.freeMb!), icon: Icons.data_usage_rounded),
           if (!r.ready) InlineMessage(r.problem ?? 'Recordings cannot be saved right now.', kind: MessageKind.error),
           const SizedBox(height: 12),
-          PTextField(
-            label: 'Folder inside the recorder folder',
+          FolderField(
+            label: 'Folder for new recordings',
             controller: _subfolder,
             enabled: !_busy,
             optional: true,
             hint: 'team-calls',
-            helper: 'The recorder itself can only write to its own folder (set in .env and Docker), so you choose a folder inside it.',
+            helper: 'Pick or type a folder inside the recorder folder, and add new ones from the picker. '
+                'The recorder folder itself is set by CALLS_RECORDINGS_HOST_DIR in .env, because the recorder runs in Docker and can only write to the folder mounted into it. '
+                'To use another disk or share, point that setting at it (or at a parent folder of the places you want) and restart the recorder.',
+            relativeTo: () => _r.sharedFolder,
+            browse: ref.read(storageRepositoryProvider).browse,
+            create: ref.read(storageRepositoryProvider).createFolder,
           ),
           const SizedBox(height: 12),
           PTextField(
@@ -677,12 +691,14 @@ class _DocumentsCardState extends ConsumerState<_DocumentsCard> {
           ),
           const SizedBox(height: 12),
           if (!_network)
-            PTextField(
+            FolderField(
               label: 'Folder',
               controller: _local,
               enabled: !_busy,
               hint: '/srv/premisave/homeowner-onboarding',
-              helper: 'A full path inside one of the allowed folders. It is created if it does not exist.',
+              helper: 'Type a full path inside one of the allowed folders, or press the folder button to browse. It is created if it does not exist.',
+              browse: ref.read(documentStorageRepositoryProvider).browse,
+              create: ref.read(documentStorageRepositoryProvider).createFolder,
             )
           else ...<Widget>[
             PSelectField<String>(
@@ -715,21 +731,26 @@ class _DocumentsCardState extends ConsumerState<_DocumentsCard> {
               hint: _protocol == 'NFS' ? '/volume1/premisave' : 'premisave',
             ),
             const SizedBox(height: 12),
-            PTextField(
+            FolderField(
               label: 'Where the share is mounted',
               controller: _mount,
               enabled: !_busy,
               hint: '/mnt/premisave-nas',
-              helper: 'The server never mounts anything itself. Mount the share first.',
+              helper: 'The server never mounts anything itself. Mount the share first, then pick or type where it is mounted.',
+              browse: ref.read(documentStorageRepositoryProvider).browse,
+              create: ref.read(documentStorageRepositoryProvider).createFolder,
             ),
             const SizedBox(height: 12),
-            PTextField(
+            FolderField(
               label: 'Folder inside the share',
               controller: _directory,
               enabled: !_busy,
               optional: true,
               hint: 'homeowner-onboarding',
-              helper: 'Letters, digits, dot, dash, underscore, space and brackets. Leave blank to use the share itself.',
+              helper: 'Pick or type a folder inside the share. Leave blank to use the share itself.',
+              relativeTo: () => _mount.text,
+              browse: ref.read(documentStorageRepositoryProvider).browse,
+              create: ref.read(documentStorageRepositoryProvider).createFolder,
             ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,

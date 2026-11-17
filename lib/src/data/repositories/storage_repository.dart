@@ -13,6 +13,17 @@ class StorageRepository {
 
   Future<StorageSettings> settings() async => StorageSettings.fromJson(asMap(await _api.get(_base)));
 
+  /// The folders inside [path] on the server, or the folders that may be chosen when [path] is empty.
+  Future<FolderListing> browse(String? path) async => FolderListing.fromJson(asMap(await _api.get(
+        '$_base/browse',
+        query: <String, dynamic>{if (path != null && path.isNotEmpty) 'path': path},
+      )));
+
+  /// Makes a folder inside [parent] and returns it.
+  Future<FolderListing> createFolder(String parent, String name) async => FolderListing.fromJson(
+        asMap(await _api.post('$_base/folders', body: <String, dynamic>{'parent': parent, 'name': name})),
+      );
+
   Map<String, dynamic> _attachmentsBody({
     required String mode,
     required String root,
@@ -91,6 +102,17 @@ class DocumentStorageRepository {
   static const String _base = '/admin/storage-settings';
 
   Future<DocumentStorageSettings> settings() async => DocumentStorageSettings.fromJson(asMap(await _api.get(_base)));
+
+  /// The folders inside [path] on the server, or the folders that may be chosen when [path] is empty.
+  Future<FolderListing> browse(String? path) async => FolderListing.fromJson(asMap(await _api.get(
+        '$_base/browse',
+        query: <String, dynamic>{if (path != null && path.isNotEmpty) 'path': path},
+      )));
+
+  /// Makes a folder inside [parent] and returns it.
+  Future<FolderListing> createFolder(String parent, String name) async => FolderListing.fromJson(
+        asMap(await _api.post('$_base/folders', body: <String, dynamic>{'parent': parent, 'name': name})),
+      );
 
   Map<String, dynamic> _body({
     required String type,

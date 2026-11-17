@@ -94,6 +94,8 @@ class RecordingsStorage {
 
   final String source;
   final String mode;
+
+  bool get isNetwork => mode == 'NETWORK';
   final String sharedFolder;
   final String subfolder;
   final int minFreeMb;
@@ -270,5 +272,59 @@ class DocumentStorageSettings {
   factory DocumentStorageSettings.fromJson(Map<String, dynamic> j) => DocumentStorageSettings(
         allowedRoots: stringList(j['allowedRoots']),
         documents: DocumentStorage.fromJson(asMap(j['documents'])),
+      );
+}
+
+/// One folder in the folder picker.
+class FolderEntry {
+  const FolderEntry({required this.name, required this.path});
+
+  final String name;
+
+  /// The full path on the server.
+  final String path;
+
+  factory FolderEntry.fromJson(Map<String, dynamic> j) => FolderEntry(name: strOr(j['name']), path: strOr(j['path']));
+}
+
+/// What the server answered when asked for the folders inside a folder. [top] is the list of folders an administrator
+/// may choose from, shown before any folder is opened.
+class FolderListing {
+  const FolderListing({
+    this.path = '',
+    this.parent,
+    this.top = false,
+    this.exists = true,
+    this.canCreate = false,
+    this.writable = false,
+    this.freeMb,
+    this.truncated = false,
+    this.folders = const <FolderEntry>[],
+  });
+
+  final String path;
+
+  /// The folder above. Empty when the parent is the list of allowed folders, null in that list.
+  final String? parent;
+  final bool top;
+
+  /// False for a folder that is allowed but has not been created yet. Choosing it creates it.
+  final bool exists;
+  final bool canCreate;
+  final bool writable;
+  final int? freeMb;
+  final bool truncated;
+  final List<FolderEntry> folders;
+
+  factory FolderListing.fromJson(Map<String, dynamic> j) => FolderListing(
+        path: strOr(j['path']),
+        parent: j['parent'] == null ? null : strOr(j['parent']),
+        top: boolOr(j['top']),
+        exists: boolOr(j['exists'], true),
+        canCreate: boolOr(j['canCreate']),
+        writable: boolOr(j['writable']),
+        freeMb: intOrNull(j['freeMb']),
+        truncated: boolOr(j['truncated']),
+        folders: mapList(j['folders']).map(FolderEntry.fromJson).toList(),
       );
 }
