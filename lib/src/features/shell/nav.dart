@@ -28,8 +28,12 @@ const NavDest _home = NavDest('/home', 'Home', Icons.home_outlined, Icons.home_r
 const NavDest _explore = NavDest('/explore', 'Explore', Icons.explore_outlined, Icons.explore_rounded);
 const NavDest _queue =
     NavDest('/staff', 'Applications', Icons.fact_check_outlined, Icons.fact_check_rounded);
-const NavDest _users =
-    NavDest('/admin', 'Users', Icons.manage_accounts_outlined, Icons.manage_accounts_rounded);
+const NavDest _users = NavDest(
+    '/admin/users', 'Users', Icons.manage_accounts_outlined, Icons.manage_accounts_rounded, <String>['/admin/audit']);
+
+/// Administrators: the switches for calls and the places where files are kept.
+const NavDest _settings = NavDest(
+    '/admin/settings', 'Settings', Icons.tune_outlined, Icons.tune_rounded, <String>['/admin/calls', '/admin/storage']);
 const NavDest _messages = NavDest('/messages', 'Messages', Icons.chat_bubble_outline_rounded, Icons.chat_bubble_rounded);
 const NavDest _people = NavDest('/people', 'People', Icons.groups_outlined, Icons.groups_rounded);
 const NavDest _account =
@@ -45,6 +49,8 @@ NavDest _destinationFor(AppTab tab) {
       return _queue;
     case AppTab.users:
       return _users;
+    case AppTab.settings:
+      return _settings;
     case AppTab.messages:
       return _messages;
     case AppTab.people:

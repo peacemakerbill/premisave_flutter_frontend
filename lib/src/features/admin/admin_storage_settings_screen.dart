@@ -19,7 +19,7 @@ class AdminStorageSettingsScreen extends ConsumerWidget {
     final messenger = ref.watch(storageSettingsProvider);
     return SubPage(
       title: 'Storage',
-      fallbackRoute: '/admin/users',
+      fallbackRoute: '/admin/settings',
       body: PageBody(
         maxWidth: 720,
         children: <Widget>[

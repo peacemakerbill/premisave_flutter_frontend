@@ -52,7 +52,7 @@ class _AdminCallSettingsScreenState extends ConsumerState<AdminCallSettingsScree
     final value = ref.watch(callSettingsProvider);
     return SubPage(
       title: 'Calls',
-      fallbackRoute: '/admin/users',
+      fallbackRoute: '/admin/settings',
       body: value.when(
         skipLoadingOnReload: true,
         loading: () => const Center(child: CircularProgressIndicator()),

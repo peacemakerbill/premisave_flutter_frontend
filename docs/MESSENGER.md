@@ -127,14 +127,14 @@ What the app does:
 
 ### Storage settings
 
-Administrators open **Settings, Storage** (or the Storage icon in the admin user list, route `/admin/storage`). The screen has three parts, each loaded on its own so one service being down does not hide the others: home owner documents (auth-service, `/admin/storage-settings`), chat files and call recordings (messenger, `/api/storage-settings`). Each part shows the source (From .env or Set in dashboard), the folder in use, free space and any problem. **Try it** creates the folder and writes a test file without saving, **Save** makes the dashboard value win, and **Reset to .env** goes back. For recordings only a folder inside the recorder's folder and the free-space limit can be chosen.
+Administrators open **Settings, Storage** (or the Settings tab for administrators, route `/admin/storage`). The screen has three parts, each loaded on its own so one service being down does not hide the others: home owner documents (auth-service, `/admin/storage-settings`), chat files and call recordings (messenger, `/api/storage-settings`). Each part shows the source (From .env or Set in dashboard), the folder in use, free space and any problem. **Try it** creates the folder and writes a test file without saving, **Save** makes the dashboard value win, and **Reset to .env** goes back. For recordings only a folder inside the recorder's folder and the free-space limit can be chosen.
 
 ### Call settings
 
 Recording is controlled by the administrators, and the app asks the messenger service (`GET /api/call-settings`) so it can hide recording completely while it is off.
 
 - **Messages, Settings, Calls** (the gear in the chat list) shows whether recording is on. A person who is not an administrator only reads it. An administrator opens the entry to reach the full screen.
-- **The full screen** (also the Call settings icon in the admin user list, route `/admin/calls`) has the switch, and shows where the videos are stored (this server or a network share), whether the storage is ready, the folder, the free space and any problem, for example a share that is not mounted.
+- **The full screen** (also the Settings tab for administrators, route `/admin/calls`) has the switch, and shows where the videos are stored (this server or a network share), whether the storage is ready, the folder, the free space and any problem, for example a share that is not mounted.
 - A change reaches every open app straight away through the `RECORDING_SETTING` event, so the Record button appears or disappears without restarting.
 - Where the videos are kept is a server setting (`CALLS_RECORDINGS_MODE`, `LOCAL` or `NETWORK`), described in the messenger service's `docs/CALLS.md`. The app only shows it.
 

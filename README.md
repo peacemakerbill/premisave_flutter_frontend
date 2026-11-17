@@ -184,9 +184,9 @@ Everything marked **live** talks to the real auth-service. The rest shows sample
 
 A call starts from the phone or video button in a chat. The messenger service decides who is in it and signs the token, and the audio and video go straight to a LiveKit server. A host or co-host can record the call while an administrator has recording switched on. The video is saved on the server's disk or on a network share, and everyone who was in the call can watch it afterwards from **Calls**.
 
-**Call settings** are in **Messages, Settings, Calls**. Everyone sees whether recording is on. An administrator opens the entry to switch it on or off and to see where the videos are stored, how much space is free and any problem with the storage. The same screen is reached from the Call settings icon in the admin user list.
+**Call settings** are in **Messages, Settings, Calls**. Everyone sees whether recording is on. An administrator opens the entry to switch it on or off and to see where the videos are stored, how much space is free and any problem with the storage. Administrators also reach it from the **Settings** tab.
 
-**Storage** is in **Messages, Settings, Storage**, and behind the Storage icon in the admin user list (route `/admin/storage`). Administrators choose where home owner documents (auth-service), chat files and call recordings (messenger) are saved. Each shows the folder in use, whether it works and the free space, and can be tried, saved or reset to the server's `.env` values. Folders must be inside the roots the server allows (`STORAGE_ALLOWED_ROOTS`), and files saved earlier keep opening. See the storage sections of the auth-service and messenger READMEs.
+**Storage** is in **Messages, Settings, Storage**, and, for administrators, in the **Settings** tab (route `/admin/storage`). Administrators choose where home owner documents (auth-service), chat files and call recordings (messenger) are saved. Each shows the folder in use, whether it works and the free space, and can be tried, saved or reset to the server's `.env` values. Folders must be inside the roots the server allows (`STORAGE_ALLOWED_ROOTS`), and files saved earlier keep opening. See the storage sections of the auth-service and messenger READMEs.
 
 <img src="docs/assets/divider.svg" alt="" width="100%"/>
 

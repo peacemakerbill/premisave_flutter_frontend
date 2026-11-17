@@ -121,16 +121,6 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
                       IconButton(
-                        tooltip: 'Call settings',
-                        icon: const Icon(Icons.video_call_outlined),
-                        onPressed: () => context.push('/admin/calls'),
-                      ),
-                      IconButton(
-                        tooltip: 'Storage',
-                        icon: const Icon(Icons.storage_outlined),
-                        onPressed: () => context.push('/admin/storage'),
-                      ),
-                      IconButton(
                         tooltip: 'Audit trail',
                         icon: const Icon(Icons.fact_check_outlined),
                         onPressed: () => context.push('/admin/audit'),
