@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/widgets/widgets.dart';
-import '../../data/models/call_models.dart';
 import '../../state/call_controller.dart';
 import 'call_chat_panel.dart';
 import 'call_people_panel.dart';

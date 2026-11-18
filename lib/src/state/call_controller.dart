@@ -749,7 +749,7 @@ class CallSession extends ChangeNotifier {
     if (_isMobile) {
       speakerOn = _call.isVideo;
       try {
-        await lk.Hardware.instance.setSpeakerphoneOn(speakerOn);
+        await lk.AudioManager.instance.setSpeakerOutputPreferred(speakerOn);
       } catch (e) {
         debugPrint('Calls: speaker route failed: $e');
       }
@@ -1142,7 +1142,7 @@ class CallSession extends ChangeNotifier {
     if (!_isMobile) return;
     speakerOn = !speakerOn;
     try {
-      await lk.Hardware.instance.setSpeakerphoneOn(speakerOn);
+      await lk.AudioManager.instance.setSpeakerOutputPreferred(speakerOn);
     } catch (e) {
       debugPrint('Calls: speaker route failed: $e');
     }

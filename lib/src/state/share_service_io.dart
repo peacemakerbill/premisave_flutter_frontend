@@ -4,7 +4,7 @@ import 'package:flutter_background/flutter_background.dart';
 /// Call it after the capture permission is granted.
 Future<bool> startShareService() async {
   await FlutterBackground.initialize(
-    androidConfig: FlutterBackgroundAndroidConfig(
+    androidConfig: const FlutterBackgroundAndroidConfig(
       notificationTitle: 'Premisave call',
       notificationText: 'You are sharing your screen',
     ),

@@ -99,11 +99,11 @@ class _ScreenPickerDialogState extends State<_ScreenPickerDialog> with SingleTic
               child: _loading
                   ? const Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator(color: CallColors.speaking))
                   : _error != null
-                      ? Padding(
-                          padding: const EdgeInsets.all(28),
+                      ? const Padding(
+                          padding: EdgeInsets.all(28),
                           child: Text(
                             'This computer did not let the app list its screens. On Linux with Wayland, sharing needs the X11 session or a desktop portal.',
-                            style: const TextStyle(color: CallColors.muted, height: 1.4),
+                            style: TextStyle(color: CallColors.muted, height: 1.4),
                           ),
                         )
                       : SizedBox(
