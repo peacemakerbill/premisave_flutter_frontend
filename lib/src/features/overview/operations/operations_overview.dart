@@ -28,7 +28,6 @@ class OperationsOverview extends ConsumerWidget {
     final user = ref.watch(sessionProvider).user;
     final live = ref.watch(liveListingsProvider);
     final week = ref.watch(financeWeekProvider);
-    final today = week.valueOrNull == null ? null : week.value!.last;
 
     return PageBody(
       bottomPadding: 48,

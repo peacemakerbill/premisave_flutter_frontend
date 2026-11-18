@@ -53,10 +53,10 @@ class _OwnerPropertyScreenState extends ConsumerState<OwnerPropertyScreen> {
             onAction: _creating ? null : _createProfile,
           );
         }
-        return DefaultTabController(
+        return const DefaultTabController(
           length: 4,
           child: Column(
-            children: const <Widget>[
+            children: <Widget>[
               TabBar(
                 isScrollable: true,
                 tabAlignment: TabAlignment.start,

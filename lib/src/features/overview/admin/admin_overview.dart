@@ -90,7 +90,7 @@ class AdminOverview extends ConsumerWidget {
           child: AuditSummaryStrip(),
         ),
         OverviewColumns(
-          left: OverviewBlock(title: 'Recent activity', child: const _Recent()),
+          left: const OverviewBlock(title: 'Recent activity', child: _Recent()),
           right: OverviewBlock(
             title: 'Storage and calls',
             subtitle: 'Where files are kept',

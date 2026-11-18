@@ -18,16 +18,16 @@ class OwnerListingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return DefaultTabController(
+    return const DefaultTabController(
       length: 3,
       child: Column(
         children: <Widget>[
-          const TabBar(
+          TabBar(
             isScrollable: true,
             tabAlignment: TabAlignment.start,
             tabs: <Tab>[Tab(text: 'My listings'), Tab(text: 'Bookings received'), Tab(text: 'Leads')],
           ),
-          const Expanded(
+          Expanded(
             child: TabBarView(
               children: <Widget>[
                 _MyListings(),

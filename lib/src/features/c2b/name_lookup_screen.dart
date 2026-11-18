@@ -116,7 +116,7 @@ class _ConnectCardState extends ConsumerState<_ConnectCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          InlineMessage(kIsWeb
+          const InlineMessage(kIsWeb
               ? 'Connect with the C2B service credentials. They are used once to get an access token and are not saved.'
               : 'Connect with the C2B service credentials. They are used to get an access token, and are saved only if you tick the box below.'),
           const SizedBox(height: 14),
