@@ -33,7 +33,7 @@ import '../features/auth/welcome_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/home/module_pages.dart';
 import '../features/overview/role_overview_page.dart';
-import '../features/explore/explore_content.dart';
+import '../features/listings/explore_screen.dart';
 import '../features/calls/call_details_screen.dart';
 import '../features/calls/call_link_screen.dart';
 import '../features/messenger/downloaded_files_screen.dart';
@@ -158,6 +158,11 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(path: 'payments', pageBuilder: (_, s) => detailPage(s, const ModulePage(module: AppModule.payments))),
               GoRoute(path: 'transactions', pageBuilder: (_, s) => detailPage(s, const ModulePage(module: AppModule.transactions))),
               GoRoute(path: 'wishlists', pageBuilder: (_, s) => detailPage(s, const ModulePage(module: AppModule.wishlists))),
+              GoRoute(path: 'properties', pageBuilder: (_, s) => detailPage(s, const ModulePage(module: AppModule.properties))),
+              GoRoute(path: 'listings', pageBuilder: (_, s) => detailPage(s, const ModulePage(module: AppModule.listings))),
+              GoRoute(path: 'tenancy', pageBuilder: (_, s) => detailPage(s, const ModulePage(module: AppModule.tenancy))),
+              GoRoute(path: 'developer', pageBuilder: (_, s) => detailPage(s, const ModulePage(module: AppModule.developer))),
+              GoRoute(path: 'lookup', pageBuilder: (_, s) => detailPage(s, const ModulePage(module: AppModule.lookup))),
               GoRoute(path: 'messages', redirect: (_, __) => '/messages'),
               GoRoute(path: 'about', pageBuilder: (_, s) => detailPage(s, const ModulePage(module: AppModule.about))),
               GoRoute(path: 'contact', pageBuilder: (_, s) => detailPage(s, const ModulePage(module: AppModule.contact))),
@@ -187,7 +192,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(path: 'status/:id/insights', pageBuilder: (_, s) => detailPage(s, StatusInsightsScreen(statusId: s.pathParameters['id'] ?? ''))),
             ],
           ),
-          GoRoute(path: '/explore', pageBuilder: (_, s) => tabPage(s, const ExploreContent())),
+          GoRoute(path: '/explore', pageBuilder: (_, s) => tabPage(s, const ExploreScreen())),
           GoRoute(
             path: '/application',
             pageBuilder: (_, s) => tabPage(s, const ApplicationHubScreen()),

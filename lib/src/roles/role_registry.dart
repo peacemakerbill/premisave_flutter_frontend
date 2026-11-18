@@ -28,31 +28,32 @@ const RoleSpec _client = RoleSpec(
     Capability.exploreProperties,
     Capability.useClientWorkspace,
     Capability.applyAsHomeOwner,
+    Capability.useWallet,
   },
   overviewTitle: 'My dashboard',
 );
 
 const RoleSpec _homeOwner = RoleSpec(
   tabs: <AppTab>[AppTab.home, AppTab.messages, AppTab.people, AppTab.account],
-  capabilities: <Capability>{Capability.viewHomeOwnerApplication},
+  capabilities: <Capability>{Capability.viewHomeOwnerApplication, Capability.useWallet, Capability.manageProperties},
   overviewTitle: 'Home owner overview',
 );
 
 const RoleSpec _operations = RoleSpec(
   tabs: <AppTab>[AppTab.home, AppTab.applications, AppTab.messages, AppTab.people, AppTab.account],
-  capabilities: <Capability>{Capability.reviewApplications},
+  capabilities: <Capability>{Capability.reviewApplications, Capability.lookupAccounts},
   overviewTitle: 'Operations overview',
 );
 
 const RoleSpec _finance = RoleSpec(
   tabs: <AppTab>[AppTab.home, AppTab.applications, AppTab.messages, AppTab.people, AppTab.account],
-  capabilities: <Capability>{Capability.reviewApplications},
+  capabilities: <Capability>{Capability.reviewApplications, Capability.lookupAccounts},
   overviewTitle: 'Finance overview',
 );
 
 const RoleSpec _support = RoleSpec(
   tabs: <AppTab>[AppTab.home, AppTab.applications, AppTab.messages, AppTab.people, AppTab.account],
-  capabilities: <Capability>{Capability.reviewApplications},
+  capabilities: <Capability>{Capability.reviewApplications, Capability.lookupAccounts},
   overviewTitle: 'Support overview',
 );
 
@@ -63,6 +64,7 @@ const RoleSpec _admin = RoleSpec(
     Capability.approveApplications,
     Capability.manageUsers,
     Capability.viewAuditTrail,
+    Capability.lookupAccounts,
   },
   overviewTitle: 'Administrator overview',
 );

@@ -307,28 +307,26 @@ class _Workspace extends StatelessWidget {
         onTap: () => context.push('/home/overview'),
       ),
       if (role.can(Capability.useClientWorkspace)) ...<Widget>[
-        MenuTile(icon: Icons.event_available_outlined, title: 'Bookings', subtitle: 'Stays and viewings', onTap: () => context.push('/home/bookings')),
-        MenuTile(icon: Icons.favorite_border_rounded, title: 'Wishlists', subtitle: 'Places you saved', onTap: () => context.push('/home/wishlists')),
+        MenuTile(icon: Icons.event_available_outlined, title: 'Bookings', subtitle: 'Stays you booked', onTap: () => context.push('/home/bookings')),
+        MenuTile(icon: Icons.favorite_border_rounded, title: 'Wishlists', subtitle: 'Listings you are interested in', onTap: () => context.push('/home/wishlists')),
         MenuTile(icon: Icons.chat_bubble_outline_rounded, title: 'Messages', subtitle: 'Chats, groups and statuses', onTap: () => context.go('/messages')),
-        MenuTile(icon: Icons.account_balance_wallet_outlined, title: 'Payments', subtitle: 'Methods and upcoming payments', onTap: () => context.push('/home/payments')),
+        MenuTile(icon: Icons.key_rounded, title: 'My tenancy', subtitle: 'Rent, leases and maintenance', onTap: () => context.push('/home/tenancy')),
+      ],
+      if (role.can(Capability.manageProperties)) ...<Widget>[
+        MenuTile(icon: Icons.apartment_rounded, title: 'Property management', subtitle: 'Properties, units, leases and rent', onTap: () => context.push('/home/properties')),
+        MenuTile(icon: Icons.home_work_outlined, title: 'My listings', subtitle: 'Listings, bookings and leads', onTap: () => context.push('/home/listings')),
+      ],
+      if (role.can(Capability.useWallet)) ...<Widget>[
+        MenuTile(icon: Icons.account_balance_wallet_outlined, title: 'Payments', subtitle: 'Wallet, deposits and withdrawals', onTap: () => context.push('/home/payments')),
         MenuTile(icon: Icons.receipt_long_outlined, title: 'Transactions', subtitle: 'Your payment history', onTap: () => context.push('/home/transactions')),
       ],
+      if (role.can(Capability.lookupAccounts))
+        MenuTile(icon: Icons.verified_user_outlined, title: 'M-Pesa name lookup', subtitle: 'Check who an M-Pesa number belongs to', onTap: () => context.push('/home/lookup')),
+      MenuTile(icon: Icons.code_rounded, title: 'Developer portal', subtitle: 'Apps and API keys', onTap: () => context.push('/home/developer')),
       MenuTile(icon: Icons.info_outline_rounded, title: 'About Premisave', onTap: () => context.push('/home/about')),
       MenuTile(icon: Icons.support_agent_outlined, title: 'Contact us', onTap: () => context.push('/home/contact')),
     ];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        MenuGroup(children: items),
-        Padding(
-          padding: const EdgeInsets.only(top: 8, left: 4),
-          child: Text(
-            'Bookings and payments show sample data until those services are connected.',
-            style: TextStyle(fontSize: 12, color: context.mutedColor),
-          ),
-        ),
-      ],
-    );
+    return MenuGroup(children: items);
   }
 }
 

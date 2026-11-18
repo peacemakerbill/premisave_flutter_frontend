@@ -24,4 +24,13 @@ enum Capability {
 
   /// The platform wide security audit trail.
   viewAuditTrail,
+
+  /// The wallet: balance, deposits, withdrawals, transfers and history.
+  useWallet,
+
+  /// Listings, bookings and leads on the person's own listings, and property management (units, leases, rent).
+  manageProperties,
+
+  /// The M-Pesa name lookup tool of the C2B Hakikisha service.
+  lookupAccounts,
 }

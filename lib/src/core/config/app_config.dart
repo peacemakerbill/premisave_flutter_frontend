@@ -16,6 +16,11 @@ class AppConfig {
   static const String _envBaseUrl = String.fromEnvironment('BASE_URL');
   static const String _envMessengerUrl = String.fromEnvironment('MESSENGER_URL');
   static const String _envInviteBaseUrl = String.fromEnvironment('GROUP_INVITE_BASE_URL');
+  static const String _envListingUrl = String.fromEnvironment('LISTING_URL');
+  static const String _envWalletUrl = String.fromEnvironment('WALLET_URL');
+  static const String _envPropertyUrl = String.fromEnvironment('PROPERTY_URL');
+  static const String _envC2bUrl = String.fromEnvironment('C2B_URL');
+  static const String _envDeveloperUrl = String.fromEnvironment('DEVELOPER_URL');
   static const String _envGeocoderUrl = String.fromEnvironment('GEOCODER_URL');
   static const String _envMapTileUrl = String.fromEnvironment('MAP_TILE_URL');
   static const String _envMapsAndroid = String.fromEnvironment('GOOGLE_MAPS_ANDROID_KEY');
@@ -81,6 +86,33 @@ class AppConfig {
     }
     return 'http://localhost:8081';
   }
+
+  /// Address of one of the other Premisave services. [fromEnv] is the value given with --dart-define and [port] is
+  /// where the service listens on a developer machine. The Android emulator reaches the host machine on 10.0.2.2.
+  static String _serviceUrl(String fromEnv, int port) {
+    if (fromEnv.isNotEmpty) {
+      return fromEnv.endsWith('/') ? fromEnv.substring(0, fromEnv.length - 1) : fromEnv;
+    }
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      return 'http://10.0.2.2:$port';
+    }
+    return 'http://localhost:$port';
+  }
+
+  /// Listing service: listings, bookings, interests and availability. Default port 8082.
+  static String get listingUrl => _serviceUrl(_envListingUrl, 8082);
+
+  /// Wallet service: balance, deposits, withdrawals, transfers and history. Default port 8084.
+  static String get walletUrl => _serviceUrl(_envWalletUrl, 8084);
+
+  /// Property management service: properties, units, leases, rent and maintenance. Default port 8085.
+  static String get propertyUrl => _serviceUrl(_envPropertyUrl, 8085);
+
+  /// C2B Hakikisha service: M-Pesa account name lookup. Default port 8090.
+  static String get c2bUrl => _serviceUrl(_envC2bUrl, 8090);
+
+  /// Developer service: the developer portal API. It has its own accounts. Default port 8091.
+  static String get developerUrl => _serviceUrl(_envDeveloperUrl, 8091);
 
   /// The live updates address: the messenger URL with http turned into ws.
   static String get messengerSocketUrl => '${messengerUrl.replaceFirst(RegExp('^http', caseSensitive: false), 'ws')}/ws-messenger';

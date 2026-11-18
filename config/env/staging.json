@@ -1,6 +1,11 @@
 {
   "BASE_URL": "https://staging-api.premisave.example",
   "MESSENGER_URL": "",
+  "LISTING_URL": "",
+  "WALLET_URL": "",
+  "PROPERTY_URL": "",
+  "C2B_URL": "",
+  "DEVELOPER_URL": "",
   "GROUP_INVITE_BASE_URL": "",
   "GOOGLE_SERVER_CLIENT_ID": "836161536260-b3p6bk2q8tdtrdd636faeka3dhps3d6m.apps.googleusercontent.com",
   "GOOGLE_CLIENT_ID": "836161536260-b3p6bk2q8tdtrdd636faeka3dhps3d6m.apps.googleusercontent.com",

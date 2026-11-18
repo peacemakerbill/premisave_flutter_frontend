@@ -173,8 +173,10 @@ class ApiClient {
   Future<dynamic> get(String path, {Map<String, dynamic>? query}) =>
       _run(() => dio.get<dynamic>(path, queryParameters: query));
 
-  Future<dynamic> post(String path, {Object? body, Map<String, dynamic>? query}) =>
-      _run(() => dio.post<dynamic>(path, data: body, queryParameters: query));
+  /// [headers] are added to this request only, for example an `Idempotency-Key`.
+  Future<dynamic> post(String path, {Object? body, Map<String, dynamic>? query, Map<String, dynamic>? headers}) => _run(
+        () => dio.post<dynamic>(path, data: body, queryParameters: query, options: headers == null ? null : Options(headers: headers)),
+      );
 
   Future<dynamic> put(String path, {Object? body, Map<String, dynamic>? query}) =>
       _run(() => dio.put<dynamic>(path, data: body, queryParameters: query));

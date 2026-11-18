@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 ///   {"status":400,"message":"..."}                      most errors
 ///   {"status":400,"errors":{"field":"message"}}         bean validation
 ///   {"status":..., "message":..., "details":...}        ApiException with details
+/// The C2B Hakikisha service answers {"errorMessage": "..."}, which is read as well.
 class ApiException implements Exception {
   ApiException(
     this.message, {
@@ -77,7 +78,7 @@ class ApiException implements Exception {
         fields = errors.map((k, v) => MapEntry(k.toString(), v.toString()));
         if (fields.isNotEmpty) message = fields.values.first;
       }
-      final m = data['message'] ?? data['error'] ?? data['detail'];
+      final m = data['message'] ?? data['error'] ?? data['errorMessage'] ?? data['detail'];
       if (m != null && m.toString().trim().isNotEmpty) message = m.toString();
     } else if (data is String && data.trim().isNotEmpty && !data.trimLeft().startsWith('<')) {
       message = data.trim();

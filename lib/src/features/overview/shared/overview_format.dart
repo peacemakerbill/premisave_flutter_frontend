@@ -1,6 +1,4 @@
-/// Currency shown on the overview dashboards. The figures are sample data until the matching services exist,
-/// so this is the one place to change when real amounts arrive with their own currency.
-const String overviewCurrency = 'USD';
+import '../../../core/utils/money.dart';
 
 const List<String> _monthNames = <String>[
   'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', //
@@ -14,11 +12,11 @@ List<String> overviewMonthsBack(DateTime now, int count) => <String>[
       for (var i = count - 1; i >= 0; i--) overviewMonth(DateTime(now.year, now.month - i).month),
     ];
 
-/// "USD 45,000"
-String overviewMoney(num value) {
+/// "USD 45,000". Amounts without a currency of their own are in the platform currency.
+String overviewMoney(num value, [String currency = platformCurrency]) {
   final digits = value.round().toString();
   final grouped = digits.replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (m) => ',');
-  return '$overviewCurrency $grouped';
+  return '$currency $grouped';
 }
 
 String _trimZero(double v) {
@@ -34,7 +32,12 @@ String overviewShort(num value) {
 }
 
 /// "USD 95K"
-String overviewShortMoney(num value) => '$overviewCurrency ${overviewShort(value)}';
+String overviewShortMoney(num value, [String currency = platformCurrency]) => '$currency ${overviewShort(value)}';
+
+const List<String> _weekdayNames = <String>['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+/// Three letter weekday name, Monday first.
+String overviewWeekday(DateTime day) => _weekdayNames[day.weekday - 1];
 
 /// "today", "tomorrow" or "in 5 days", counted in calendar days.
 String overviewDueIn(DateTime now, DateTime due) {

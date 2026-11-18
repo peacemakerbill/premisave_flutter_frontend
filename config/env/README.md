@@ -37,10 +37,15 @@ If you are unsure whether something is public, ask: *would it matter if anyone w
 | --- | --- | --- |
 | `BASE_URL` | Address of the auth-service, with no trailing slash, for example `https://api.example.com` | A default for the platform: `http://localhost:8080`, or `http://10.0.2.2:8080` on the Android emulator |
 | `MESSENGER_URL` | Address of the messenger service, with no trailing slash. The chat socket is opened on the same host at `/ws-messenger` | A default for the platform: `http://localhost:8081`, or `http://10.0.2.2:8081` on the Android emulator |
+| `LISTING_URL` | Address of the listing service, with no trailing slash | A default for the platform: `http://localhost:8082`, or `http://10.0.2.2:8082` on the Android emulator |
+| `WALLET_URL` | Address of the wallet service | A default for the platform: `http://localhost:8084`, or `http://10.0.2.2:8084` on the Android emulator |
+| `PROPERTY_URL` | Address of the property management service | A default for the platform: `http://localhost:8085`, or `http://10.0.2.2:8085` on the Android emulator |
+| `C2B_URL` | Address of the C2B Hakikisha service | A default for the platform: `http://localhost:8090`, or `http://10.0.2.2:8090` on the Android emulator |
+| `DEVELOPER_URL` | Address of the developer service | A default for the platform: `http://localhost:8091`, or `http://10.0.2.2:8091` on the Android emulator |
 | `GROUP_INVITE_BASE_URL` | Start of the group invite links the app shows when the server does not send a full link, for example `https://premisave.com/join` | `https://premisave.com/join` |
 | `SUPPORT_EMAIL` | The address shown on help and contact screens | A development address. **Set it for production** |
 
-On a real phone `localhost` means the phone itself, so set `BASE_URL` to your computer's address on the network, for example `http://192.168.1.20:8080`.
+On a real phone `localhost` means the phone itself, so set `BASE_URL` to your computer's address on the network, for example `http://192.168.1.20:8080`, and do the same for every other service address you use. A browser build is also checked by CORS, which each service sets for itself: see [docs/SERVICES.md](../../docs/SERVICES.md#browser-rules-cors).
 
 ### Social sign in
 

@@ -1,6 +1,6 @@
 # Roles and access
 
-<img src="assets/roles.svg" alt="A grid of the six roles against the eight capabilities, with the tabs each role gets." width="100%"/>
+<img src="assets/roles.svg" alt="A grid of the six roles against the eleven capabilities, with the tabs each role gets." width="100%"/>
 
 Everyone signs in to the same app. This page explains how the app decides what each person sees, and how to add a role, a capability or a guarded page without scattering `if (role == ...)` checks through the screens.
 
@@ -97,6 +97,10 @@ const List<(String, Capability)> _guarded = <(String, Capability)>[
   ('/admin', Capability.manageUsers),
   ('/staff', Capability.reviewApplications),
   ('/explore', Capability.exploreProperties),
+  ('/home/lookup', Capability.lookupAccounts),
+  ('/home/properties', Capability.manageProperties),
+  ('/home/listings', Capability.manageProperties),
+  ('/home/tenancy', Capability.useClientWorkspace),
 ];
 ```
 
@@ -150,7 +154,7 @@ Say you want a `landlord` role.
 3. **`features/overview/`.** Build the role's dashboard in its own folder, `overview/landlord/landlord_overview.dart`, and add one case to `RoleOverviewPage._bodyFor`. This is the only place that picks a dashboard. The switch has no default either, so the compiler reminds you.
 4. **The backend.** The auth-service has to know the role too, so it can be assigned and its permissions enforced there. See below.
 
-The dashboards for the other roles still show sample data (their hero says "Sample data"). The administrator's is built from live data and is the pattern to copy once a role's service exists: `features/overview/admin/admin_overview.dart` reads each part from its own provider (people, application statistics, the 24 hour security summary, recent audit events, and the three storage settings), passes `sampleData: false` to `OverviewHero`, and shows a skeleton, an error with a retry, or an empty state per section, so one service being down does not hide the rest. Pull down refreshes every part.
+Every role's dashboard is built from live data, and the pattern is the same for all of them: read each part from its own provider (`state/overview_providers.dart` for the finance, operations and support parts, `state/service_providers.dart` for the rest), wrap each part in `OverviewLoad`, which shows a skeleton while it loads, an error with a retry, and the content when it arrives, and use `overviewFigure` for the numbers in the hero so a figure shows a dash when its service is down. One service being down does not hide the rest, and pull down refreshes every part. `features/overview/admin/admin_overview.dart` and `finance/finance_overview.dart` are good ones to copy. [SERVICES.md](SERVICES.md#role-dashboards) lists the calls each role's overview makes.
 
 Nothing else is needed: the tabs, the guards and the cards on Home follow from the spec.
 

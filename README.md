@@ -32,7 +32,7 @@
 
 ## What is this?
 
-Premisave is a real estate platform. This repository is its **Flutter app**: one codebase for Android, iOS, the web, Linux, Windows and macOS. It talks to the Spring Boot [auth-service](https://github.com/peacemakerbill/premisave_auth_service), which owns accounts, sessions, profiles, security and the home owner application.
+Premisave is a real estate platform. This repository is its **Flutter app**: one codebase for Android, iOS, the web, Linux, Windows and macOS. It talks to seven Spring Boot services: the [auth-service](https://github.com/peacemakerbill/premisave_auth_service), which owns accounts, sessions, profiles, security and the home owner application, the [messenger](https://github.com/peacemakerbill/premisave-messenger-service), the [listing service](https://github.com/peacemakerbill/premisave-listing-service), the [wallet service](https://github.com/peacemakerbill/premisave-wallet-service), the [property management service](https://github.com/peacemakerbill/premisave-property-management-service), the [C2B Hakikisha service](https://github.com/peacemakerbill/premisave-c2b-hakikisha-service-m-pesa) and the [developer service](https://github.com/peacemakerbill/premisave-developer-service).
 
 Everyone signs in to the **same app**. What they see after that depends on their role. A client explores properties and applies to become a home owner. Staff review those applications. An administrator approves them and manages users. Adding a new kind of account does not mean touching screens: you describe it once in [`lib/src/roles/role_registry.dart`](lib/src/roles/role_registry.dart) and the navigation, the route guards and the home screen follow.
 
@@ -43,7 +43,7 @@ Everyone signs in to the **same app**. What they see after that depends on their
 | **Security you can see** | Sessions, devices, sign-in history and security events are all on screen, and a person can end any session. |
 | **Real maps** | Google Maps on Android, iOS and the web, OpenStreetMap everywhere else, one `PlaceMapView` in front of both. |
 | **14 themes, 11 textures** | Light, dark, high contrast, nine fonts and three corner styles, saved per device. |
-| **Small to learn** | 209 Dart files, about 36 thousand lines, one rule per layer. See [how it works](#how-it-works). |
+| **Small to learn** | 242 Dart files, about 42 thousand lines, one rule per layer. See [how it works](#how-it-works). |
 
 <img src="docs/assets/divider.svg" alt="" width="100%"/>
 
@@ -161,7 +161,9 @@ Staging and production need an env file and a version tag. Each backend explains
 
 ## What is connected
 
-Everything marked **live** talks to the real auth-service. The rest shows sample data until its own service exists, and the Home screen says so.
+Everything in this table talks to a real service. [docs/SERVICES.md](docs/SERVICES.md) lists every call, screen by screen.
+
+<img src="docs/assets/services.svg" alt="The Flutter app on the left and the seven Premisave services on the right with their ports and the setting that holds each address." width="100%"/>
 
 | Area | State | What you get |
 | --- | :---: | --- |
@@ -176,7 +178,13 @@ Everything marked **live** talks to the real auth-service. The rest shows sample
 | Administration | live | User list and details, role changes, an overview built from live data (people, applications, security, recent activity and where files are stored), platform wide security summary and audit trail (search by name, username, email, address or any other word, filters, who and what, device, address and place, full event details, and summary figures that open the events they count), final approval of applications |
 | Places | live | Address search and "what is here", through the auth-service when it has a Google key, free Photon search otherwise |
 | Messages | live | Chats, groups, replies, reactions, files, typing and online status, statuses, group invite links and QR codes, voice and video calls (one to one, group, call links, screen share) that a host can record, through the messenger service. See [docs/MESSENGER.md](docs/MESSENGER.md) |
-| Bookings, payments, transactions, wishlists | sample | Screens are built, the services behind them are not |
+| Explore, bookings, wishlists | live | Search with filters, listing detail with availability, booking with a cancellation quote, interest in a listing, through the listing service |
+| Payments and transactions | live | Wallet balance, deposit, transfer, withdraw, statement and four history tabs, through the wallet service |
+| Property management | live | Owners: dashboard, properties and units, leases, maintenance and its status. Tenants: rent balance, leases, notices, maintenance requests, paying rent, through the property service |
+| My listings | live | An owner's listings, a form to create a listing in any of the five categories with up to 20 photos, archive and unarchive, through the listing service |
+| Developer portal | live | A developer signs in, creates apps and manages API keys, through the developer service, with its own token |
+| M-Pesa name lookup | live | Staff check which name belongs to a number, through the C2B Hakikisha service, with its own credentials that can be remembered on the device if the person chooses |
+| Role dashboards | live | Every role's overview is built from live data. Client: stays, saved places, spend and featured listings. Home owner: rent, occupancy, maintenance, leases and listings. Operations: live listings and the day's payments. Finance: revenue, held money, latest deposits and bookings that need review. Support: the application queue. Each part loads on its own, so one service being down does not hide the rest |
 
 ### Calls and recording
 
@@ -238,7 +246,7 @@ flowchart TD
 
 ## Roles and access
 
-<img src="docs/assets/roles.svg" alt="A grid of the six roles against the eight capabilities, with the tabs each role gets." width="100%"/>
+<img src="docs/assets/roles.svg" alt="A grid of the six roles against the eleven capabilities, with the tabs each role gets." width="100%"/>
 
 Screens and routes never ask "is this an administrator?". They ask for a **capability**, such as `manageUsers`, and `role_registry.dart` says which roles have it. That is why a new role is one entry in one file, and why forgetting to describe a new role is a compile error: the `switch` over `Role` has no default.
 
@@ -249,6 +257,10 @@ const List<(String, Capability)> _guarded = <(String, Capability)>[
   ('/admin', Capability.manageUsers),
   ('/staff', Capability.reviewApplications),
   ('/explore', Capability.exploreProperties),
+  ('/home/lookup', Capability.lookupAccounts),
+  ('/home/properties', Capability.manageProperties),
+  ('/home/listings', Capability.manageProperties),
+  ('/home/tenancy', Capability.useClientWorkspace),
 ];
 ```
 
@@ -324,6 +336,11 @@ The app reads its settings at build time with `--dart-define`, and `AppConfig` i
 | --- | --- | --- |
 | `BASE_URL` | Where the auth-service lives | `http://localhost:8080`, or `http://10.0.2.2:8080` on the Android emulator |
 | `MESSENGER_URL` | Where the messenger service lives | `http://localhost:8081`, or `http://10.0.2.2:8081` on the Android emulator |
+| `LISTING_URL` | Where the listing service lives | `http://localhost:8082`, or `http://10.0.2.2:8082` on the Android emulator |
+| `WALLET_URL` | Where the wallet service lives | `http://localhost:8084`, or `http://10.0.2.2:8084` on the Android emulator |
+| `PROPERTY_URL` | Where the property management service lives | `http://localhost:8085`, or `http://10.0.2.2:8085` on the Android emulator |
+| `C2B_URL` | Where the C2B Hakikisha service lives | `http://localhost:8090`, or `http://10.0.2.2:8090` on the Android emulator |
+| `DEVELOPER_URL` | Where the developer service lives | `http://localhost:8091`, or `http://10.0.2.2:8091` on the Android emulator |
 | `GROUP_INVITE_BASE_URL` | The address shown in group invite links and QR codes | `https://premisave.com/join` |
 | `GOOGLE_SERVER_CLIENT_ID`, `GOOGLE_CLIENT_ID` | Google sign in | The project's own web client |
 | `GITHUB_CLIENT_ID`, `GITHUB_REDIRECT_URI` | GitHub sign in, and the code flow on Linux and Windows | Client built in, redirect `http://localhost:3000/auth.html` in debug builds |
@@ -373,11 +390,13 @@ After changing a `--dart-define` value, **stop the app and start it again**. Flu
 | **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** | You want to understand the layers, or add a feature |
 | **[docs/ROLES_AND_ACCESS.md](docs/ROLES_AND_ACCESS.md)** | You are adding a role, a capability or a guarded page |
 | **[docs/SIGN_IN_PROVIDERS.md](docs/SIGN_IN_PROVIDERS.md)** | You are setting up Google, Facebook or GitHub sign in |
+| **[docs/SERVICES.md](docs/SERVICES.md)** | You are connecting a backend service, or a screen cannot reach one |
 | **[docs/MESSENGER.md](docs/MESSENGER.md)** | You are working on chats, calls or recording, or running the messenger service and LiveKit |
 | **[docs/MAPS_AND_PLACES.md](docs/MAPS_AND_PLACES.md)** | You are creating Google Maps keys, or maps and search misbehave |
 | **[docs/THEMING.md](docs/THEMING.md)** | You are adding a theme, a texture or a font |
 | **[config/env/README.md](config/env/README.md)** | You are filling in an environment file |
 | **[Backend README](https://github.com/peacemakerbill/premisave_auth_service#readme)** | You need the API, the `.env` reference or the data model |
+| **The other six backends** | Each repository's README has a section, "Connected to the Flutter app", with the exact calls the app makes to it |
 
 <img src="docs/assets/divider.svg" alt="" width="100%"/>
 
@@ -385,7 +404,11 @@ After changing a `--dart-define` value, **stop the app and start it again**. Flu
 
 Being straight about what is not finished saves everyone a debugging session.
 
-- **Bookings, payments, transactions and wishlists** show sample data. The screens exist, the services do not.
+- **There is no ticketing service**, so the support overview is built on the home owner application queue, which is the work the support role has in the app today. It will need a new source if a ticketing service is added.
+- **The operations overview counts the listings the public can see.** The listing service only lists promoted listings to operations (its platform wide listing endpoints are for administrators and finance), so listings an owner has not promoted yet are not counted there.
+- **The M-Pesa lookup only remembers its credentials if the person asks.** The "Remember on this device" box stores them in the device's secure storage. It is hidden on the web, where secure storage is not private enough for service secrets, so the web asks every time.
+- **Money is shown in USD unless a service names another currency.** The wallet and property services both keep money in USD, so amounts that arrive with no currency are shown as USD. Short stay bookings carry their own currency and are shown with it.
+- **Photos for a new listing are limited to 10 MB each and 40 MB in all**, which is the listing service's own limit. Photos picked on a phone are scaled down first.
 - **Native social sign in on Android, iOS and macOS** needs each platform's own app registration (Google services files, Facebook app configuration, URL schemes). The Dart side is written, the native files are not in the repository.
 - **Sign in with Apple** is not implemented yet.
 - **Calls only ring while the app is open or in the background.** There is no push ringing when the app is closed, and no waiting room. Sharing the screen from iOS is not included.

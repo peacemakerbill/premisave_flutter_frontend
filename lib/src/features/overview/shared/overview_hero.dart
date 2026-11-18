@@ -24,7 +24,6 @@ class OverviewHero extends StatelessWidget {
     required this.message,
     required this.metrics,
     this.actions = const <Widget>[],
-    this.sampleData = true,
   });
 
   final Role role;
@@ -32,9 +31,6 @@ class OverviewHero extends StatelessWidget {
   final String message;
   final List<OverviewMetric> metrics;
   final List<Widget> actions;
-
-  /// Shows a "Sample data" label while the figures are not yet backed by a service.
-  final bool sampleData;
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +49,6 @@ class OverviewHero extends StatelessWidget {
             children: <Widget>[
               StatusPill(role.label, color: Brand.gold, icon: Icons.badge_outlined),
               if (u != null && u.verified) const StatusPill('Verified', color: Color(0xFF5FD39A), icon: Icons.verified_rounded),
-              if (sampleData) const StatusPill('Sample data', color: Brand.cream, icon: Icons.info_outline_rounded),
             ],
           ),
           const SizedBox(height: 18),

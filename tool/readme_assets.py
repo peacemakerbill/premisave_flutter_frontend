@@ -556,16 +556,17 @@ def auth_flow():
 CAP_LABEL = {
     'exploreProperties': ('Explore', 'properties'), 'useClientWorkspace': ('Client', 'workspace'), 'applyAsHomeOwner': ('Apply as', 'home owner'),
     'viewHomeOwnerApplication': ('View own', 'application'), 'reviewApplications': ('Review', 'applications'),
-    'approveApplications': ('Approve', 'applications'), 'manageUsers': ('Manage', 'users'), 'viewAuditTrail': ('Audit', 'trail')}
+    'approveApplications': ('Approve', 'applications'), 'manageUsers': ('Manage', 'users'), 'viewAuditTrail': ('Audit', 'trail'),
+    'useWallet': ('Use', 'wallet'), 'manageProperties': ('Manage', 'properties'), 'lookupAccounts': ('Look up', 'M-Pesa names')}
 TAB_LABEL = {'home': 'Home', 'explore': 'Explore', 'applications': 'Applications', 'users': 'Users', 'people': 'People', 'account': 'Account'}
 
 
 def roles():
     rl, caps = roles_data()
     label = {'client': 'Client', 'homeOwner': 'Home owner', 'operations': 'Operations', 'finance': 'Finance', 'support': 'Support', 'admin': 'Administrator'}
-    left, cw, rh, top = 32, 104, 54, 150
+    left, cw, rh, top = 32, (104 if len(caps) <= 8 else 92), 54, 150
     cx0 = left + 170
-    w = cx0 + len(caps) * cw + 350
+    w = cx0 + len(caps) * cw + (350 if len(caps) <= 8 else 540)
     h = top + len(rl) * rh + 78
     out = [sheet(w, h, 'Who can do what', 'read from lib/src/roles/role_registry.dart')]
     tabx = cx0 + len(caps) * cw + 24

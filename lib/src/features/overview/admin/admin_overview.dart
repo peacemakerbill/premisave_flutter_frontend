@@ -58,7 +58,6 @@ class AdminOverview extends ConsumerWidget {
         OverviewHero(
           role: Role.admin,
           user: user,
-          sampleData: false,
           message: 'People, applications, security and storage across the platform.',
           metrics: <OverviewMetric>[
             OverviewMetric('People', _figure(users, (List<UserModel> l) => '${l.length}'),

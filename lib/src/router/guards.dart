@@ -4,6 +4,10 @@ import '../roles/role_registry.dart';
 
 /// Which capability each guarded area needs. The most specific prefix comes first.
 const List<(String, Capability)> _guarded = <(String, Capability)>[
+  ('/home/lookup', Capability.lookupAccounts),
+  ('/home/properties', Capability.manageProperties),
+  ('/home/listings', Capability.manageProperties),
+  ('/home/tenancy', Capability.useClientWorkspace),
   ('/admin/audit', Capability.viewAuditTrail),
   ('/admin', Capability.manageUsers),
   ('/staff', Capability.reviewApplications),

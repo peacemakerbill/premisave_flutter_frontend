@@ -7,6 +7,7 @@
 | **[SETUP.md](SETUP.md)** | You are setting the project up on a new machine, or something does not start |
 | **[ARCHITECTURE.md](ARCHITECTURE.md)** | You want to understand the layers, or add a feature |
 | **[ROLES_AND_ACCESS.md](ROLES_AND_ACCESS.md)** | You are adding a role, a capability or a guarded page |
+| **[SERVICES.md](SERVICES.md)** | You are connecting a backend service, or a screen cannot reach one |
 | **[SIGN_IN_PROVIDERS.md](SIGN_IN_PROVIDERS.md)** | You are setting up Google, Facebook or GitHub sign in |
 | **[MAPS_AND_PLACES.md](MAPS_AND_PLACES.md)** | You are creating Google Maps keys, or maps and search misbehave |
 | **[THEMING.md](THEMING.md)** | You are adding a theme, a texture or a font |
@@ -33,5 +34,6 @@ The pictures move, and all of it is plain CSS: a scan across the banner, packets
 | `themes.svg`, `patterns.svg` | The palettes and textures, from `palette.dart` |
 | `stats-features.svg`, `stats-layers.svg` | Lines of Dart per feature and per layer |
 | `stack.svg`, `setup.svg` | The libraries used, and the setup steps |
+| `services.svg` | The seven backend services, their ports and settings. Drawn by [`tool/service_pictures.py`](../tool/service_pictures.py), the same file every backend repository carries |
 
 The animations are CSS and SMIL inside the SVG, so they play on GitHub with no scripts. The CSS ones stop when the viewer asks for reduced motion.
