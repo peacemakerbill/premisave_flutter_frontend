@@ -34,7 +34,10 @@ const List<PChoice<String>> _policies = <PChoice<String>>[
 /// Create a listing for the listing service: its category, price, place, the details that category needs and photos.
 /// A new listing is reviewed by Premisave before the public can see it.
 class ListingFormSheet extends ConsumerStatefulWidget {
-  const ListingFormSheet({super.key});
+  /// [existing] is the listing as the service sent it. When given, the form edits that listing instead of creating one.
+  const ListingFormSheet({super.key, this.existing});
+
+  final Map<String, dynamic>? existing;
 
   @override
   ConsumerState<ListingFormSheet> createState() => _ListingFormSheetState();
@@ -48,6 +51,39 @@ class _ListingFormSheetState extends ConsumerState<ListingFormSheet> {
   String? _policy;
   bool _busy = false;
   String? _error;
+
+  bool get _editing => widget.existing != null;
+
+  String get _listingId => (widget.existing?['id'] ?? widget.existing?['listingId'] ?? '').toString();
+
+  @override
+  void initState() {
+    super.initState();
+    final e = widget.existing;
+    if (e == null) return;
+    _category = (e['category'] ?? _category).toString();
+    for (final key in const <String>[
+      'title', 'description', 'city', 'country', 'address', 'pricePerNight', 'pricePerDay', 'price', 'maxGuests', 'bedrooms',
+      'bathrooms', 'minLeaseMonths', 'tenantRequirements', 'propertyType', 'floors', 'plotSize', 'sizeInAcres', 'landUseType',
+      'depositAmount', 'leaseDurationMonths', 'leaseTerms',
+    ]) {
+      final v = e[key];
+      if (v != null) _ctl(key).text = _plain(v);
+    }
+    final amenities = e['amenities'];
+    if (amenities is List) _ctl('amenities').text = amenities.join(', ');
+    for (final key in const <String>['hasWifi', 'hasKitchen', 'furnished', 'hasGarage', 'hasTitleDeed', 'renewable']) {
+      if (e[key] is bool) _flags[key] = e[key] as bool;
+    }
+    final policy = e['cancellationPolicy']?.toString();
+    if (policy != null && _policies.any((p) => p.value == policy)) _policy = policy;
+  }
+
+  /// 120.0 reads as 120 in a text box.
+  String _plain(Object v) {
+    if (v is double && v == v.roundToDouble()) return v.toInt().toString();
+    return v.toString();
+  }
 
   TextEditingController _ctl(String key) => _c.putIfAbsent(key, TextEditingController.new);
 
@@ -236,11 +272,19 @@ class _ListingFormSheetState extends ConsumerState<ListingFormSheet> {
       _error = null;
     });
     try {
-      final r = await ref.read(listingRepositoryProvider).createListing(result.details!, _photos);
+      final repo = ref.read(listingRepositoryProvider);
+      final String message;
+      if (_editing) {
+        final changes = Map<String, dynamic>.of(result.details!)..remove('category');
+        final text = await repo.updateListing(_listingId, changes, photos: _photos);
+        message = text.isEmpty ? 'Listing updated' : text;
+      } else {
+        message = (await repo.createListing(result.details!, _photos)).message;
+      }
       ref.invalidate(myListingsProvider);
       if (!mounted) return;
-      Navigator.of(context).pop();
-      showToast(context, r.message);
+      Navigator.of(context).pop(true);
+      showToast(context, message);
     } catch (e) {
       if (mounted) setState(() => _error = ApiException.from(e).message);
     } finally {
@@ -318,22 +362,32 @@ class _ListingFormSheetState extends ConsumerState<ListingFormSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        PSelectField<String>(
-          label: 'What are you listing?',
-          options: _categories,
-          value: _category,
-          onChanged: (v) => setState(() {
-            if (v != null) _category = v;
-          }),
-        ),
-        const SizedBox(height: 14),
+        if (_editing)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 14),
+            child: InlineMessage(
+              'This is a ${_categories.firstWhere((c) => c.value == _category, orElse: () => _categories.first).label.toLowerCase()} listing. The kind of listing cannot be changed once it is created.',
+              kind: MessageKind.info,
+            ),
+          )
+        else ...<Widget>[
+          PSelectField<String>(
+            label: 'What are you listing?',
+            options: _categories,
+            value: _category,
+            onChanged: (v) => setState(() {
+              if (v != null) _category = v;
+            }),
+          ),
+          const SizedBox(height: 14),
+        ],
         _field('title', 'Title', hint: 'Sunny two bedroom apartment in Kilimani', icon: Icons.title_rounded),
         _field('description', 'Description', maxLines: 5),
         _field('city', 'City', optional: true, icon: Icons.location_city_outlined),
         _field('country', 'Country', optional: true, icon: Icons.public_rounded),
         _field('address', 'Address', optional: true, icon: Icons.place_outlined),
         ..._details(),
-        Text('Photos', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: context.mutedColor)),
+        Text(_editing ? 'Add photos' : 'Photos', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: context.mutedColor)),
         const SizedBox(height: 8),
         _Photos(
           photos: _photos,
@@ -343,12 +397,14 @@ class _ListingFormSheetState extends ConsumerState<ListingFormSheet> {
         ),
         const SizedBox(height: 6),
         Text(
-          'Up to $maxListingPhotos photos. The first one is the cover. Premisave reviews a new listing before the public can see it.',
+          _editing
+              ? 'Photos added here join the ones already on the listing. Use Photos in the listing menu to remove, reorder or choose the cover.'
+              : 'Up to $maxListingPhotos photos. The first one is the cover. Premisave reviews a new listing before the public can see it.',
           style: TextStyle(fontSize: 12.5, height: 1.45, color: pal.ink3),
         ),
         if (_error != null) ...<Widget>[const SizedBox(height: 14), InlineMessage(_error!, kind: MessageKind.error)],
         const SizedBox(height: 18),
-        PButton(label: 'Submit for review', icon: Icons.publish_rounded, expand: true, loading: _busy, onPressed: _submit),
+        PButton(label: _editing ? 'Save changes' : 'Submit for review', icon: _editing ? Icons.save_outlined : Icons.publish_rounded, expand: true, loading: _busy, onPressed: _submit),
       ],
     );
   }

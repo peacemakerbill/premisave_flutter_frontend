@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 
 import '../config/app_config.dart';
@@ -41,8 +43,9 @@ class ServiceClient {
   final Future<String?> Function()? tokenProvider;
   final void Function()? onUnauthorized;
 
-  Future<dynamic> get(String path, {Map<String, dynamic>? query}) =>
-      _run(() => dio.get<dynamic>(path, queryParameters: query));
+  Future<dynamic> get(String path, {Map<String, dynamic>? query, Map<String, dynamic>? headers}) => _run(
+        () => dio.get<dynamic>(path, queryParameters: query, options: headers == null ? null : Options(headers: headers)),
+      );
 
   Future<dynamic> post(String path, {Object? body, Map<String, dynamic>? query, Map<String, dynamic>? headers}) => _run(
         () => dio.post<dynamic>(path, data: body, queryParameters: query, options: Options(headers: headers)),
@@ -51,8 +54,43 @@ class ServiceClient {
   Future<dynamic> put(String path, {Object? body, Map<String, dynamic>? query}) =>
       _run(() => dio.put<dynamic>(path, data: body, queryParameters: query));
 
-  Future<dynamic> delete(String path, {Map<String, dynamic>? query}) =>
-      _run(() => dio.delete<dynamic>(path, queryParameters: query));
+  Future<dynamic> patch(String path, {Object? body, Map<String, dynamic>? query}) =>
+      _run(() => dio.patch<dynamic>(path, data: body, queryParameters: query));
+
+  Future<dynamic> delete(String path, {Object? body, Map<String, dynamic>? query}) =>
+      _run(() => dio.delete<dynamic>(path, data: body, queryParameters: query));
+
+  /// The body is the file itself, for an endpoint that takes an image as the whole request.
+  Future<dynamic> putBytes(String path, Uint8List bytes, {required String contentType}) => _run(
+        () => dio.put<dynamic>(path, data: Stream<List<int>>.fromIterable(<List<int>>[bytes]), options: Options(
+          contentType: contentType,
+          headers: <String, dynamic>{Headers.contentLengthHeader: bytes.length},
+        )),
+      );
+
+  /// multipart/form-data with the verb the endpoint wants.
+  Future<dynamic> uploadWith(String method, String path, FormData form, {Map<String, dynamic>? query}) => _run(
+        () => dio.request<dynamic>(
+          path,
+          data: form,
+          queryParameters: query,
+          options: Options(method: method, contentType: 'multipart/form-data'),
+        ),
+      );
+
+  /// Raw bytes, for document downloads.
+  Future<Uint8List> download(String path, {Map<String, dynamic>? query}) async {
+    try {
+      final res = await dio.get<List<int>>(
+        path,
+        queryParameters: query,
+        options: Options(responseType: ResponseType.bytes),
+      );
+      return Uint8List.fromList(res.data ?? const <int>[]);
+    } on DioException catch (e) {
+      throw ApiException.from(e);
+    }
+  }
 
   Future<dynamic> _run(Future<Response<dynamic>> Function() call) async {
     try {

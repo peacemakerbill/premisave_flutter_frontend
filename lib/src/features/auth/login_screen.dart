@@ -79,6 +79,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
+              // Two kinds of account sign in from here: a Premisave account, or a developer account for the API portal.
+              SegmentedButton<int>(
+                showSelectedIcon: false,
+                segments: const <ButtonSegment<int>>[
+                  ButtonSegment<int>(value: 0, icon: Icon(Icons.person_outline_rounded, size: 18), label: Text('Premisave')),
+                  ButtonSegment<int>(value: 1, icon: Icon(Icons.code_rounded, size: 18), label: Text('Developers')),
+                ],
+                selected: const <int>{0},
+                onSelectionChanged: busy ? null : (v) => v.contains(1) ? context.go('/developers') : null,
+              ),
+              const SizedBox(height: 20),
               if (notice != null) ...<Widget>[
                 InlineMessage(notice),
                 const SizedBox(height: 16),

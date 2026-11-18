@@ -3,6 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../core/network/api_exception.dart';
 import '../data/models/developer_models.dart';
+import '../data/social_auth_service.dart';
 import 'providers.dart';
 
 /// Keeps the developer service token in secure storage, apart from the auth-service tokens.
@@ -96,6 +97,38 @@ class DeveloperSession extends Notifier<DeveloperSessionState> {
     await ref.read(developerTokenStoreProvider).save(token);
     final account = await repo.me();
     state = DeveloperSessionState(status: DeveloperStatus.signedIn, account: account);
+  }
+
+  /// Signs in with a token the developer service already issued, such as the one from a social sign in.
+  Future<void> signInWithToken(String token) async {
+    await ref.read(developerTokenStoreProvider).save(token);
+    final account = await ref.read(developerRepositoryProvider).me();
+    state = DeveloperSessionState(status: DeveloperStatus.signedIn, account: account);
+  }
+
+  /// Signs in or up with Google, Facebook or GitHub. Returns false when the person closed the sign in window.
+  Future<bool> signInSocial(String provider) async {
+    final String? credential;
+    switch (provider) {
+      case 'google':
+        credential = await SocialAuthService.googleIdToken();
+      case 'facebook':
+        credential = await SocialAuthService.facebookAccessToken();
+      default:
+        credential = await SocialAuthService.githubCode();
+    }
+    if (credential == null) return false;
+    final token = await ref.read(developerRepositoryProvider).socialLogin(provider, credential);
+    await signInWithToken(token);
+    return true;
+  }
+
+  /// Reloads the account after the profile changed.
+  Future<void> refresh() async {
+    try {
+      final account = await ref.read(developerRepositoryProvider).me();
+      state = DeveloperSessionState(status: DeveloperStatus.signedIn, account: account);
+    } catch (_) {}
   }
 
   Future<void> signOut() async {

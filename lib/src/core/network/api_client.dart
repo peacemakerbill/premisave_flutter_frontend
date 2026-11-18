@@ -208,6 +208,16 @@ class ApiClient {
         ),
       );
 
+  /// multipart/form-data with the verb the endpoint wants (an edit is a PUT).
+  Future<dynamic> uploadWith(String method, String path, FormData form, {Map<String, dynamic>? query}) => _run(
+        () => dio.request<dynamic>(
+          path,
+          data: form,
+          queryParameters: query,
+          options: Options(method: method, contentType: 'multipart/form-data'),
+        ),
+      );
+
   /// Raw bytes, for document downloads.
   Future<Uint8List> download(String path, {Map<String, dynamic>? query}) async {
     try {

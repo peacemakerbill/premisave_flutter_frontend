@@ -307,22 +307,23 @@ class _Workspace extends StatelessWidget {
         onTap: () => context.push('/home/overview'),
       ),
       if (role.can(Capability.useClientWorkspace)) ...<Widget>[
-        MenuTile(icon: Icons.event_available_outlined, title: 'Bookings', subtitle: 'Stays you booked', onTap: () => context.push('/home/bookings')),
-        MenuTile(icon: Icons.favorite_border_rounded, title: 'Wishlists', subtitle: 'Listings you are interested in', onTap: () => context.push('/home/wishlists')),
+        MenuTile(icon: Icons.event_available_outlined, title: 'Bookings', subtitle: 'Stays, saved listings, short stays and rates', onTap: () => context.go('/bookings')),
         MenuTile(icon: Icons.chat_bubble_outline_rounded, title: 'Messages', subtitle: 'Chats, groups and statuses', onTap: () => context.go('/messages')),
-        MenuTile(icon: Icons.key_rounded, title: 'My tenancy', subtitle: 'Rent, leases and maintenance', onTap: () => context.push('/home/tenancy')),
+        MenuTile(icon: Icons.key_rounded, title: 'My tenancy', subtitle: 'Rent, leases, bills, maintenance and notices', onTap: () => context.go('/tenancy')),
       ],
       if (role.can(Capability.manageProperties)) ...<Widget>[
-        MenuTile(icon: Icons.apartment_rounded, title: 'Property management', subtitle: 'Properties, units, leases and rent', onTap: () => context.push('/home/properties')),
-        MenuTile(icon: Icons.home_work_outlined, title: 'My listings', subtitle: 'Listings, bookings and leads', onTap: () => context.push('/home/listings')),
+        MenuTile(icon: Icons.apartment_rounded, title: 'Property management', subtitle: 'Properties, units, leases, tenants and rent', onTap: () => context.go('/property')),
+        MenuTile(icon: Icons.home_work_outlined, title: 'My listings', subtitle: 'Create, edit, photos, calendar, bookings and promotions', onTap: () => context.go('/listings')),
       ],
-      if (role.can(Capability.useWallet)) ...<Widget>[
-        MenuTile(icon: Icons.account_balance_wallet_outlined, title: 'Payments', subtitle: 'Wallet, deposits and withdrawals', onTap: () => context.push('/home/payments')),
-        MenuTile(icon: Icons.receipt_long_outlined, title: 'Transactions', subtitle: 'Your payment history', onTap: () => context.push('/home/transactions')),
-      ],
+      if (role.can(Capability.useWallet))
+        MenuTile(icon: Icons.account_balance_wallet_outlined, title: 'Wallet', subtitle: 'Balance, money in and out, history, linked accounts', onTap: () => context.go('/wallet')),
+      if (role.can(Capability.administerWallet))
+        MenuTile(icon: Icons.account_balance_outlined, title: 'Finance', subtitle: 'All wallets, reconciliation, M-Pesa operations and rates', onTap: () => context.go('/finance')),
+      if (role.can(Capability.administerListings))
+        MenuTile(icon: Icons.gavel_outlined, title: 'Moderation', subtitle: 'Review listings, bookings and payouts', onTap: () => context.go('/moderation')),
       if (role.can(Capability.lookupAccounts))
-        MenuTile(icon: Icons.verified_user_outlined, title: 'M-Pesa name lookup', subtitle: 'Check who an M-Pesa number belongs to', onTap: () => context.push('/home/lookup')),
-      MenuTile(icon: Icons.code_rounded, title: 'Developer portal', subtitle: 'Apps and API keys', onTap: () => context.push('/home/developer')),
+        MenuTile(icon: Icons.verified_user_outlined, title: 'M-Pesa name lookup', subtitle: 'Check who an M-Pesa number belongs to', onTap: () => context.go('/lookup')),
+      MenuTile(icon: Icons.code_rounded, title: 'Developer portal', subtitle: 'Apps, API keys, businesses and transfers', onTap: () => context.go('/developers')),
       MenuTile(icon: Icons.info_outline_rounded, title: 'About Premisave', onTap: () => context.push('/home/about')),
       MenuTile(icon: Icons.support_agent_outlined, title: 'Contact us', onTap: () => context.push('/home/contact')),
     ];

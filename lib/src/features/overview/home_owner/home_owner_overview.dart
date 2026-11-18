@@ -59,8 +59,8 @@ class _HomeOwnerOverviewState extends ConsumerState<HomeOwnerOverview> {
     final d = board.valueOrNull;
 
     final heroActions = <Widget>[
-      HeroAction(label: 'My listings', icon: Icons.storefront_outlined, onPressed: () => context.push('/home/listings')),
-      HeroAction(label: 'Properties', icon: Icons.apartment_rounded, filled: false, onPressed: () => context.push('/home/properties')),
+      HeroAction(label: 'My listings', icon: Icons.storefront_outlined, onPressed: () => context.go('/listings')),
+      HeroAction(label: 'Properties', icon: Icons.apartment_rounded, filled: false, onPressed: () => context.go('/property')),
     ];
 
     if (exists.hasValue && !hasProfile) {
@@ -249,7 +249,7 @@ class _Properties extends StatelessWidget {
         title: 'No properties yet',
         message: 'Properties you add appear here with their units and how many are let.',
         actionLabel: 'Add a property',
-        onAction: () => context.push('/home/properties'),
+        onAction: () => context.go('/property'),
       );
     }
     return ResponsiveWrap(
@@ -323,7 +323,7 @@ class _Maintenance extends StatelessWidget {
                 .whereType<String>()
                 .join(', '),
             trailing: StatusPill(sentence(r.status), color: pal.warn, dense: true),
-            onTap: () => context.push('/home/properties'),
+            onTap: () => context.go('/property'),
           ),
       ],
     );
@@ -357,7 +357,7 @@ class _Leases extends StatelessWidget {
             trailing: l.monthlyRent == null
                 ? null
                 : OverviewTrailing(value: overviewMoney(l.monthlyRent!), caption: 'per month', color: pal.good),
-            onTap: () => context.push('/home/properties'),
+            onTap: () => context.go('/property'),
           ),
       ],
     );
@@ -378,7 +378,7 @@ class _Listings extends StatelessWidget {
         title: 'No listings yet',
         message: 'Create a listing so people can find and book your place.',
         actionLabel: 'Create a listing',
-        onAction: () => context.push('/home/listings'),
+        onAction: () => context.go('/listings'),
       );
     }
     Color toneOf(String? s) {
@@ -403,7 +403,7 @@ class _Listings extends StatelessWidget {
               value: l.headlinePrice == null ? '-' : overviewMoney(l.headlinePrice!, l.currency),
               badge: StatusPill(l.status == null ? 'Live' : sentence(l.status), color: toneOf(l.status), dense: true),
             ),
-            onTap: () => context.push('/home/listings'),
+            onTap: () => context.go('/listings'),
           ),
       ],
     );

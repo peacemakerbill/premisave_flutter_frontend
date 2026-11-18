@@ -16,7 +16,16 @@ class SocialAuthButtons extends ConsumerStatefulWidget {
     this.onNotice,
     this.disabled = false,
     this.onBusyChanged,
+    this.onSignIn,
+    this.only,
   });
+
+  /// Handles the tap instead of signing in to the Premisave account. Used by the developer portal, which has its own
+  /// accounts. Returns false when the person closed the sign in window.
+  final Future<bool> Function(String provider)? onSignIn;
+
+  /// Shows only these providers (google, facebook, github). Everything when null.
+  final List<String>? only;
 
   /// Receives the message to show, or null to clear the previous one.
   final ValueChanged<String?> onError;
@@ -45,6 +54,11 @@ class _SocialAuthButtonsState extends ConsumerState<SocialAuthButtons> {
     widget.onError(null);
     widget.onNotice?.call(null);
     try {
+      final custom = widget.onSignIn;
+      if (custom != null) {
+        await custom(provider);
+        return;
+      }
       final session = ref.read(sessionProvider.notifier);
       switch (provider) {
         case 'google':
@@ -69,7 +83,8 @@ class _SocialAuthButtonsState extends ConsumerState<SocialAuthButtons> {
       const _Provider('google', 'Google', SocialLogo.google()),
       const _Provider('facebook', 'Facebook', SocialLogo.facebook()),
       _Provider('github', 'GitHub', SocialLogo.github(color: context.inkColor)),
-    ];
+    ].where((p) => widget.only == null || widget.only!.contains(p.id)).toList();
+    if (items.isEmpty) return const SizedBox.shrink();
 
     final busy = widget.disabled || _active != null;
     return Column(

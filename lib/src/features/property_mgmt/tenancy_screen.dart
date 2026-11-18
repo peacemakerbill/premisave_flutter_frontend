@@ -10,78 +10,10 @@ import '../../data/models/property_models.dart';
 import '../../state/providers.dart';
 import '../../state/service_providers.dart';
 import '../shared/service_widgets.dart';
-import 'owner_property_screen.dart';
 
-/// My tenancy: rent owed, leases, maintenance requests and notices from the landlord.
-/// Talks to the property management service. Rent is paid from the wallet.
-class TenancyScreen extends ConsumerStatefulWidget {
-  const TenancyScreen({super.key});
-
-  @override
-  ConsumerState<TenancyScreen> createState() => _TenancyScreenState();
-}
-
-class _TenancyScreenState extends ConsumerState<TenancyScreen> {
-  bool _registering = false;
-
-  Future<void> _register() async {
-    setState(() => _registering = true);
-    try {
-      await ref.read(propertyRepositoryProvider).registerAsTenant();
-      ref.invalidate(tenantProfileProvider);
-      if (mounted) showToast(context, 'You are registered as a tenant');
-    } catch (e) {
-      if (mounted) showApiError(context, e);
-    } finally {
-      if (mounted) setState(() => _registering = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final profile = ref.watch(tenantProfileProvider);
-    return profile.when(
-      loading: () => const SkeletonList(),
-      error: (e, _) => ErrorState(error: e, onRetry: () => ref.invalidate(tenantProfileProvider)),
-      data: (tenant) {
-        if (tenant == null) {
-          return EmptyState(
-            icon: Icons.key_rounded,
-            title: 'Register as a tenant',
-            message: 'Use your Premisave account to see your rent, leases and notices, and to pay rent from your wallet.',
-            actionLabel: _registering ? 'Registering' : 'Register as a tenant',
-            onAction: _registering ? null : _register,
-          );
-        }
-        return DefaultTabController(
-          length: 4,
-          child: Column(
-            children: <Widget>[
-              const TabBar(
-                isScrollable: true,
-                tabAlignment: TabAlignment.start,
-                tabs: <Tab>[Tab(text: 'Rent'), Tab(text: 'Leases'), Tab(text: 'Maintenance'), Tab(text: 'Notices')],
-              ),
-              Expanded(
-                child: TabBarView(
-                  children: <Widget>[
-                    const _RentTab(),
-                    _LeasesTab(tenantId: tenant.id),
-                    _MaintenanceTab(tenantId: tenant.id),
-                    _NoticesTab(tenantId: tenant.id),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _RentTab extends ConsumerWidget {
-  const _RentTab();
+/// Rent owed across every home, with a button to pay each one from the wallet.
+class TenantRentTab extends ConsumerWidget {
+  const TenantRentTab({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -193,30 +125,9 @@ class _RentCardState extends ConsumerState<_RentCard> {
   }
 }
 
-class _LeasesTab extends ConsumerWidget {
-  const _LeasesTab({required this.tenantId});
-
-  final String tenantId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final provider = tenantLeasesProvider(tenantId);
-    return AsyncBody<List<LeaseModel>>(
-      value: ref.watch(provider),
-      onRetry: () => ref.invalidate(provider),
-      builder: (items) => PageBody(
-        maxWidth: 760,
-        onRefresh: () async => ref.invalidate(provider),
-        children: items.isEmpty
-            ? const <Widget>[SizedBox(height: 340, child: EmptyState(icon: Icons.description_outlined, title: 'No leases yet'))]
-            : <Widget>[for (final l in items) LeaseCard(lease: l)],
-      ),
-    );
-  }
-}
-
-class _MaintenanceTab extends ConsumerWidget {
-  const _MaintenanceTab({required this.tenantId});
+/// Maintenance requests raised by the tenant, and a form to raise another.
+class TenantMaintenanceTab extends ConsumerWidget {
+  const TenantMaintenanceTab({super.key, required this.tenantId});
 
   final String tenantId;
 
@@ -346,8 +257,9 @@ class _RequestFormState extends ConsumerState<_RequestForm> {
   }
 }
 
-class _NoticesTab extends ConsumerWidget {
-  const _NoticesTab({required this.tenantId});
+/// Notices from the landlord.
+class TenantNoticesTab extends ConsumerWidget {
+  const TenantNoticesTab({super.key, required this.tenantId});
 
   final String tenantId;
 

@@ -55,7 +55,16 @@ class WelcomeScreen extends StatelessWidget {
                       child: const Text('Sign in'),
                     ),
                   ),
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 10),
+                  Align(
+                    alignment: Alignment.center,
+                    child: TextButton.icon(
+                      onPressed: () => context.go('/developers'),
+                      icon: Icon(Icons.code_rounded, size: 18, color: Brand.cream.op(0.85)),
+                      label: Text('Building on Premisave? Developer portal', style: TextStyle(color: Brand.cream.op(0.85), fontWeight: FontWeight.w700)),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
                   Row(
                     children: <Widget>[
                       Icon(Icons.lock_outline_rounded, size: 16, color: Brand.cream.op(0.6)),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../core/network/api_exception.dart';
 import '../../core/theme/brand.dart';
@@ -172,7 +171,7 @@ class _WalletBody extends ConsumerWidget {
         SectionHeader(
           'Recent activity',
           action: 'See all',
-          onAction: () => context.push('/home/transactions'),
+          onAction: () => DefaultTabController.maybeOf(context)?.animateTo(2),
         ),
         activity.when(
           loading: () => const SkeletonList(count: 3, height: 64, shrink: true, padding: EdgeInsets.zero),

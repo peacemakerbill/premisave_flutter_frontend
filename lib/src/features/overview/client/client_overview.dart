@@ -59,7 +59,7 @@ class ClientOverview extends ConsumerWidget {
           ],
           actions: <Widget>[
             HeroAction(label: 'Browse properties', icon: Icons.search_rounded, onPressed: () => context.go('/explore')),
-            HeroAction(label: 'My bookings', icon: Icons.event_available_outlined, filled: false, onPressed: () => context.push('/home/bookings')),
+            HeroAction(label: 'My bookings', icon: Icons.event_available_outlined, filled: false, onPressed: () => context.go('/bookings')),
           ],
         ),
         OverviewColumns(
@@ -154,7 +154,7 @@ class _Stays extends ConsumerWidget {
               value: b.totalAmount == null ? '-' : overviewMoney(b.totalAmount!, b.currency),
               badge: StatusPill(b.status == 'CONFIRMED' ? 'Confirmed' : 'Waiting for host', color: b.status == 'CONFIRMED' ? pal.good : pal.warn, dense: true),
             ),
-            onTap: () => context.push('/home/bookings'),
+            onTap: () => context.go('/bookings'),
           ),
       ],
     );
@@ -184,21 +184,21 @@ class _Shortcuts extends StatelessWidget {
           title: 'My wishlist',
           subtitle: saved == null ? 'Places you saved' : plural(saved!, 'saved property', 'saved properties'),
           trailing: chevron(),
-          onTap: () => context.push('/home/wishlists'),
+          onTap: () => context.go('/bookings'),
         ),
         OverviewRow(
           leading: const IconBadge(Icons.calendar_month_outlined, size: 42),
           title: 'Manage bookings',
           subtitle: upcoming == null ? 'Your stays' : '$upcoming upcoming',
           trailing: chevron(),
-          onTap: () => context.push('/home/bookings'),
+          onTap: () => context.go('/bookings'),
         ),
         OverviewRow(
           leading: const IconBadge(Icons.account_balance_wallet_outlined, size: 42),
           title: 'My wallet',
           subtitle: 'Balance, deposits and history',
           trailing: chevron(),
-          onTap: () => context.push('/home/payments'),
+          onTap: () => context.go('/wallet'),
         ),
       ],
     );

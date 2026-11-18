@@ -45,7 +45,7 @@ class OperationsOverview extends ConsumerWidget {
           ],
           actions: <Widget>[
             HeroAction(label: 'Applications', icon: Icons.assignment_outlined, onPressed: () => context.go('/staff')),
-            HeroAction(label: 'M-Pesa lookup', icon: Icons.person_search_outlined, filled: false, onPressed: () => context.push('/home/lookup')),
+            HeroAction(label: 'M-Pesa lookup', icon: Icons.person_search_outlined, filled: false, onPressed: () => context.go('/lookup')),
           ],
         ),
         OverviewBlock(title: 'Needs your attention', child: _Attention(live: live, week: week)),

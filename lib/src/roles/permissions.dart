@@ -33,4 +33,10 @@ enum Capability {
 
   /// The M-Pesa name lookup tool of the C2B Hakikisha service.
   lookupAccounts,
+
+  /// Every wallet, the ledger, reconciliation, M-Pesa operations, gateway balances and exchange rates.
+  administerWallet,
+
+  /// Moderate every listing and booking: approve, reject, archive, restore, delete and settle payments.
+  administerListings,
 }

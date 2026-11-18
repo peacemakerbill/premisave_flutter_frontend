@@ -26,3 +26,20 @@ String isoDate(DateTime d) {
   String two(int n) => n.toString().padLeft(2, '0');
   return '${d.year}-${two(d.month)}-${two(d.day)}';
 }
+
+/// The records inside an answer: a bare list, a Spring page ({content: []}), or the first list under [key].
+List<Map<String, dynamic>> rows(Object? body, {String? key}) {
+  final data = unwrap(body);
+  if (data is List) return mapList(data);
+  if (data is Map) {
+    final m = asMap(data);
+    if (key != null && m[key] is List) return mapList(m[key]);
+    for (final k in const <String>['content', 'items', 'results']) {
+      if (m[k] is List) return mapList(m[k]);
+    }
+    for (final v in m.values) {
+      if (v is List && v.isNotEmpty && v.first is Map) return mapList(v);
+    }
+  }
+  return <Map<String, dynamic>>[];
+}

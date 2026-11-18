@@ -14,20 +14,66 @@ import '../../state/service_providers.dart';
 import '../shared/service_widgets.dart';
 
 /// M-Pesa name lookup for staff. It asks the C2B Hakikisha service who owns an M-Pesa number, the same question
-/// Safaricom asks it before a customer pays. The service has its own username and password: they are typed here and
-/// traded for a token. They are saved in the system keychain only when the person ticks "Remember on this device".
-class NameLookupScreen extends ConsumerWidget {
+/// Safaricom asks it before a customer pays. Signed in staff connect automatically: the service reads its own username
+/// and password from its application.yml and hands out a token for the staff member's Premisave sign in. Typing the
+/// credentials is only a fallback for when the service has no JWT_SECRET set.
+class NameLookupScreen extends ConsumerStatefulWidget {
   const NameLookupScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<NameLookupScreen> createState() => _NameLookupScreenState();
+}
+
+class _NameLookupScreenState extends ConsumerState<NameLookupScreen> {
+  bool _connecting = false;
+  String? _autoError;
+
+  @override
+  void initState() {
+    super.initState();
+    Future<void>.microtask(_auto);
+  }
+
+  Future<void> _auto() async {
+    if (ref.read(c2bSessionProvider).active) return;
+    setState(() {
+      _connecting = true;
+      _autoError = null;
+    });
+    try {
+      await ref.read(c2bSessionProvider.notifier).connectAutomatically();
+    } catch (e) {
+      if (mounted) setState(() => _autoError = ApiException.from(e).message);
+    } finally {
+      if (mounted) setState(() => _connecting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final session = ref.watch(c2bSessionProvider);
     return PageBody(
       maxWidth: 640,
       children: <Widget>[
         const PageTitle('M-Pesa name lookup', subtitle: 'Check who an M-Pesa number belongs to before money moves.'),
         const SizedBox(height: 12),
-        if (!session.active) const _ConnectCard() else const _LookupCard(),
+        if (session.active)
+          _LookupCard(shortcode: session.shortcode)
+        else if (_connecting)
+          const SkeletonList(count: 1, height: 120, shrink: true, padding: EdgeInsets.zero)
+        else ...<Widget>[
+          if (_autoError != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: InlineMessage(
+                '$_autoError You can still connect with the service credentials below.',
+                kind: MessageKind.warning,
+                actionLabel: 'Try again',
+                onAction: _auto,
+              ),
+            ),
+          const _ConnectCard(),
+        ],
         ServiceDownHint('C2B Hakikisha service', AppConfig.c2bUrl),
         if (session.active) ...<Widget>[
           const SectionHeader('Accounts the service knows'),
@@ -147,7 +193,10 @@ class _ConnectCardState extends ConsumerState<_ConnectCard> {
 }
 
 class _LookupCard extends ConsumerStatefulWidget {
-  const _LookupCard();
+  const _LookupCard({this.shortcode});
+
+  /// The shortcode from the service's configuration, when it sent one.
+  final String? shortcode;
 
   @override
   ConsumerState<_LookupCard> createState() => _LookupCardState();
@@ -155,7 +204,7 @@ class _LookupCard extends ConsumerStatefulWidget {
 
 class _LookupCardState extends ConsumerState<_LookupCard> {
   final TextEditingController _number = TextEditingController();
-  final TextEditingController _shortcode = TextEditingController(text: '600992');
+  late final TextEditingController _shortcode = TextEditingController(text: widget.shortcode ?? '600992');
   bool _busy = false;
   String? _error;
   NameLookupResult? _result;

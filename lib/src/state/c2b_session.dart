@@ -1,13 +1,17 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import '../core/network/api_exception.dart';
 import 'providers.dart';
 
 class C2bSessionState {
-  const C2bSessionState({this.token, this.expiresAt});
+  const C2bSessionState({this.token, this.expiresAt, this.shortcode});
 
   final String? token;
   final DateTime? expiresAt;
+
+  /// The paybill shortcode the service is configured with. Only known after an automatic connection.
+  final String? shortcode;
 
   bool get active => token != null && token!.isNotEmpty && (expiresAt == null || DateTime.now().isBefore(expiresAt!));
 }
@@ -77,6 +81,18 @@ class C2bSession extends Notifier<C2bSessionState> {
     } else {
       await store.clear();
     }
+  }
+
+  /// Connects with the person's own Premisave sign in. The service holds the Hakikisha username and password in its
+  /// configuration, so nothing is typed. Throws an [ApiException] when the service refuses, for example for a role that
+  /// is not staff, or when it has no JWT_SECRET set.
+  Future<void> connectAutomatically() async {
+    final stored = await ref.read(tokenStoreProvider).load();
+    final access = stored.accessToken;
+    if (access == null || access.isEmpty) throw ApiException('Sign in to Premisave first.');
+    final s = await ref.read(c2bRepositoryProvider).consoleSession(access);
+    final lifetime = s.expiresIn > 60 ? s.expiresIn - 30 : s.expiresIn;
+    state = C2bSessionState(token: s.token, expiresAt: DateTime.now().add(Duration(seconds: lifetime)), shortcode: s.shortcode.isEmpty ? null : s.shortcode);
   }
 
   void disconnect() => state = const C2bSessionState();

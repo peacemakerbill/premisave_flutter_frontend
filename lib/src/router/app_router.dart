@@ -30,10 +30,20 @@ import '../features/auth/splash_screen.dart';
 import '../features/auth/token_password_screen.dart';
 import '../features/auth/verify_screen.dart';
 import '../features/auth/welcome_screen.dart';
+import '../features/c2b/name_lookup_screen.dart';
+import '../features/developer/developer_auth_page.dart';
+import '../features/developer/developer_portal.dart';
 import '../features/home/home_screen.dart';
 import '../features/home/module_pages.dart';
 import '../features/overview/role_overview_page.dart';
 import '../features/listings/explore_screen.dart';
+import '../features/listings/listing_manage.dart';
+import '../features/moderation/moderation_hub.dart';
+import '../features/property_mgmt/property_hub.dart';
+import '../features/property_mgmt/tenancy_hub.dart';
+import '../features/shell/more_page.dart';
+import '../features/wallet/finance_hub.dart';
+import '../features/wallet/wallet_hub.dart';
 import '../features/calls/call_details_screen.dart';
 import '../features/calls/call_link_screen.dart';
 import '../features/messenger/downloaded_files_screen.dart';
@@ -61,6 +71,8 @@ import '../features/security/sign_in_history_screen.dart';
 import '../features/shell/app_shell.dart';
 import '../features/review/review_detail_screen.dart';
 import '../features/review/review_queue_screen.dart';
+import '../roles/permissions.dart';
+import '../roles/role_registry.dart';
 import '../state/session_controller.dart';
 import 'guards.dart';
 import 'transitions.dart';
@@ -72,6 +84,8 @@ const Set<String> _alwaysOpen = <String>{
   '/security-report',
   '/admin-invitation',
   '/reset-password',
+  '/developers',
+  '/verify-email',
 };
 
 /// Pages that only make sense when signed out.
@@ -84,6 +98,9 @@ const Set<String> _signedOutOnly = <String>{
 };
 
 bool _isAlwaysOpen(String loc) => _alwaysOpen.any((p) => loc == p || loc.startsWith('$p/'));
+
+/// Bookings belong to clients. A home owner sees the bookings on their listings, under Listings.
+String _bookingsHome(Ref ref) => ref.read(sessionProvider).role.can(Capability.useClientWorkspace) ? '/bookings' : '/listings';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final refresh = ValueNotifier<int>(0);
@@ -145,6 +162,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/verify', pageBuilder: (_, s) => fadePage(s, VerifyScreen(token: s.uri.queryParameters['token']))),
       GoRoute(path: '/verify/:token', pageBuilder: (_, s) => fadePage(s, VerifyScreen(token: s.pathParameters['token']))),
       GoRoute(path: '/resend-activation', pageBuilder: (_, s) => fadePage(s, ResendActivationScreen(email: s.uri.queryParameters['email']))),
+      // The developer portal has its own accounts and works signed in or out of Premisave. Its emails link here.
+      GoRoute(path: '/developers', pageBuilder: (_, s) => fadePage(s, const DeveloperPortalPage())),
+      GoRoute(path: '/developers/verify-email', pageBuilder: (_, s) => fadePage(s, DeveloperVerifyEmailPage(token: s.uri.queryParameters['token']))),
+      GoRoute(path: '/developers/reset-password', pageBuilder: (_, s) => fadePage(s, DeveloperResetPasswordPage(token: s.uri.queryParameters['token']))),
+      GoRoute(path: '/verify-email', redirect: (_, s) => '/developers/verify-email${s.uri.hasQuery ? '?${s.uri.query}' : ''}'),
       GoRoute(path: '/security-report', pageBuilder: (_, s) => fadePage(s, SecurityReportScreen(token: s.uri.queryParameters['token']))),
       ShellRoute(
         builder: (context, state, child) => AppShell(location: state.uri.path, child: child),
@@ -154,15 +176,15 @@ final routerProvider = Provider<GoRouter>((ref) {
             pageBuilder: (_, s) => tabPage(s, const HomeScreen()),
             routes: <RouteBase>[
               GoRoute(path: 'overview', pageBuilder: (_, s) => detailPage(s, const RoleOverviewPage())),
-              GoRoute(path: 'bookings', pageBuilder: (_, s) => detailPage(s, const ModulePage(module: AppModule.bookings))),
-              GoRoute(path: 'payments', pageBuilder: (_, s) => detailPage(s, const ModulePage(module: AppModule.payments))),
-              GoRoute(path: 'transactions', pageBuilder: (_, s) => detailPage(s, const ModulePage(module: AppModule.transactions))),
-              GoRoute(path: 'wishlists', pageBuilder: (_, s) => detailPage(s, const ModulePage(module: AppModule.wishlists))),
-              GoRoute(path: 'properties', pageBuilder: (_, s) => detailPage(s, const ModulePage(module: AppModule.properties))),
-              GoRoute(path: 'listings', pageBuilder: (_, s) => detailPage(s, const ModulePage(module: AppModule.listings))),
-              GoRoute(path: 'tenancy', pageBuilder: (_, s) => detailPage(s, const ModulePage(module: AppModule.tenancy))),
-              GoRoute(path: 'developer', pageBuilder: (_, s) => detailPage(s, const ModulePage(module: AppModule.developer))),
-              GoRoute(path: 'lookup', pageBuilder: (_, s) => detailPage(s, const ModulePage(module: AppModule.lookup))),
+              GoRoute(path: 'bookings', redirect: (_, __) => _bookingsHome(ref)),
+              GoRoute(path: 'payments', redirect: (_, __) => '/wallet'),
+              GoRoute(path: 'transactions', redirect: (_, __) => '/wallet'),
+              GoRoute(path: 'wishlists', redirect: (_, __) => _bookingsHome(ref)),
+              GoRoute(path: 'properties', redirect: (_, __) => '/property'),
+              GoRoute(path: 'listings', redirect: (_, __) => '/listings'),
+              GoRoute(path: 'tenancy', redirect: (_, __) => '/tenancy'),
+              GoRoute(path: 'developer', redirect: (_, __) => '/developers'),
+              GoRoute(path: 'lookup', redirect: (_, __) => '/lookup'),
               GoRoute(path: 'messages', redirect: (_, __) => '/messages'),
               GoRoute(path: 'about', pageBuilder: (_, s) => detailPage(s, const ModulePage(module: AppModule.about))),
               GoRoute(path: 'contact', pageBuilder: (_, s) => detailPage(s, const ModulePage(module: AppModule.contact))),
@@ -193,6 +215,18 @@ final routerProvider = Provider<GoRouter>((ref) {
             ],
           ),
           GoRoute(path: '/explore', pageBuilder: (_, s) => tabPage(s, const ExploreScreen())),
+          GoRoute(path: '/more', pageBuilder: (_, s) => tabPage(s, const MorePage())),
+          GoRoute(path: '/bookings', pageBuilder: (_, s) => tabPage(s, const ClientBookingsHub())),
+          GoRoute(path: '/wallet', pageBuilder: (_, s) => tabPage(s, const WalletHub())),
+          GoRoute(path: '/listings', pageBuilder: (_, s) => tabPage(s, const OwnerListingsHub())),
+          GoRoute(path: '/property', pageBuilder: (_, s) => tabPage(s, const OwnerPropertyHub())),
+          GoRoute(path: '/tenancy', pageBuilder: (_, s) => tabPage(s, const TenancyHub())),
+          GoRoute(path: '/finance', pageBuilder: (_, s) => tabPage(s, const FinanceHub())),
+          GoRoute(path: '/moderation', pageBuilder: (_, s) => tabPage(s, const ModerationHub())),
+          GoRoute(
+            path: '/lookup',
+            pageBuilder: (_, s) => detailPage(s, const SubPage(title: 'M-Pesa name lookup', body: NameLookupScreen(), fallbackRoute: '/more')),
+          ),
           GoRoute(
             path: '/application',
             pageBuilder: (_, s) => tabPage(s, const ApplicationHubScreen()),

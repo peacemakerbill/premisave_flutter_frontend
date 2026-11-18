@@ -25,13 +25,18 @@ class AppShell extends ConsumerWidget {
       final text = ref.read(messengerProvider).notice;
       if (text != null && text.isNotEmpty) showToast(context, text, error: true);
     });
-    final dests = destinationsFor(session.role);
+    final wide = context.isWide;
+    final overflow = wide ? const <NavDest>[] : overflowFor(session.role);
+    final dests = wide ? destinationsFor(session.role) : phoneDestinationsFor(session.role);
     var index = dests.indexWhere((d) => d.matches(location));
+    if (index < 0 && overflow.any((d) => d.matches(location))) index = dests.length - 1;
     if (index < 0) index = 0;
+    final moreHasMessages = overflow.any((d) => d.path == '/messages');
 
     Widget iconFor(NavDest d, bool selected) {
       final icon = Icon(selected ? d.selectedIcon : d.icon);
-      if (d.path != '/messages' || unread <= 0) return icon;
+      final showsUnread = d.path == '/messages' || (d.path == '/more' && moreHasMessages);
+      if (!showsUnread || unread <= 0) return icon;
       return Badge(label: Text(unread > 99 ? '99+' : '$unread'), child: icon);
     }
 
@@ -39,7 +44,7 @@ class AppShell extends ConsumerWidget {
       if (i != index) context.go(dests[i].path);
     }
 
-    if (context.isWide) {
+    if (wide) {
       final extended = MediaQuery.of(context).size.width >= 1240;
       return PScaffold(
         body: Row(
