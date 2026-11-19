@@ -106,16 +106,15 @@ class DeveloperSession extends Notifier<DeveloperSessionState> {
     state = DeveloperSessionState(status: DeveloperStatus.signedIn, account: account);
   }
 
-  /// Signs in or up with Google, Facebook or GitHub. Returns false when the person closed the sign in window.
+  /// Asks the provider who the person is, the way this device can: the browser and a local port on Linux and Windows
+  /// (a code the service trades), the provider's own sign in elsewhere (a token). Returns null when the person closed
+  /// the window.
   ///
   /// The developer service has OAuth clients of its own, so the client ids come from the service and not from the app's
-  /// settings. Linux and Windows cannot run the providers' own sign in, so they open the browser, receive a code on a
-  /// local port and let the service trade it.
-  Future<bool> signInSocial(String provider) async {
-    final repo = ref.read(developerRepositoryProvider);
-    final ids = (await repo.socialProviders()).clientIds;
+  /// settings.
+  Future<({String? token, String? code, String? redirectUri})?> _credentialFor(String provider) async {
+    final ids = (await ref.read(developerRepositoryProvider).socialProviders()).clientIds;
     final id = ids[provider];
-    final String token;
     if (SocialAuthService.usesCodeFlow) {
       final String? code;
       switch (provider) {
@@ -126,23 +125,53 @@ class DeveloperSession extends Notifier<DeveloperSessionState> {
         default:
           code = await SocialAuthService.githubCode(clientId: id);
       }
-      if (code == null) return false;
-      token = await repo.socialLogin(provider, code: code, redirectUri: SocialAuthService.codeRedirectUri);
-    } else {
-      final String? credential;
-      switch (provider) {
-        case 'google':
-          credential = await SocialAuthService.googleIdToken(clientId: id);
-        case 'facebook':
-          credential = await SocialAuthService.facebookAccessToken();
-        default:
-          credential = await SocialAuthService.githubCode(clientId: id);
-      }
-      if (credential == null) return false;
-      token = await repo.socialLogin(provider, token: credential);
+      if (code == null) return null;
+      return (token: null, code: code, redirectUri: SocialAuthService.codeRedirectUri);
     }
+    final String? credential;
+    switch (provider) {
+      case 'google':
+        credential = await SocialAuthService.googleIdToken(clientId: id);
+      case 'facebook':
+        credential = await SocialAuthService.facebookAccessToken();
+      default:
+        credential = await SocialAuthService.githubCode(clientId: id);
+    }
+    if (credential == null) return null;
+    return (token: credential, code: null, redirectUri: null);
+  }
+
+  /// Signs in or up with Google, Facebook or GitHub. Returns false when the person closed the sign in window.
+  ///
+  /// Throws an [ApiException] whose `next` is CONFIRM_LINK when the provider's address already has an account and the
+  /// service emailed that address a link to join the two. That is not a failure: the message says what to do.
+  ///
+  /// Linux and Windows cannot run the providers' own sign in, so they open the browser, receive a code on a local port
+  /// and let the service trade it.
+  Future<bool> signInSocial(String provider) async {
+    final credential = await _credentialFor(provider);
+    if (credential == null) return false;
+    final token = await ref.read(developerRepositoryProvider).socialLogin(
+          provider,
+          token: credential.token,
+          code: credential.code,
+          redirectUri: credential.redirectUri,
+        );
     await signInWithToken(token);
     return true;
+  }
+
+  /// Joins a Google, Facebook or GitHub account to the signed in developer. Returns null when the person closed the
+  /// sign in window, otherwise what is joined now.
+  Future<DeveloperConnections?> connectSocial(String provider) async {
+    final credential = await _credentialFor(provider);
+    if (credential == null) return null;
+    return ref.read(developerRepositoryProvider).connect(
+          provider,
+          token: credential.token,
+          code: credential.code,
+          redirectUri: credential.redirectUri,
+        );
   }
 
   /// Reloads the account after the profile changed.

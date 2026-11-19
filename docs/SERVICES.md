@@ -159,7 +159,8 @@ Open `/developers`. It is linked from the first page and from the sign in page (
 | Area | What it does | Calls |
 | --- | --- | --- |
 | Sign in and sign up | Email and password, social sign in (Google, Facebook, GitHub, as many as the service has switched on), forgot password, resend the confirmation email | `POST /api/v1/auth/login`, `/signup`, `/forgot-password`, `/resend-verification`, `/social/{provider}`, `GET /api/v1/auth/social/providers` |
-| Email links | The link in the confirmation email opens `/developers/verify-email?token=` and the reset link opens `/developers/reset-password?token=` | `POST /api/v1/auth/verify-email`, `/reset-password` |
+| Email links | The link in the confirmation email opens `/developers/verify-email?token=`, the reset link opens `/developers/reset-password?token=` and the link that joins Facebook to an existing account opens `/developers/link-provider?token=` | `POST /api/v1/auth/verify-email`, `/reset-password`, `/social/link/confirm` |
+| Sign in methods | Profile, Sign in methods: connect or disconnect Google, Facebook and GitHub for the signed in developer | `GET /api/v1/me/connections`, `POST` and `DELETE /api/v1/me/connections/{provider}` |
 | Overview | Counts and quick actions | `GET /api/v1/me`, `/apps`, `/businesses` |
 | Apps | Filter by environment. Create a **sandbox** app with no business, or a live app for a business. Edit, suspend, reactivate, transfer. API keys: create, rotate, revoke. The secret is shown once | `GET`, `POST` and `PUT /api/v1/apps`, `/apps/{id}/suspend`, `/reactivate`, `/apps/{id}/keys`, `.../rotate`, `DELETE .../keys/{key}` |
 | Businesses | Add a business. Application form, directors, documents (upload, view, remove), submit, answer returned items, timeline | `GET` and `POST /api/v1/businesses`, `/businesses/{id}/application/**` |
@@ -243,7 +244,7 @@ A phone or desktop app is not stopped by CORS. A browser is, so for the web buil
 | Service | Setting | Set it to |
 | --- | --- | --- |
 | auth-service | `FRONTEND_URL` | where the app is served, for example `http://localhost:3000`. Links become `/verify/<token>` and `/reset-password?token=` |
-| developer-service | `DEVELOPER_PORTAL_URL` | the app address plus `/developers`, for example `http://localhost:3000/developers`. Links become `/developers/verify-email?token=` and `/developers/reset-password?token=` |
+| developer-service | `DEVELOPER_PORTAL_URL` | the app address plus `/developers`, for example `http://localhost:3000/developers`. Links become `/developers/verify-email?token=`, `/developers/reset-password?token=` and `/developers/link-provider?token=` |
 
 A production host must serve `index.html` for every path that is not a file, or opening a link from an email shows "page not found". The app uses clean paths (no `#`).
 

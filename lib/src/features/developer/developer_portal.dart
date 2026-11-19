@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart' show ImagePicker, ImageSource;
 
 import '../../core/config/app_config.dart';
 import '../../core/network/api_exception.dart';
+import '../../core/branding/social_logos.dart';
 import '../../core/theme/brand.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/widgets.dart';
@@ -547,6 +548,162 @@ class _TransfersTab extends ConsumerWidget {
   }
 }
 
+// -------------------------------------------------------------- sign in methods
+
+/// Google, Facebook and GitHub accounts joined to this developer account, with Connect and Disconnect for each. A
+/// connected provider signs in to this account directly, whatever address it uses.
+class _ConnectionsView extends ConsumerStatefulWidget {
+  const _ConnectionsView();
+
+  @override
+  ConsumerState<_ConnectionsView> createState() => _ConnectionsViewState();
+}
+
+class _ConnectionsViewState extends ConsumerState<_ConnectionsView> {
+  static const List<String> _all = <String>['google', 'facebook', 'github'];
+
+  DeveloperConnections? _data;
+  String? _error;
+  String? _busy;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final d = await ref.read(developerRepositoryProvider).connections();
+      if (mounted) {
+        setState(() {
+          _data = d;
+          _error = null;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _error = ApiException.from(e).message);
+    }
+  }
+
+  Future<void> _connect(String provider) async {
+    setState(() => _busy = provider);
+    try {
+      final d = await ref.read(developerSessionProvider.notifier).connectSocial(provider);
+      if (d != null && mounted) {
+        setState(() {
+          _data = d;
+          _error = null;
+        });
+        showToast(context, '${providerLabel(provider)} connected');
+      }
+    } catch (e) {
+      if (mounted) showApiError(context, ApiException.from(e));
+    } finally {
+      if (mounted) setState(() => _busy = null);
+    }
+  }
+
+  Future<void> _disconnect(String provider) async {
+    final label = providerLabel(provider);
+    final yes = await confirmDialog(
+      context,
+      title: 'Disconnect $label',
+      message: '$label will no longer sign in to this account. You can connect it again later.',
+      confirmLabel: 'Disconnect',
+      danger: true,
+    );
+    if (!yes || !mounted) return;
+    setState(() => _busy = provider);
+    try {
+      final d = await ref.read(developerRepositoryProvider).disconnect(provider);
+      if (mounted) {
+        setState(() => _data = d);
+        showToast(context, '$label disconnected');
+      }
+    } catch (e) {
+      if (mounted) showApiError(context, ApiException.from(e));
+    } finally {
+      if (mounted) setState(() => _busy = null);
+    }
+  }
+
+  Widget _logo(String provider) {
+    switch (provider) {
+      case 'google':
+        return const SocialLogo.google();
+      case 'facebook':
+        return const SocialLogo.facebook();
+      default:
+        return SocialLogo.github(color: context.inkColor);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final data = _data;
+    if (_error != null && data == null) {
+      return Center(child: Padding(padding: const EdgeInsets.all(24), child: InlineMessage(_error!, kind: MessageKind.error)));
+    }
+    if (data == null) return const Center(child: CircularProgressIndicator());
+    final shown = _all.where((p) => data.available.contains(p) || data.of(p) != null).toList();
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: <Widget>[
+        Text(
+          'Connect Google, Facebook or GitHub to sign in with one tap. The address of the account you connect does not '
+          'have to match the one here.',
+          style: TextStyle(fontSize: 13.5, color: context.mutedColor, height: 1.4),
+        ),
+        const SizedBox(height: 14),
+        for (final p in shown) ...<Widget>[
+          PCard(
+            child: Row(
+              children: <Widget>[
+                _logo(p),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(providerLabel(p), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                      Text(
+                        data.of(p) == null
+                            ? 'Not connected'
+                            : [
+                                'Connected',
+                                if (data.of(p)!.email != null) data.of(p)!.email!,
+                                if (data.of(p)!.linkedAt != null) formatDate(data.of(p)!.linkedAt),
+                              ].join(' · '),
+                        style: TextStyle(fontSize: 12.5, color: context.mutedColor),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                if (data.of(p) == null)
+                  PButton(label: 'Connect', small: true, kind: PButtonKind.outline, loading: _busy == p, onPressed: _busy == null ? () => _connect(p) : null)
+                else
+                  PButton(label: 'Disconnect', small: true, kind: PButtonKind.text, loading: _busy == p, onPressed: _busy == null ? () => _disconnect(p) : null),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+        ],
+        if (!data.hasPassword && data.connections.length < 2 && data.connections.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Text(
+              'This account has no password, so its only way in is ${providerLabel(data.connections.first.provider)}. Set a '
+              'password under Change password before disconnecting it.',
+              style: TextStyle(fontSize: 12.5, color: context.mutedColor, height: 1.4),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
 // ------------------------------------------------------------------ profile
 
 class _ProfileTab extends ConsumerStatefulWidget {
@@ -664,6 +821,12 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
           ],
           run: (_, v) => repo.changePassword(currentPassword: v['currentPassword'] as String?, newPassword: v['newPassword'] as String),
           done: 'Password changed',
+        ),
+        ItemAction(
+          'Sign in methods',
+          Icons.link_rounded,
+          title: 'Sign in methods',
+          page: (_) => const _ConnectionsView(),
         ),
         ItemAction(
           'Send confirmation email',

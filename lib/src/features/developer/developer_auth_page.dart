@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/theme/brand.dart';
 import '../../core/widgets/widgets.dart';
+import '../../data/models/developer_models.dart';
 import '../../state/developer_session.dart';
 import '../../state/providers.dart';
 import '../auth/auth_scaffold.dart';
@@ -58,6 +59,23 @@ class _DeveloperAuthPageState extends ConsumerState<DeveloperAuthPage> {
       if (mounted && res.providers.isNotEmpty) setState(() => _providers = res.providers);
     } catch (_) {
       // The buttons stay as they are when the list cannot be loaded.
+    }
+  }
+
+  /// A provider whose address already has an account is not an error: a link went to that address, so say so gently.
+  Future<bool> _signInSocial(String provider) async {
+    try {
+      return await ref.read(developerSessionProvider.notifier).signInSocial(provider);
+    } catch (e) {
+      final err = ApiException.from(e);
+      if (err.next != 'CONFIRM_LINK') rethrow;
+      if (mounted) {
+        setState(() {
+          _error = null;
+          _info = err.message;
+        });
+      }
+      return false;
     }
   }
 
@@ -237,7 +255,7 @@ class _DeveloperAuthPageState extends ConsumerState<DeveloperAuthPage> {
             disabled: _busy,
             onError: (m) => setState(() => _error = m),
             onNotice: (m) => setState(() => _info = m),
-            onSignIn: (provider) => ref.read(developerSessionProvider.notifier).signInSocial(provider),
+            onSignIn: _signInSocial,
           ),
         ],
       ),
@@ -298,6 +316,75 @@ class _DeveloperVerifyEmailPageState extends ConsumerState<DeveloperVerifyEmailP
   Widget build(BuildContext context) {
     return AuthScaffold(
       title: 'Confirm your email',
+      subtitle: 'Developer portal',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          if (_busy) const Center(child: Padding(padding: EdgeInsets.all(24), child: CircularProgressIndicator())),
+          if (_message != null) InlineMessage(_message!, kind: MessageKind.success),
+          if (_error != null) InlineMessage(_error!, kind: MessageKind.error),
+          const SizedBox(height: 18),
+          PButton(label: 'Go to developer sign in', expand: true, onPressed: () => context.go('/developers')),
+        ],
+      ),
+    );
+  }
+}
+
+/// Where the "join Facebook to your account" email lands. Reads the code from the link and joins the provider account.
+/// It signs nobody in: the person goes back and signs in with the provider, which now goes straight in.
+class DeveloperLinkProviderPage extends ConsumerStatefulWidget {
+  const DeveloperLinkProviderPage({super.key, this.token});
+
+  final String? token;
+
+  @override
+  ConsumerState<DeveloperLinkProviderPage> createState() => _DeveloperLinkProviderPageState();
+}
+
+class _DeveloperLinkProviderPageState extends ConsumerState<DeveloperLinkProviderPage> {
+  String? _message;
+  String? _error;
+  bool _busy = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _link();
+  }
+
+  Future<void> _link() async {
+    final token = widget.token;
+    if (token == null || token.isEmpty) {
+      setState(() {
+        _busy = false;
+        _error = 'This link has no code. Open the link from the email again, or sign in with the provider to get a new email.';
+      });
+      return;
+    }
+    try {
+      final provider = await ref.read(developerRepositoryProvider).confirmProviderLink(token);
+      final label = providerLabel(provider);
+      if (mounted) {
+        setState(() {
+          _message = '$label is now linked to your developer account. Go back and sign in with $label.';
+          _busy = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = ApiException.from(e).message;
+          _busy = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AuthScaffold(
+      title: 'Link your sign in',
       subtitle: 'Developer portal',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

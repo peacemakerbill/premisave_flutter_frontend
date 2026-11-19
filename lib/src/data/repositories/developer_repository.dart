@@ -143,6 +143,30 @@ class DeveloperRepository {
     return strOr(unwrapMap(res)['accessToken']);
   }
 
+  /// Opens the link from the "join Facebook to your account" email. Joins the provider account and signs nobody in.
+  /// Returns the provider's key, such as facebook.
+  Future<String> confirmProviderLink(String token) async {
+    final res = await _api.post('/api/v1/auth/social/link/confirm', body: <String, dynamic>{'token': token});
+    return strOr(unwrapMap(res)['provider']);
+  }
+
+  /// The providers joined to the signed in account.
+  Future<DeveloperConnections> connections() async =>
+      DeveloperConnections.fromJson(unwrapMap(await _api.get('/api/v1/me/connections')));
+
+  /// Joins a provider account to the signed in account with what the provider gave the app (see [socialLogin]).
+  Future<DeveloperConnections> connect(String provider, {String? token, String? code, String? redirectUri}) async {
+    final res = await _api.post('/api/v1/me/connections/${_id(provider)}', body: <String, dynamic>{
+      if (token != null) 'token': token,
+      if (code != null) 'code': code,
+      if (redirectUri != null) 'redirectUri': redirectUri,
+    });
+    return DeveloperConnections.fromJson(unwrapMap(res));
+  }
+
+  Future<DeveloperConnections> disconnect(String provider) async =>
+      DeveloperConnections.fromJson(unwrapMap(await _api.delete('/api/v1/me/connections/${_id(provider)}')));
+
   // ------------------------------------------------------------------ profile
 
   Future<Map<String, dynamic>> profile() async => unwrapMap(await _api.get('/api/v1/me'));

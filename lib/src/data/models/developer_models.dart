@@ -24,6 +24,53 @@ class DeveloperAccount {
   final String role;
 }
 
+/// Google, Facebook or GitHub as a person would write it, from the key the service uses.
+String providerLabel(String key) {
+  switch (key) {
+    case 'google':
+      return 'Google';
+    case 'facebook':
+      return 'Facebook';
+    case 'github':
+      return 'GitHub';
+    default:
+      return key.isEmpty ? 'The provider' : key;
+  }
+}
+
+/// One provider account (Google, Facebook or GitHub) joined to a developer account.
+class DeveloperConnection {
+  DeveloperConnection.fromJson(Map<String, dynamic> j)
+      : provider = strOr(j['provider']),
+        email = str(j['email']),
+        linkedAt = dateOrNull(j['linkedAt']);
+
+  final String provider;
+  final String? email;
+  final DateTime? linkedAt;
+}
+
+/// What a developer account has joined, and whether it still has a password to fall back on.
+class DeveloperConnections {
+  DeveloperConnections.fromJson(Map<String, dynamic> j)
+      : connections = mapList(j['connections']).map(DeveloperConnection.fromJson).toList(),
+        hasPassword = boolOr(j['hasPassword']),
+        available = stringList(j['available']);
+
+  final List<DeveloperConnection> connections;
+  final bool hasPassword;
+
+  /// The providers the service has switched on.
+  final List<String> available;
+
+  DeveloperConnection? of(String provider) {
+    for (final c in connections) {
+      if (c.provider == provider) return c;
+    }
+    return null;
+  }
+}
+
 class DeveloperApp {
   DeveloperApp.fromJson(Map<String, dynamic> j)
       : appId = strOr(j['appId']),

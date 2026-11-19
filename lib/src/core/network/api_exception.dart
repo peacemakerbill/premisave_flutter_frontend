@@ -16,12 +16,20 @@ class ApiException implements Exception {
     this.statusCode,
     this.fieldErrors = const <String, String>{},
     this.isNetwork = false,
+    this.code,
+    this.next,
   });
 
   final String message;
   final int? statusCode;
   final Map<String, String> fieldErrors;
   final bool isNetwork;
+
+  /// The service's stable error code, such as ACCOUNT_EXISTS, when it sent one.
+  final String? code;
+
+  /// What the service says to do next, such as CONFIRM_LINK or CONFIRM_EMAIL, when it sent one.
+  final String? next;
 
   bool get isUnauthorized => statusCode == 401;
   bool get isForbidden => statusCode == 403;
@@ -70,9 +78,16 @@ class ApiException implements Exception {
       } catch (_) {}
     }
     String? message;
+    String? code;
+    String? next;
     var fields = <String, String>{};
 
     if (data is Map) {
+      final extra = data['data'];
+      if (extra is Map) {
+        code = extra['code']?.toString();
+        next = extra['next']?.toString();
+      }
       final errors = data['errors'];
       if (errors is Map) {
         fields = errors.map((k, v) => MapEntry(k.toString(), v.toString()));
@@ -92,7 +107,7 @@ class ApiException implements Exception {
       message = _fallbackFor(status);
     }
     message ??= _fallbackFor(status);
-    return ApiException(message, statusCode: status, fieldErrors: fields);
+    return ApiException(message, statusCode: status, fieldErrors: fields, code: code, next: next);
   }
 
   static String _fallbackFor(int? status) {
