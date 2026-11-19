@@ -9,6 +9,7 @@ import '../../core/widgets/widgets.dart';
 import '../../data/models/wallet_models.dart';
 import '../../state/providers.dart';
 import '../../state/service_providers.dart';
+import '../shared/person_widgets.dart';
 import '../shared/service_widgets.dart';
 
 void _refreshWallet(WidgetRef ref) {
@@ -350,8 +351,13 @@ class ActivityRow extends StatelessWidget {
     required this.credit,
     required this.status,
     this.icon,
+    this.leading,
+    this.onTap,
   });
 
+  /// A picture to put in front, in place of the arrow, for example the person on the other side.
+  final Widget? leading;
+  final VoidCallback? onTap;
   final String title;
   final String subtitle;
   final String amount;
@@ -365,14 +371,16 @@ class ActivityRow extends StatelessWidget {
     return PCard(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      onTap: onTap,
       child: Row(
         children: <Widget>[
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(color: tint.op(0.12), borderRadius: BorderRadius.circular(context.radius(12))),
-            child: Icon(icon ?? (credit ? Icons.south_west_rounded : Icons.north_east_rounded), color: tint, size: 20),
-          ),
+          leading ??
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(color: tint.op(0.12), borderRadius: BorderRadius.circular(context.radius(12))),
+                child: Icon(icon ?? (credit ? Icons.south_west_rounded : Icons.north_east_rounded), color: tint, size: 20),
+              ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -400,3 +408,28 @@ class ActivityRow extends StatelessWidget {
 }
 
 String activityTitle(WalletTransaction t) => t.description ?? sentence(t.type);
+
+/// Everything about one line of activity: who was on the other side with their picture, the account, the reference and
+/// the reason when it failed.
+void showActivityDetail(BuildContext context, WalletTransaction t) {
+  final person = PersonRef(id: t.counterpartyId, email: t.counterpartyEmail, name: t.counterpartyName);
+  showFormSheet<void>(
+    context,
+    title: activityTitle(t),
+    subtitle: whenLabel(t.createdAt),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        if (person.isKnown) PersonCard(person, role: t.isCredit ? 'Received from' : 'Sent to'),
+        Align(alignment: Alignment.centerLeft, child: StatusChip(t.status)),
+        const SizedBox(height: 12),
+        KeyValueLine(t.isCredit ? 'Money in' : 'Money out', formatMoney(t.amount, t.currency), bold: true),
+        KeyValueLine('Kind', sentence(t.type)),
+        if (t.provider != null && t.provider!.isNotEmpty) KeyValueLine('Through', sentence(t.provider)),
+        if (t.account != null && t.account!.isNotEmpty) KeyValueLine('Account', t.account!),
+        if (t.reference != null && t.reference!.isNotEmpty) KeyValueLine('Reference', t.reference!),
+        if (t.failureReason != null && t.failureReason!.isNotEmpty) KeyValueLine('Reason', t.failureReason!),
+      ],
+    ),
+  );
+}

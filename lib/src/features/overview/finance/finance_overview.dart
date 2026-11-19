@@ -42,10 +42,10 @@ class FinanceOverview extends ConsumerWidget {
           user: user,
           message: 'Revenue, held money and payments that need a person.',
           metrics: <OverviewMetric>[
-            OverviewMetric('Revenue today', overviewFigure(week, (List<DailyFinance> w) => overviewShortMoney(w.last.revenue)), 'commission and fees'),
-            OverviewMetric('This week', overviewFigure(week, (List<DailyFinance> w) => overviewShortMoney(w.fold<double>(0, (s, d) => s + d.revenue))), 'revenue, 7 days'),
-            OverviewMetric('Held for users', overviewFigure(balances, (BalanceOverview b) => overviewShortMoney(b.liability)), 'wallets and escrow'),
-            OverviewMetric('Need review', overviewFigure(review, (({int total, List<BookingModel> items}) r) => '${r.total}'), 'bookings'),
+            OverviewMetric('Revenue today', overviewFigure(week, (List<DailyFinance> w) => overviewShortMoney(w.last.revenue)), 'commission and fees', onTap: () => context.go('/finance?tab=reports')),
+            OverviewMetric('This week', overviewFigure(week, (List<DailyFinance> w) => overviewShortMoney(w.fold<double>(0, (s, d) => s + d.revenue))), 'revenue, 7 days', onTap: () => context.go('/finance?tab=reports')),
+            OverviewMetric('Held for users', overviewFigure(balances, (BalanceOverview b) => overviewShortMoney(b.liability)), 'wallets and escrow', onTap: () => context.go('/finance?tab=wallets')),
+            OverviewMetric('Need review', overviewFigure(review, (({int total, List<BookingModel> items}) r) => '${r.total}'), 'bookings', onTap: () => context.go('/moderation?tab=bookings')),
           ],
           actions: <Widget>[
             HeroAction(label: 'Applications', icon: Icons.assignment_outlined, onPressed: () => context.go('/staff')),

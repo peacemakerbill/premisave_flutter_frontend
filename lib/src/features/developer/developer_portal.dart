@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart' show ImagePicker, ImageSource;
@@ -338,6 +339,7 @@ class DeveloperAppPage extends ConsumerStatefulWidget {
 
 class _DeveloperAppPageState extends ConsumerState<DeveloperAppPage> {
   int _bump = 0;
+  bool _deleted = false;
 
   void _reload() => setState(() => _bump++);
 
@@ -345,6 +347,15 @@ class _DeveloperAppPageState extends ConsumerState<DeveloperAppPage> {
   Widget build(BuildContext context) {
     final repo = ref.read(developerRepositoryProvider);
     final id = widget.appId;
+    if (_deleted) {
+      return EmptyState(
+        icon: Icons.delete_outline_rounded,
+        title: 'App deleted',
+        message: 'The app and its keys are gone.',
+        actionLabel: 'Back to apps',
+        onAction: () => Navigator.of(context).maybePop(),
+      );
+    }
     return DefaultTabController(
       length: 2,
       child: Column(
@@ -404,6 +415,18 @@ class _DeveloperAppPageState extends ConsumerState<DeveloperAppPage> {
                       },
                       done: 'Transfer started. Check the Transfers menu for the code.',
                     ),
+                    ItemAction(
+                      'Delete',
+                      Icons.delete_outline_rounded,
+                      danger: true,
+                      confirm: 'The app and all its keys are removed for good, and its keys stop working at once. '
+                          'A live app gives up its wallet link. Payments already made stay in your records. This cannot be undone.',
+                      run: (_, __) async {
+                        await repo.deleteApp(id);
+                        if (mounted) setState(() => _deleted = true);
+                      },
+                      done: 'App deleted',
+                    ),
                   ],
                 ),
                 _KeysSection(appId: id, key: ValueKey<int>(_bump), onChanged: _reload),
@@ -427,14 +450,15 @@ class _KeysSection extends ConsumerWidget {
     final repo = ref.read(developerRepositoryProvider);
     return ResourceSection(
       load: () => repo.keysRaw(appId),
-      intro: 'A secret is shown once, when a key is created or rotated.',
+      intro: 'Open a key to see its details. A secret is shown once, when a key is created or rotated, and only its last four '
+          'characters are kept, so a lost secret cannot be read back. Rotate the key to get a new one.',
       emptyTitle: 'No keys yet',
       emptyMessage: 'Create a key to call the API from this app.',
       emptyIcon: Icons.vpn_key_outlined,
       row: RowView(
         icon: Icons.vpn_key_outlined,
         title: (m) => pick(m, <String>['label'], 'Key'),
-        subtitle: (m) => '${pick(m, <String>['key'])}  ends ${pick(m, <String>['secretEndsWith'])}',
+        subtitle: (m) => '${pick(m, <String>['key'])}  ${pick(m, <String>['secretPreview'])}',
         status: (m) => pick(m, <String>['status']),
       ),
       headerActions: <ItemAction>[
@@ -451,6 +475,12 @@ class _KeysSection extends ConsumerWidget {
         ),
       ],
       itemActions: <ItemAction>[
+        ItemAction(
+          'Copy key',
+          Icons.copy_rounded,
+          run: (m, _) => Clipboard.setData(ClipboardData(text: pick(m, <String>['key']))),
+          done: 'Key copied',
+        ),
         ItemAction(
           'Rotate',
           Icons.autorenew_rounded,

@@ -56,11 +56,15 @@ enum FieldKind {
 
 /// One choice of a [FieldKind.picker]: [value] is sent, [label] is shown, [description] is the smaller line under it.
 class PickOption {
-  const PickOption(this.value, this.label, {this.description});
+  const PickOption(this.value, this.label, {this.description, this.initials, this.imageUrl});
 
   final String value;
   final String label;
   final String? description;
+
+  /// When set, the option is drawn with a round picture, or these initials when there is no picture.
+  final String? initials;
+  final String? imageUrl;
 }
 
 /// The parts of a chosen place a [FieldKind.address] can pass on to other fields.
@@ -606,22 +610,22 @@ class _ResourceFormState extends State<ResourceForm> {
               label: f.label,
               optional: optional,
               value: _value[f.key] as String?,
-              options: <PChoice<String>>[for (final o in options) PChoice<String>(o.value, o.label, description: o.description)],
+              options: <PChoice<String>>[for (final o in options) PChoice<String>(o.value, o.label, description: o.description, initials: o.initials, imageUrl: o.imageUrl)],
               errorText: _errors[f.key],
               hint: f.searcher != null ? 'Search and choose' : (options.isEmpty ? 'Nothing to choose from' : 'Search and choose'),
               searchable: true,
               remoteSearch: f.searcher == null
                   ? null
                   : (q) async => <PChoice<String>>[
-                        for (final o in await f.searcher!(q)) PChoice<String>(o.value, o.label, description: o.description),
+                        for (final o in await f.searcher!(q)) PChoice<String>(o.value, o.label, description: o.description, initials: o.initials, imageUrl: o.imageUrl),
                       ],
               onChoice: f.searcher == null
                   ? null
                   : (c) {
                       if (c == null) return;
                       // Keep the chosen one so its label shows in the box.
-                      setState(() => _options[f.key] = <PickOption>[PickOption(c.value, c.label, description: c.description)]);
-                      f.onPicked?.call(PickOption(c.value, c.label, description: c.description));
+                      setState(() => _options[f.key] = <PickOption>[PickOption(c.value, c.label, description: c.description, initials: c.initials, imageUrl: c.imageUrl)]);
+                      f.onPicked?.call(PickOption(c.value, c.label, description: c.description, initials: c.initials, imageUrl: c.imageUrl));
                     },
               onChanged: (v) {
                 setState(() => _value[f.key] = v);

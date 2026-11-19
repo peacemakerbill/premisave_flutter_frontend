@@ -11,6 +11,7 @@ import '../../data/models/wallet_models.dart';
 import '../../state/providers.dart';
 import '../../state/service_providers.dart';
 import '../shared/service_widgets.dart';
+import '../shared/person_widgets.dart';
 import 'wallet_forms.dart';
 import 'wallet_money.dart';
 
@@ -194,6 +195,10 @@ class _WalletBody extends ConsumerWidget {
                     amount: formatMoney(t.amount, t.currency),
                     credit: t.isCredit,
                     status: t.status,
+                    leading: (t.counterpartyId ?? t.counterpartyEmail) == null
+                        ? null
+                        : PersonAvatar(PersonRef(id: t.counterpartyId, email: t.counterpartyEmail, name: t.counterpartyName), size: 40),
+                    onTap: () => showActivityDetail(context, t),
                   ),
               ],
             );

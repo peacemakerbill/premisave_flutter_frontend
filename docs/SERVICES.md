@@ -63,6 +63,10 @@ Every part of the app that reads or writes a service has its own menu, a row of 
 
 The old routes under `/home` (`/home/payments`, `/home/properties` and the rest) still work and redirect to these.
 
+## Overview cards
+
+The big figures at the top of each role's overview are buttons. Opening one goes to the screen with the detail behind it, for example the wallet figures to the wallet, the booking figures to the bookings tab. A figure that opens a tab of a hub uses `?tab=` with the tab's name, which `HubPage` reads.
+
 ## Wallet
 
 Open `/wallet`. A person with no wallet sees **Open my wallet**, which calls `POST /wallet/create`. Amounts go through `parseAmount`, and money is shown by `formatMoney`.
@@ -70,8 +74,8 @@ Open `/wallet`. A person with no wallet sees **Open my wallet**, which calls `PO
 | Tab | What it does | Calls |
 | --- | --- | --- |
 | Overview | Balance, deposit, send, withdraw, payment methods, latest activity. Deposit, Send and Withdraw each open a centred chooser that lists every gateway (M-Pesa, M-Pesa till, Pochi, card, PayPal, Flutterwave, crypto, bank and wallet to wallet) and continue into the matching form | `GET /wallet`, `POST /wallet/deposit`, `POST /wallet/transfer`, `POST /disbursements` |
-| Money | Deposit by M-Pesa, M-Pesa till, card, PayPal, Flutterwave and crypto. Send to a wallet. Withdraw to M-Pesa, Pochi, PayPal, bank, Flutterwave and crypto. Confirm a payment made on a provider page | `POST /wallet/deposit`, `POST /wallet/transfer`, `POST /disbursements`, `POST /disbursements/b2pochi`, `POST /disbursements/nowpayments/{id}/verify`, `POST /wallet/deposit/stripe/confirm`, `.../paypal/confirm`, `.../flutterwave/confirm` |
-| History | All activity, deposits, withdrawals, transfers and payments, with status and date filters | `GET /transactions/history`, `/deposits/history`, `/disbursements/history`, `/wallet/transfer/history`, `/payments/history` |
+| Money | Deposit by M-Pesa, M-Pesa till, card, PayPal, Flutterwave and crypto. M-Pesa amounts are typed in KES; the wallet is credited the USD value. Send to a wallet: type a name, username or email and the matching people appear with their pictures, narrowing as you type. Withdraw to M-Pesa, Pochi, PayPal, bank, Flutterwave and crypto. Confirm a payment made on a provider page | `POST /wallet/deposit`, `POST /wallet/transfer`, `POST /disbursements`, `POST /disbursements/b2pochi`, `POST /disbursements/nowpayments/{id}/verify`, `POST /wallet/deposit/stripe/confirm`, `.../paypal/confirm`, `.../flutterwave/confirm` |
+| History | All activity, deposits, withdrawals, transfers and payments, with status and date filters. A transfer shows the other person's picture and name, and opening a row shows their card, the account, the reference and the reason a payment failed | `GET /transactions/history`, `/deposits/history`, `/disbursements/history`, `/wallet/transfer/history`, `/payments/history` |
 | Statement | Money in and out for a period | `POST /wallet/statement` |
 | Linked accounts | Saved cards (list, default, remove, confirm), PayPal (link, confirm, disconnect), Flutterwave (link, confirm, unlink), bank through Stripe Connect (link, refresh, unlink) | `GET` and `DELETE /wallet/stripe/cards`, `PUT /wallet/stripe/cards/{id}/default`, `POST /wallet/stripe/setup-intent`, `POST /wallet/stripe/setup-intent/confirm`, `/wallet/paypal/*`, `/wallet/flutterwave/*`, `/wallet/stripe/connect/*` |
 | Requests | Payment requests from businesses: approve, decline, revoke. The wallet service serves these only with `COMMERCIAL_PREMISAVE_ENABLED=true`; with it off the endpoint answers 404 and the tab shows an empty list | `GET /wallet/consents`, `POST /wallet/consents/{id}/approve`, `/decline`, `/revoke` |
@@ -162,11 +166,11 @@ Open `/developers`. It is linked from the first page and from the sign in page (
 | Email links | The link in the confirmation email opens `/developers/verify-email?token=`, the reset link opens `/developers/reset-password?token=` and the link that joins Facebook to an existing account opens `/developers/link-provider?token=` | `POST /api/v1/auth/verify-email`, `/reset-password`, `/social/link/confirm` |
 | Sign in methods | Profile, Sign in methods: connect or disconnect Google, Facebook and GitHub for the signed in developer | `GET /api/v1/me/connections`, `POST` and `DELETE /api/v1/me/connections/{provider}` |
 | Overview | Counts and quick actions | `GET /api/v1/me`, `/apps`, `/businesses` |
-| Apps | Filter by environment. Create a **sandbox** app with no business, or a live app for a business. Edit, suspend, reactivate, transfer. API keys: create, rotate, revoke. The secret is shown once | `GET`, `POST` and `PUT /api/v1/apps`, `/apps/{id}/suspend`, `/reactivate`, `/apps/{id}/keys`, `.../rotate`, `DELETE .../keys/{key}` |
+| Apps | Filter by environment. Create a **sandbox** app with no business, or a live app for a business. Edit, suspend, reactivate, transfer, delete (with a confirmation; the keys go with the app, and a live app gives up its wallet link). API keys: open one to see its details and last four characters, copy the key, create, rotate, revoke. The secret is shown once and cannot be read back, so a lost one is replaced by rotating | `GET`, `POST` and `PUT /api/v1/apps`, `DELETE /api/v1/apps/{id}`, `/apps/{id}/suspend`, `/reactivate`, `/apps/{id}/keys`, `GET .../keys/{key}`, `.../rotate`, `DELETE .../keys/{key}` |
 | Businesses | Add a business. Application form, directors, documents (upload, view, remove), submit, answer returned items, timeline | `GET` and `POST /api/v1/businesses`, `/businesses/{id}/application/**` |
 | Transfers | Move an app to another developer, enter the code, resend, cancel, claim a business | `POST /api/v1/apps/{id}/transfer`, `GET /api/v1/transfers`, `POST .../confirm`, `/resend`, `/cancel` |
 | Profile | Edit, username check, change password, picture, resend confirmation, test merchant numbers, sign out everywhere | `GET` and `PUT /api/v1/me`, `PUT /api/v1/me/picture`, `POST /api/v1/me/logout-all`, `GET /api/v1/test-merchants` |
-| Admin | For developers with the ADMIN role: statistics, developers (create, edit, email, role, status, unlock, sign out, password reset, apps, businesses, share), administrators, all apps (edit, status, owner, keys), transfers, audit | `GET` and `POST /api/v1/admin/*` |
+| Admin | For developers with the ADMIN role: statistics, developers (create, edit, email, role, status, unlock, sign out, password reset, apps, businesses, share), administrators, all apps (edit, status, owner, keys), transfers, audit. Sharing a business is a search by business name or merchant number, and the id fills itself in | `GET` and `POST /api/v1/admin/*`, `GET /api/v1/admin/businesses?q=` |
 
 A key and its secret are shown **once**, with a copy button, because the service only keeps a hash.
 

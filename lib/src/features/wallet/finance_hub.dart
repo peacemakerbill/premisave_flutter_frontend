@@ -8,6 +8,7 @@ import '../../state/providers.dart';
 import '../overview/finance/finance_overview.dart';
 import '../shared/ask_then_show.dart';
 import '../shared/hub.dart';
+import '../shared/person_widgets.dart';
 import '../shared/pickers.dart';
 import '../shared/resource_form.dart';
 import '../shared/resource_view.dart';
@@ -144,6 +145,8 @@ const Map<String, String> _providers = <String, String>{
 
 RowView _flowRow(IconData icon) => RowView(
       icon: icon,
+      leading: (context, m) => walletRowLeading(context, m, icon),
+      header: walletRowHeader,
       title: (m) {
         final what = sentence(pick(m, <String>['provider', 'type', 'service', 'direction'], 'Record'));
         final who = pick(m, <String>['userName', 'userId', 'senderUserId', 'description']);
@@ -186,6 +189,8 @@ class _AdminWalletsTabState extends ConsumerState<AdminWalletsTab> {
       icon: Icons.account_balance_wallet_outlined,
       row: RowView(
         icon: Icons.account_balance_wallet_outlined,
+        leading: (context, m) => walletRowLeading(context, m, Icons.account_balance_wallet_outlined),
+        header: walletRowHeader,
         title: (m) => pick(m, <String>['accountNumber', 'email', 'userName', 'userId'], 'Wallet'),
         subtitle: (m) => pick(m, <String>['userName', 'fullName']),
         status: (m) => m['frozen'] == true ? 'FROZEN' : null,

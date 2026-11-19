@@ -61,10 +61,11 @@ class AdminOverview extends ConsumerWidget {
           message: 'People, applications, security and storage across the platform.',
           metrics: <OverviewMetric>[
             OverviewMetric('People', _figure(users, (List<UserModel> l) => '${l.length}'),
-                _figure(users, (List<UserModel> l) => '${l.where((u) => u.active && !u.archived).length} active')),
-            OverviewMetric('Awaiting review', _figure(apps, (StaffStats s) => '${s.awaitingReview}'), 'applications'),
-            OverviewMetric('Events', _figure(sec, (AuditSummary s) => '${s.total}'), 'last 24 hours'),
-            OverviewMetric('Failed sign ins', _figure(sec, (AuditSummary s) => '${s.failedSignIns}'), 'last 24 hours'),
+                _figure(users, (List<UserModel> l) => '${l.where((u) => u.active && !u.archived).length} active'),
+                onTap: () => context.go('/admin/users')),
+            OverviewMetric('Awaiting review', _figure(apps, (StaffStats s) => '${s.awaitingReview}'), 'applications', onTap: () => context.go('/staff')),
+            OverviewMetric('Events', _figure(sec, (AuditSummary s) => '${s.total}'), 'last 24 hours', onTap: () => context.push('/admin/audit')),
+            OverviewMetric('Failed sign ins', _figure(sec, (AuditSummary s) => '${s.failedSignIns}'), 'last 24 hours', onTap: () => context.go('/admin/security')),
           ],
           actions: <Widget>[
             HeroAction(label: 'Users', icon: Icons.people_alt_outlined, onPressed: () => context.go('/admin/users')),

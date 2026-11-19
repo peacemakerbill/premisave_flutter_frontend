@@ -12,6 +12,7 @@ import '../../state/providers.dart';
 import '../../state/service_providers.dart';
 import '../shared/ask_then_show.dart';
 import '../shared/hub.dart';
+import '../shared/person_widgets.dart';
 import '../shared/resource_form.dart';
 import '../shared/resource_view.dart';
 import 'wallet_accounts.dart';
@@ -179,8 +180,11 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
             emptyTitle: 'Nothing here',
             emptyMessage: 'Money that moves in and out of the wallet shows here.',
             emptyIcon: Icons.receipt_long_outlined,
+            hidden: const <String>{'counterpartyId', 'counterpartyName'},
             row: RowView(
               icon: Icons.receipt_long_outlined,
+              leading: (context, m) => walletRowLeading(context, m, Icons.receipt_long_outlined),
+              header: walletRowHeader,
               title: (m) {
                 final what = sentence(pick(m, <String>['type', 'provider', 'service', 'direction'], 'Activity'));
                 final who = pick(m, <String>['description', 'recipientName', 'counterparty', 'destination']);

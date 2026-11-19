@@ -49,12 +49,14 @@ class ClientOverview extends ConsumerWidget {
               'Upcoming stays',
               overviewFigure(bookings, (List<BookingModel> _) => '${stays.length}'),
               bookings.hasValue ? (next == null ? 'Nothing booked' : (next <= 0 ? 'Next one starts today' : 'Next in ${plural(next, 'day')}')) : '',
+              onTap: () => context.go('/bookings'),
             ),
-            OverviewMetric('Saved places', overviewFigure(saved, (List<InterestModel> l) => '${l.length}'), 'in your wishlist'),
+            OverviewMetric('Saved places', overviewFigure(saved, (List<InterestModel> l) => '${l.length}'), 'in your wishlist', onTap: () => context.go('/bookings?tab=saved')),
             OverviewMetric(
               'Total spent',
               overviewFigure(bookings, (List<BookingModel> l) => _spent(l).value),
               bookings.hasValue ? _spent(bookings.value!).caption : '',
+              onTap: () => context.go('/wallet?tab=history'),
             ),
           ],
           actions: <Widget>[

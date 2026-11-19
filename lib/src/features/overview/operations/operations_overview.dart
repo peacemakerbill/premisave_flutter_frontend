@@ -38,10 +38,10 @@ class OperationsOverview extends ConsumerWidget {
           user: user,
           message: 'Live listings and today\'s payments across the platform.',
           metrics: <OverviewMetric>[
-            OverviewMetric('Live listings', overviewFigure(live, (List<ListingModel> l) => '${l.length}'), 'visible to the public'),
-            OverviewMetric('Payments today', overviewFigure(week, (List<DailyFinance> w) => '${w.last.transactionCount}'), 'deposits, withdrawals, transfers'),
-            OverviewMetric('Waiting', overviewFigure(week, (List<DailyFinance> w) => '${w.last.pending}'), 'with a payment provider'),
-            OverviewMetric('Failed', overviewFigure(week, (List<DailyFinance> w) => '${w.last.failed}'), 'today'),
+            OverviewMetric('Live listings', overviewFigure(live, (List<ListingModel> l) => '${l.length}'), 'visible to the public', onTap: () => context.go('/moderation?tab=approved')),
+            OverviewMetric('Payments today', overviewFigure(week, (List<DailyFinance> w) => '${w.last.transactionCount}'), 'deposits, withdrawals, transfers', onTap: () => context.go('/finance?tab=transactions')),
+            OverviewMetric('Waiting', overviewFigure(week, (List<DailyFinance> w) => '${w.last.pending}'), 'with a payment provider', onTap: () => context.go('/finance?tab=to-resolve')),
+            OverviewMetric('Failed', overviewFigure(week, (List<DailyFinance> w) => '${w.last.failed}'), 'today', onTap: () => context.go('/finance?tab=to-resolve')),
           ],
           actions: <Widget>[
             HeroAction(label: 'Applications', icon: Icons.assignment_outlined, onPressed: () => context.go('/staff')),

@@ -128,7 +128,10 @@ class KeyValueLine extends StatelessWidget {
       child: Row(
         children: <Widget>[
           Expanded(child: Text(label, style: TextStyle(fontSize: 13, color: context.mutedColor))),
-          Text(value, style: TextStyle(fontSize: 13.5, fontWeight: bold ? FontWeight.w800 : FontWeight.w600)),
+          const SizedBox(width: 12),
+          Flexible(
+            child: Text(value, textAlign: TextAlign.end, style: TextStyle(fontSize: 13.5, fontWeight: bold ? FontWeight.w800 : FontWeight.w600)),
+          ),
         ],
       ),
     );

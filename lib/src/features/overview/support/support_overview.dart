@@ -40,13 +40,14 @@ class SupportOverview extends ConsumerWidget {
           user: user,
           message: 'Home owner applications waiting on a reviewer or on the applicant.',
           metrics: <OverviewMetric>[
-            OverviewMetric('Awaiting review', overviewFigure(stats, (StaffStats s) => '${s.awaitingReview}'), 'applications'),
-            OverviewMetric('Need more info', overviewFigure(stats, (StaffStats s) => '${s.needsInfoFromApplicant}'), 'waiting on the applicant'),
-            OverviewMetric('Unassigned', overviewFigure(stats, (StaffStats s) => '${s.unassigned}'), 'no reviewer yet'),
+            OverviewMetric('Awaiting review', overviewFigure(stats, (StaffStats s) => '${s.awaitingReview}'), 'applications', onTap: () => context.go('/staff')),
+            OverviewMetric('Need more info', overviewFigure(stats, (StaffStats s) => '${s.needsInfoFromApplicant}'), 'waiting on the applicant', onTap: () => context.go('/staff')),
+            OverviewMetric('Unassigned', overviewFigure(stats, (StaffStats s) => '${s.unassigned}'), 'no reviewer yet', onTap: () => context.go('/staff')),
             OverviewMetric(
               'Decision time',
               overviewFigure(stats, (StaffStats s) => s.averageDecisionHours == null ? 'None yet' : waitingLabel(s.averageDecisionHours!.round())),
               'on average',
+              onTap: () => context.go('/staff'),
             ),
           ],
           actions: <Widget>[

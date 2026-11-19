@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import '../theme/brand.dart';
 import '../utils/formatters.dart';
 import 'popup.dart';
+import 'user_avatar.dart';
 
 InputDecoration _decoration(
   BuildContext context, {
@@ -186,11 +187,15 @@ class _PTextFieldState extends State<PTextField> {
 }
 
 class PChoice<T> {
-  const PChoice(this.value, this.label, {this.description});
+  const PChoice(this.value, this.label, {this.description, this.initials, this.imageUrl});
 
   final T value;
   final String label;
   final String? description;
+
+  /// When set, the choice is drawn with a round picture, or these initials when there is no picture. Used for people.
+  final String? initials;
+  final String? imageUrl;
 }
 
 /// A field that opens a bottom sheet to pick one option. Used in place of a dropdown
@@ -248,15 +253,25 @@ class PSelectField<T> extends StatelessWidget {
               errorText: errorText,
               suffix: const Icon(Icons.expand_more_rounded),
             ),
-            child: Text(
-              selected?.label ?? hint,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-                color: selected == null ? context.mutedColor.op(0.8) : context.inkColor,
-              ),
+            child: Row(
+              children: <Widget>[
+                if (selected?.initials != null) ...<Widget>[
+                  UserAvatar(initials: selected!.initials!, imageUrl: selected.imageUrl, size: 26),
+                  const SizedBox(width: 10),
+                ],
+                Expanded(
+                  child: Text(
+                    selected?.label ?? hint,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: selected == null ? context.mutedColor.op(0.8) : context.inkColor,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -338,7 +353,7 @@ class _PickerSheetState<T> extends State<_PickerSheet<T>> {
       return;
     }
     setState(() => _searching = true);
-    _debounce = Timer(const Duration(milliseconds: 350), () async {
+    _debounce = Timer(const Duration(milliseconds: 250), () async {
       try {
         final list = await remote(v.trim());
         if (!mounted || _q != v) return;
@@ -415,6 +430,7 @@ class _PickerSheetState<T> extends State<_PickerSheet<T>> {
                         final o = items[i];
                         final isSel = o.value == widget.value;
                         return ListTile(
+                          leading: o.initials == null ? null : UserAvatar(initials: o.initials!, imageUrl: o.imageUrl, size: 40),
                           title: Text(o.label, style: TextStyle(fontWeight: isSel ? FontWeight.w800 : FontWeight.w500)),
                           subtitle: o.description == null
                               ? null

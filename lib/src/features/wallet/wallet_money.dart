@@ -8,6 +8,7 @@ import '../../core/utils/money.dart';
 import '../../core/widgets/widgets.dart';
 import '../../state/providers.dart';
 import '../../state/service_providers.dart';
+import '../shared/pickers.dart';
 import '../shared/resource_form.dart';
 import '../shared/resource_view.dart';
 import '../shared/service_widgets.dart';
@@ -45,6 +46,16 @@ class MoneyFlows {
         kind: FieldKind.number,
         required: true,
         helper: 'In your default currency. Change it under Settings.',
+      );
+
+  /// M-Pesa takes Kenyan shillings, so its forms always ask in KES, whatever the default currency is. The wallet is
+  /// credited or debited the USD value.
+  FieldSpec get _kesField => const FieldSpec(
+        'amount',
+        'Amount (KES)',
+        kind: FieldKind.number,
+        required: true,
+        helper: 'M-Pesa is always in Kenyan shillings. Your wallet is credited the dollar value.',
       );
 
   void _refresh() {
@@ -118,13 +129,13 @@ class MoneyFlows {
             MoneyOption(Icons.phone_iphone_rounded, 'M-Pesa', 'A prompt comes to your phone', () => flow(
                   title: 'Deposit with M-Pesa',
                   subtitle: 'Leave the phone empty to use the number saved on your wallet.',
-                  fields: <FieldSpec>[_amountField, const FieldSpec('phoneNumber', 'M-Pesa phone', kind: FieldKind.phone, hint: '2547...')],
+                  fields: <FieldSpec>[_kesField, const FieldSpec('phoneNumber', 'M-Pesa phone', kind: FieldKind.phone, hint: '2547...')],
                   call: (v, _) => repo.deposit(<String, dynamic>{...v, 'provider': 'MPESA'}),
                 )),
             MoneyOption(Icons.storefront_outlined, 'M-Pesa till', 'Pay from a business till with Express Checkout', () => flow(
                   title: 'Deposit from a till',
                   subtitle: 'The prompt goes to the phone registered as the till operator.',
-                  fields: <FieldSpec>[_amountField, const FieldSpec('payerTillNumber', 'Till number', required: true)],
+                  fields: <FieldSpec>[_kesField, const FieldSpec('payerTillNumber', 'Till number', required: true)],
                   call: (v, _) => repo.deposit(<String, dynamic>{...v, 'provider': 'MPESA_TILL'}),
                 )),
             MoneyOption(Icons.credit_card_rounded, 'Card', 'Charges your saved card', () => flow(
@@ -165,12 +176,20 @@ class MoneyFlows {
 
   List<MoneyOption> sends() {
     final repo = ref.read(walletRepositoryProvider);
+    final profiles = ref.read(profileRepositoryProvider);
     return <MoneyOption>[
 
-            MoneyOption(Icons.north_east_rounded, 'Send to another wallet', 'By the email of their wallet', () => flow(
+            MoneyOption(Icons.north_east_rounded, 'Send to another wallet', 'Search for a person by name', () => flow(
                   title: 'Send money',
                   fields: <FieldSpec>[
-                    const FieldSpec('recipientAccountNumber', 'Recipient wallet email', kind: FieldKind.email, required: true),
+                    userPicker(
+                      profiles,
+                      key: 'recipientAccountNumber',
+                      label: 'Send to',
+                      required: true,
+                      by: PersonValue.email,
+                      helper: 'Type a name, username or email. Pick the person and their wallet is filled in.',
+                    ),
                     _amountField,
                     const FieldSpec('description', 'Note'),
                   ],
@@ -185,14 +204,14 @@ class MoneyFlows {
     return <MoneyOption>[
 MoneyOption(Icons.phone_iphone_rounded, 'Withdraw to M-Pesa', 'To your verified number', () => flow(
                   title: 'Withdraw to M-Pesa',
-                  fields: <FieldSpec>[_amountField, const FieldSpec('remarks', 'Note')],
+                  fields: <FieldSpec>[_kesField, const FieldSpec('remarks', 'Note')],
                   call: (v, ref) => repo.disburse(<String, dynamic>{...v, 'provider': 'MPESA', 'reference': ref}),
                   submit: 'Withdraw',
                 )),
             MoneyOption(Icons.storefront_outlined, 'Pay to Pochi la Biashara', 'To any Pochi number', () => flow(
                   title: 'Pay to Pochi la Biashara',
                   fields: <FieldSpec>[
-                    _amountField,
+                    _kesField,
                     const FieldSpec('phoneNumber', 'Pochi phone', kind: FieldKind.phone, hint: '2547...', helper: 'Leave empty to use the number saved on your wallet.'),
                     FieldSpec('remarks', 'Note'),
                     FieldSpec('occasion', 'Occasion'),

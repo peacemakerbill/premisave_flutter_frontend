@@ -254,6 +254,36 @@ final RowView _appRow = RowView(
   status: (m) => pick(m, <String>['status']),
 );
 
+/// A business found by typing part of its name or merchant number. The id goes into the form once one is picked.
+FieldSpec _businessPicker(DeveloperRepository repo, String developerId) {
+  PickOption option(Map<String, dynamic> m) {
+    final name = pick(m, <String>['name', 'tradingName'], 'Business');
+    final has = m['alreadyHas'] == true;
+    final parts = <String>[
+      if (pick(m, <String>['merchantNumber']).isNotEmpty) pick(m, <String>['merchantNumber']),
+      if (pick(m, <String>['country']).isNotEmpty) pick(m, <String>['country']),
+      if (has) 'already has it',
+    ];
+    return PickOption(pick(m, <String>['businessId']), name, description: parts.join('  '), initials: initialsOf(name));
+  }
+
+  return FieldSpec(
+    'businessId',
+    'Business',
+    kind: FieldKind.picker,
+    required: true,
+    helper: 'Type at least two letters of a business name or merchant number.',
+    searcher: (q) async => <PickOption>[for (final m in await repo.adminSearchBusinesses(q, developerId: developerId)) option(m)],
+    resolve: (id) async {
+      final found = await repo.adminSearchBusinesses(id, developerId: developerId);
+      for (final m in found) {
+        if (pick(m, <String>['businessId']) == id) return option(m);
+      }
+      return null;
+    },
+  );
+}
+
 class _DeveloperBusinesses extends ConsumerStatefulWidget {
   const _DeveloperBusinesses({required this.developerId});
 
@@ -281,7 +311,8 @@ class _DeveloperBusinessesState extends ConsumerState<_DeveloperBusinesses> {
           'Share a business',
           Icons.share_outlined,
           title: 'Share a business with this developer',
-          fields: const <FieldSpec>[FieldSpec('businessId', 'Business id', required: true)],
+          subtitle: 'Search by business name or merchant number. Pick one and it is filled in for you.',
+          fields: <FieldSpec>[_businessPicker(repo, widget.developerId)],
           run: (_, v) => repo.adminShareBusiness(widget.developerId, v['businessId'] as String),
           done: 'Business shared',
         ),
@@ -428,7 +459,7 @@ class _AdminKeys extends ConsumerWidget {
       row: RowView(
         icon: Icons.vpn_key_outlined,
         title: (m) => pick(m, <String>['label'], 'Key'),
-        subtitle: (m) => pick(m, <String>['key']),
+        subtitle: (m) => '${pick(m, <String>['key'])}  ${pick(m, <String>['secretPreview'])}',
         status: (m) => pick(m, <String>['status']),
       ),
       headerActions: <ItemAction>[

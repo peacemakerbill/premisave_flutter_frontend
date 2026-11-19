@@ -76,6 +76,9 @@ class DeveloperRepository {
 
   Future<void> suspendApp(String appId) => _api.post('/api/v1/apps/${_id(appId)}/suspend');
 
+  /// Removes an app of the signed in developer, with all its keys. This cannot be undone.
+  Future<void> deleteApp(String appId) => _api.delete('/api/v1/apps/${_id(appId)}');
+
   Future<void> reactivateApp(String appId) => _api.post('/api/v1/apps/${_id(appId)}/reactivate');
 
   Future<List<ApiKeyModel>> keys(String appId) async {
@@ -102,6 +105,10 @@ class DeveloperRepository {
   /// A new key as the service sent it, with the secret that is shown once.
   Future<Map<String, dynamic>> createKeyRaw(String appId, {String? label}) async =>
       unwrapMap(await _api.post('/api/v1/apps/${_id(appId)}/keys', body: compact(<String, dynamic>{'label': label})));
+
+  /// One key as the service holds it. The secret is never part of it, only its last four characters.
+  Future<Map<String, dynamic>> keyRaw(String appId, String key) async =>
+      unwrapMap(await _api.get('/api/v1/apps/${_id(appId)}/keys/${_id(key)}'));
 
   Future<Map<String, dynamic>> rotateKeyRaw(String appId, String key) async =>
       unwrapMap(await _api.post('/api/v1/apps/${_id(appId)}/keys/${_id(key)}/rotate'));
@@ -330,6 +337,12 @@ class DeveloperRepository {
 
   Future<List<Map<String, dynamic>>> adminDeveloperBusinesses(String id) async =>
       rows(await _api.get('$_admin/developers/${_id(id)}/businesses'), key: 'businesses');
+
+  /// Finds any business by name, trading name or merchant number. Those [developerId] already has are marked alreadyHas.
+  Future<List<Map<String, dynamic>>> adminSearchBusinesses(String q, {String? developerId}) async => rows(
+        await _api.get('$_admin/businesses', query: compact(<String, dynamic>{'q': q.trim().isEmpty ? null : q.trim(), 'developerId': developerId})),
+        key: 'businesses',
+      );
 
   Future<void> adminShareBusiness(String developerId, String businessId) =>
       _api.post('$_admin/developers/${_id(developerId)}/businesses/${_id(businessId)}');

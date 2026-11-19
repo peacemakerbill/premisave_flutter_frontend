@@ -201,7 +201,7 @@ class _DetailRow extends StatelessWidget {
 
 /// How one record reads as a row in a list.
 class RowView {
-  const RowView({required this.title, this.subtitle, this.status, this.trailing, this.image, this.icon = Icons.article_outlined});
+  const RowView({required this.title, this.subtitle, this.status, this.trailing, this.image, this.icon = Icons.article_outlined, this.leading, this.header});
 
   final String Function(Json m) title;
   final String? Function(Json m)? subtitle;
@@ -211,6 +211,12 @@ class RowView {
   /// A photo for the row. It replaces the icon in the list and tops the detail sheet.
   final String? Function(Json m)? image;
   final IconData icon;
+
+  /// Replaces the icon or photo in front of the row, for example with a person's picture.
+  final Widget Function(BuildContext context, Json m)? leading;
+
+  /// Shown above the details in the pop-up that opens from the row, for example the cards of the people involved.
+  final Widget Function(BuildContext context, Json m)? header;
 }
 
 /// Something a person can do to a record, or from the top of a list when [item] is empty.
@@ -409,7 +415,7 @@ class _ResourceSectionState extends State<ResourceSection> {
       context,
       title: widget.row.title(shown),
       subtitle: widget.row.subtitle?.call(shown),
-      child: _ItemSheet(item: shown, actions: widget.itemActions, hidden: widget.hidden, image: widget.row.image?.call(shown), onChanged: _reload),
+      child: _ItemSheet(item: shown, actions: widget.itemActions, hidden: widget.hidden, image: widget.row.image?.call(shown), header: widget.row.header, onChanged: _reload),
     );
   }
 
@@ -500,7 +506,7 @@ class _RowCard extends StatelessWidget {
       onTap: onTap,
       child: Row(
         children: <Widget>[
-          _leading(context, row.image?.call(item)),
+          row.leading != null ? row.leading!(context, item) : _leading(context, row.image?.call(item)),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -527,9 +533,10 @@ class _RowCard extends StatelessWidget {
 }
 
 class _ItemSheet extends StatelessWidget {
-  const _ItemSheet({required this.item, required this.actions, required this.hidden, required this.onChanged, this.image});
+  const _ItemSheet({required this.item, required this.actions, required this.hidden, required this.onChanged, this.image, this.header});
 
   final String? image;
+  final Widget Function(BuildContext context, Json m)? header;
   final Json item;
   final List<ItemAction> actions;
   final Set<String> hidden;
@@ -550,6 +557,7 @@ class _ItemSheet extends StatelessWidget {
           ),
           const SizedBox(height: 12),
         ],
+        if (header != null) header!(context, item),
         MapDetail(item, hidden: hidden),
         const SizedBox(height: 16),
         ActionBar(

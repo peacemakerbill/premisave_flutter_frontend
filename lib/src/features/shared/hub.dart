@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/theme/brand.dart';
 import '../../core/widgets/widgets.dart';
@@ -22,11 +23,32 @@ class HubPage extends StatelessWidget {
   final List<Widget>? actions;
   final int initialIndex;
 
+  /// A link such as /finance?tab=to-resolve opens that tab. The value is a tab's name with spaces as dashes, or its number.
+  int? _wantedTab(BuildContext context) {
+    String? raw;
+    try {
+      raw = GoRouterState.of(context).uri.queryParameters['tab'];
+    } catch (_) {
+      return null;
+    }
+    if (raw == null || raw.isEmpty) return null;
+    final number = int.tryParse(raw);
+    if (number != null) return number;
+    String flat(String s) => s.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+    final want = flat(raw);
+    for (var i = 0; i < tabs.length; i++) {
+      if (flat(tabs[i].label) == want) return i;
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final wanted = _wantedTab(context);
     return DefaultTabController(
+      key: ValueKey<String>('tabs-${wanted ?? 'default'}'),
       length: tabs.length,
-      initialIndex: initialIndex.clamp(0, tabs.length - 1),
+      initialIndex: (wanted ?? initialIndex).clamp(0, tabs.length - 1),
       child: PScaffold(
         appBar: AppBar(
           automaticallyImplyLeading: Navigator.of(context).canPop(),

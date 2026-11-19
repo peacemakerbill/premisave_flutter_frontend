@@ -52,7 +52,15 @@ class WalletTransaction {
         amount = doubleOrNull(j['amount']) ?? 0,
         currency = strOr(j['currency'], platformCurrency),
         description = str(j['description']),
-        createdAt = dateOrNull(j['createdAt']);
+        createdAt = dateOrNull(j['createdAt']),
+        direction = str(j['direction']),
+        provider = str(j['provider']),
+        counterpartyId = str(j['counterpartyId']),
+        counterpartyEmail = str(j['counterpartyEmail']),
+        counterpartyName = str(j['counterpartyName']),
+        account = str(j['account']),
+        reference = str(j['reference']),
+        failureReason = str(j['failureReason']);
 
   final String id;
   final String type;
@@ -62,8 +70,22 @@ class WalletTransaction {
   final String? description;
   final DateTime? createdAt;
 
+  /// IN when money came into the wallet, OUT when it left. Empty on older answers, which fall back to the kind.
+  final String? direction;
+  final String? provider;
+
+  /// The other side of a transfer, when this line is one.
+  final String? counterpartyId;
+  final String? counterpartyEmail;
+  final String? counterpartyName;
+
+  /// Where the money came from or went to outside the wallet, such as a phone number or a PayPal email.
+  final String? account;
+  final String? reference;
+  final String? failureReason;
+
   /// Money coming in. Everything else is money going out.
-  bool get isCredit => type == 'DEPOSIT' || type == 'REFUND';
+  bool get isCredit => direction != null ? direction == 'IN' : (type == 'DEPOSIT' || type == 'REFUND');
 }
 
 /// A statement for a date range, from POST /wallet/statement.

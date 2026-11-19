@@ -106,16 +106,18 @@ class _HomeOwnerOverviewState extends ConsumerState<HomeOwnerOverview> {
           user: user,
           message: 'Here is how your portfolio looks today, from rent to repairs.',
           metrics: <OverviewMetric>[
-            OverviewMetric('Monthly rent', overviewFigure(board, (OwnerDashboard x) => overviewShortMoney(x.monthlyRevenue)), 'from active leases'),
+            OverviewMetric('Monthly rent', overviewFigure(board, (OwnerDashboard x) => overviewShortMoney(x.monthlyRevenue)), 'from active leases', onTap: () => context.go('/property?tab=leases')),
             OverviewMetric(
               'Occupancy',
               overviewFigure(board, (OwnerDashboard x) => '${(x.occupancyRate * 100).round()}%'),
               board.hasValue ? '${d!.occupiedUnits} of ${plural(d.totalUnits, 'unit')} let' : '',
+              onTap: () => context.go('/property?tab=properties'),
             ),
             OverviewMetric(
               'Requests',
               overviewFigure(board, (OwnerDashboard x) => '${x.pendingMaintenance}'),
               board.hasValue ? (d!.pendingMaintenance == 0 ? 'Nothing waiting' : 'waiting for you') : '',
+              onTap: () => context.go('/property?tab=maintenance'),
             ),
           ],
           actions: heroActions,

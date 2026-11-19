@@ -8,11 +8,14 @@ import '../../../roles/role.dart';
 
 /// One headline figure in the hero: a label, a big value and a short caption.
 class OverviewMetric {
-  const OverviewMetric(this.label, this.value, this.caption);
+  const OverviewMetric(this.label, this.value, this.caption, {this.onTap});
 
   final String label;
   final String value;
   final String caption;
+
+  /// Opens the screen that holds the records behind this figure. A figure with no [onTap] is not tappable.
+  final VoidCallback? onTap;
 }
 
 /// The top of every role's overview: a greeting, status labels, up to four headline figures and shortcuts.
@@ -134,6 +137,20 @@ class _MetricView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final body = _body(context);
+    if (metric.onTap == null) return body;
+    return Semantics(
+      button: true,
+      label: '${metric.label}, ${metric.value}. Open the details.',
+      child: InkWell(
+        onTap: metric.onTap,
+        borderRadius: BorderRadius.circular(context.radius(10)),
+        child: Padding(padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 2), child: body),
+      ),
+    );
+  }
+
+  Widget _body(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -160,6 +177,18 @@ class _MetricView extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: TextStyle(fontSize: 12.5, height: 1.35, color: Brand.cream.op(0.8)),
         ),
+        if (metric.onTap != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Text('Details', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Brand.gold)),
+                const SizedBox(width: 2),
+                Icon(Icons.chevron_right_rounded, size: 16, color: Brand.gold),
+              ],
+            ),
+          ),
       ],
     );
   }
