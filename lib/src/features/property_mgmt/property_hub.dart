@@ -13,6 +13,7 @@ import '../shared/resource_view.dart';
 import 'owner_property_screen.dart';
 import 'property_leases.dart';
 import 'property_ops.dart';
+import 'property_pickers.dart';
 
 const Map<String, String> propertyTypes = <String, String>{
   'APARTMENT': 'Apartment',
@@ -104,12 +105,6 @@ class _OwnerPropertyHubState extends ConsumerState<OwnerPropertyHub> {
             HubTab('Leases', Icons.description_outlined, (_) => const LeasesTab()),
             HubTab('Tenants', Icons.groups_outlined, (_) => const TenantsTab()),
             HubTab('Maintenance', Icons.build_circle_outlined, (_) => const MaintenanceTab()),
-            HubTab('Work orders', Icons.engineering_outlined, (_) => const WorkOrdersTab()),
-            HubTab('Inspections', Icons.fact_check_outlined, (_) => const InspectionsTab()),
-            HubTab('Notices', Icons.campaign_outlined, (_) => const NoticesTab()),
-            HubTab('Reports', Icons.bar_chart_rounded, (_) => const ReportsTab()),
-            HubTab('Blacklist', Icons.block_outlined, (_) => const BlacklistTab()),
-            HubTab('Profile', Icons.badge_outlined, (_) => const OwnerProfileTab()),
           ],
         );
       },
@@ -127,20 +122,32 @@ class PropertiesTab extends ConsumerStatefulWidget {
 }
 
 class _PropertiesTabState extends ConsumerState<PropertiesTab> {
+  int _bump = 0;
+
   @override
   Widget build(BuildContext context) {
     final PropertyRepository repo = ref.read(propertyRepositoryProvider);
     String id(Json m) => pick(m, <String>['id', 'propertyId']);
     return ResourceSection(
+      refreshKey: _bump,
       load: () => repo.propertiesRaw(),
-      detail: (m) => repo.property(id(m)),
       emptyTitle: 'No properties yet',
       emptyMessage: 'Add a property, then add its units and lease them.',
       emptyIcon: Icons.apartment_rounded,
+      onOpen: (context, item) async {
+        await Navigator.of(context).push<void>(
+          MaterialPageRoute<void>(builder: (_) => SubPage(title: pick(item, <String>['title'], 'Property'), body: PropertyDetailPage(propertyId: id(item)))),
+        );
+        if (mounted) setState(() => _bump++);
+      },
       row: RowView(
         icon: Icons.apartment_rounded,
         title: (m) => pick(m, <String>['title'], 'Property'),
         subtitle: (m) => <String>[sentence(pick(m, <String>['propertyType'])), pick(m, <String>['address.city'])].where((e) => e.isNotEmpty).join(' in '),
+        trailing: (m) {
+          final total = m['totalUnits'];
+          return total is num && total > 0 ? '${total.toInt()} units' : null;
+        },
         status: (m) => m['isActive'] == false || m['active'] == false ? 'INACTIVE' : null,
       ),
       headerActions: <ItemAction>[
@@ -148,63 +155,92 @@ class _PropertiesTabState extends ConsumerState<PropertiesTab> {
           'Add a property',
           Icons.add_home_work_outlined,
           title: 'Add a property',
-          fields: const <FieldSpec>[
-            FieldSpec('title', 'Title', required: true),
-            FieldSpec('description', 'Description', kind: FieldKind.multiline),
-            FieldSpec('propertyType', 'Type', kind: FieldKind.select, required: true, options: propertyTypes),
-            FieldSpec('address.street', 'Street', required: true),
-            FieldSpec('address.city', 'City', required: true),
-            FieldSpec('address.state', 'State or county'),
-            FieldSpec('address.country', 'Country', required: true),
-            FieldSpec('address.postalCode', 'Postal code'),
-            FieldSpec('latitude', 'Latitude', kind: FieldKind.number),
-            FieldSpec('longitude', 'Longitude', kind: FieldKind.number),
-            FieldSpec('registrationType', 'Registration document', kind: FieldKind.select, required: true, options: registrationTypes),
-            FieldSpec('registrationNumber', 'Registration number', required: true),
-          ],
+          fields: propertyFields(),
           run: (_, v) async {
             await repo.createProperty(v);
+            if (mounted) setState(() => _bump++);
           },
           done: 'Property added',
         ),
       ],
-      itemActions: <ItemAction>[
-        ItemAction(
-          'Units',
-          Icons.meeting_room_outlined,
-          title: 'Units',
-          page: (m) => UnitsPage(propertyId: id(m)),
-        ),
-        ItemAction(
-          'Who lives here',
-          Icons.key_rounded,
-          title: 'Occupancy',
-          page: (m) => OccupancyPage.property(propertyId: id(m)),
-        ),
-        ItemAction(
-          'Edit',
-          Icons.edit_outlined,
-          title: 'Edit property',
-          initialFromItem: true,
-          fields: const <FieldSpec>[
-            FieldSpec('title', 'Title'),
-            FieldSpec('description', 'Description', kind: FieldKind.multiline),
-            FieldSpec('isActive', 'Active', kind: FieldKind.toggle),
-          ],
-          run: (m, v) async {
-            await repo.updateProperty(id(m), v);
-          },
-          done: 'Property saved',
-        ),
-        ItemAction(
-          'Delete',
-          Icons.delete_outline_rounded,
-          danger: true,
-          confirm: 'The property is deleted. A property with active leases cannot be deleted.',
-          run: (m, _) => repo.deleteProperty(id(m)),
-          done: 'Property deleted',
-        ),
-      ],
+    );
+  }
+}
+
+/// The details of a property, in the order a person fills them in. Used to add one and to edit it. The street box searches
+/// places and fills in the city, state, postal code and map position.
+List<FieldSpec> propertyFields({bool editing = false}) => <FieldSpec>[
+      const FieldSpec('title', 'Name of the property', required: true, hint: 'Sunrise Apartments'),
+      const FieldSpec('propertyType', 'Type', kind: FieldKind.select, required: true, options: propertyTypes),
+      const FieldSpec('description', 'Description', kind: FieldKind.multiline, hint: 'What the property offers, its surroundings, parking and so on'),
+      ...addressFields(),
+      const FieldSpec('address.landmark', 'Landmark', hint: 'Near the main market'),
+      const FieldSpec('registrationType', 'Registration document', kind: FieldKind.select, required: true, options: registrationTypes),
+      const FieldSpec('registrationNumber', 'Registration number', required: true),
+      if (editing) const FieldSpec('isActive', 'Active', kind: FieldKind.toggle, helper: 'An inactive property is kept but not offered for new leases.'),
+    ];
+
+/// One property on a screen of its own: its details with edit and delete, its units and who lives in them.
+class PropertyDetailPage extends ConsumerStatefulWidget {
+  const PropertyDetailPage({super.key, required this.propertyId});
+
+  final String propertyId;
+
+  @override
+  ConsumerState<PropertyDetailPage> createState() => _PropertyDetailPageState();
+}
+
+class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
+  int _bump = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final PropertyRepository repo = ref.read(propertyRepositoryProvider);
+    final id = widget.propertyId;
+    return DefaultTabController(
+      length: 3,
+      child: Column(
+        children: <Widget>[
+          const TabBar(tabs: <Tab>[Tab(text: 'Details'), Tab(text: 'Units'), Tab(text: 'Occupants')]),
+          Expanded(
+            child: TabBarView(
+              children: <Widget>[
+                ResourceView(
+                  refreshKey: _bump,
+                  load: () => repo.property(id),
+                  actions: <ItemAction>[
+                    ItemAction(
+                      'Edit',
+                      Icons.edit_outlined,
+                      title: 'Edit property',
+                      initialFromItem: true,
+                      fields: propertyFields(editing: true),
+                      run: (_, v) async {
+                        await repo.updateProperty(id, v);
+                        if (mounted) setState(() => _bump++);
+                      },
+                      done: 'Property saved',
+                    ),
+                    ItemAction(
+                      'Delete',
+                      Icons.delete_outline_rounded,
+                      danger: true,
+                      confirm: 'The property is deleted. A property with active leases cannot be deleted.',
+                      run: (_, __) async {
+                        await repo.deleteProperty(id);
+                        if (context.mounted) Navigator.of(context).pop();
+                      },
+                      done: 'Property deleted',
+                    ),
+                  ],
+                ),
+                UnitsPage(propertyId: id),
+                OccupancyPage.property(propertyId: id),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -337,7 +373,7 @@ class _UnitDetailPageState extends ConsumerState<UnitDetailPage> {
                   emptyTitle: 'No maintenance requests',
                   emptyIcon: Icons.build_circle_outlined,
                   row: _maintenanceRow,
-                  itemActions: maintenanceActions(repo),
+                  itemActions: maintenanceActions(repo, ref.read(profileRepositoryProvider)),
                 ),
                 UnitInspectionsTab(unitId: id),
               ],
@@ -380,7 +416,7 @@ class OccupancyPage extends ConsumerWidget {
             Icons.login_rounded,
             title: 'Record a move in',
             subtitle: 'For a tenant who has no lease on this unit.',
-            fields: const <FieldSpec>[FieldSpec('tenantId', 'Tenant id', required: true)],
+            fields: <FieldSpec>[tenantPicker(repo, required: true)],
             run: (_, v) async {
               await repo.moveInDirect(unit, v['tenantId'] as String);
             },
@@ -390,7 +426,22 @@ class OccupancyPage extends ConsumerWidget {
             'Move out',
             Icons.logout_rounded,
             title: 'Record a move out',
-            fields: const <FieldSpec>[FieldSpec('tenantId', 'Tenant id', required: true)],
+            fields: <FieldSpec>[
+              FieldSpec(
+                'tenantId',
+                'Who is moving out',
+                kind: FieldKind.picker,
+                required: true,
+                loader: () async {
+                  final history = await repo.unitOccupancyHistory(unit);
+                  return <PickOption>[
+                    for (final h in history)
+                      if (h['moveOutDate'] == null && pick(h, <String>['tenantId']).isNotEmpty)
+                        PickOption(pick(h, <String>['tenantId']), pick(h, <String>['tenant.fullName'], 'Tenant'), description: pick(h, <String>['tenant.phoneNumber'])),
+                  ];
+                },
+              ),
+            ],
             run: (_, v) async {
               await repo.moveOutDirect(unit, v['tenantId'] as String);
             },
@@ -405,6 +456,9 @@ class OccupancyPage extends ConsumerWidget {
 final RowView _maintenanceRow = RowView(
   icon: Icons.build_circle_outlined,
   title: (m) => pick(m, <String>['title'], 'Request'),
-  subtitle: (m) => pick(m, <String>['description']),
+  subtitle: (m) => <String>[
+    pick(m, <String>['rentalUnit.unitNumber']).isEmpty ? '' : 'Unit ${pick(m, <String>['rentalUnit.unitNumber'])}',
+    pick(m, <String>['description']),
+  ].where((e) => e.isNotEmpty).join(', '),
   status: (m) => pick(m, <String>['status']),
 );

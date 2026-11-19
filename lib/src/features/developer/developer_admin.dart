@@ -130,7 +130,7 @@ class _DevelopersState extends ConsumerState<_Developers> {
                   FieldSpec('firstName', 'First name', required: true, maxLength: 60),
                   FieldSpec('middleName', 'Middle name', maxLength: 60),
                   FieldSpec('lastName', 'Last name', required: true, maxLength: 60),
-                  FieldSpec('country', 'Country code', maxLength: 2),
+                  FieldSpec('country', 'Country', kind: FieldKind.countryCode),
                   FieldSpec('phoneNumber', 'Phone number', kind: FieldKind.phone, maxLength: 24),
                   FieldSpec('companyName', 'Company', maxLength: 160),
                   FieldSpec('role', 'Role', kind: FieldKind.select, options: <String, String>{'DEVELOPER': 'Developer', 'ADMIN': 'Administrator'}),
@@ -153,7 +153,7 @@ class _DevelopersState extends ConsumerState<_Developers> {
                   FieldSpec('middleName', 'Middle name', maxLength: 60, clearable: true),
                   FieldSpec('lastName', 'Last name', maxLength: 60),
                   FieldSpec('username', 'Username', maxLength: 40),
-                  FieldSpec('country', 'Country code', maxLength: 2),
+                  FieldSpec('country', 'Country', kind: FieldKind.countryCode),
                   FieldSpec('phoneNumber', 'Phone number', kind: FieldKind.phone, maxLength: 24, clearable: true),
                   FieldSpec('companyName', 'Company', maxLength: 160, clearable: true),
                   FieldSpec('city', 'City', maxLength: 80, clearable: true),
@@ -379,7 +379,20 @@ class _AllAppsState extends ConsumerState<_AllApps> {
                 'Change owner',
                 Icons.swap_horiz_rounded,
                 title: 'Change owner',
-                fields: const <FieldSpec>[FieldSpec('developerId', 'New owner developer id', required: true)],
+                fields: <FieldSpec>[
+                  FieldSpec(
+                    'developerId',
+                    'New owner',
+                    kind: FieldKind.picker,
+                    required: true,
+                    helper: 'Search developers by name or email.',
+                    searcher: (q) async => <PickOption>[
+                      for (final d in await repo.adminDevelopers(q: q))
+                        if (pick(d, <String>['id', 'developerId']).isNotEmpty)
+                          PickOption(pick(d, <String>['id', 'developerId']), pick(d, <String>['fullName', 'email'], 'Developer'), description: pick(d, <String>['email'])),
+                    ],
+                  ),
+                ],
                 run: (m, v) => repo.adminSetAppOwner(id(m), v['developerId'] as String),
                 done: 'Owner changed',
               ),

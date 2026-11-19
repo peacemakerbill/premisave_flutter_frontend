@@ -3,10 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/widgets.dart';
+import '../../data/repositories/profile_repository.dart';
 import '../../data/repositories/property_repository.dart';
 import '../../state/providers.dart';
+import '../shared/pickers.dart';
 import '../shared/resource_form.dart';
 import '../shared/resource_view.dart';
+import 'property_pickers.dart';
 
 const Map<String, String> noticeTypes = <String, String>{
   'RENT_REMINDER': 'Rent reminder',
@@ -69,7 +72,7 @@ class _StatusTabsState extends State<StatusTabs> {
 
 // -------------------------------------------------------------- maintenance
 
-List<ItemAction> maintenanceActions(PropertyRepository repo) {
+List<ItemAction> maintenanceActions(PropertyRepository repo, ProfileRepository profiles) {
   String id(Json m) => pick(m, <String>['id', 'maintenanceRequestId']);
   return <ItemAction>[
     ItemAction(
@@ -97,10 +100,10 @@ List<ItemAction> maintenanceActions(PropertyRepository repo) {
       Icons.engineering_outlined,
       title: 'Assign a work order',
       visible: (m) => <String>{'PENDING', 'IN_PROGRESS'}.contains(pick(m, <String>['status'])),
-      fields: const <FieldSpec>[
-        FieldSpec('assignedTo', 'Assigned to (user id)', required: true),
-        FieldSpec('title', 'Title', required: true),
-        FieldSpec('description', 'Instructions', kind: FieldKind.multiline),
+      fields: <FieldSpec>[
+        userPicker(profiles, key: 'assignedTo', label: 'Assign to', required: true, helper: 'The technician or vendor, found by name, username or email.'),
+        const FieldSpec('title', 'Title', required: true),
+        const FieldSpec('description', 'Instructions', kind: FieldKind.multiline),
       ],
       run: (m, v) async {
         await repo.createWorkOrder(<String, dynamic>{...v, 'maintenanceRequestId': id(m)});
@@ -183,6 +186,7 @@ class MaintenanceTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final repo = ref.read(propertyRepositoryProvider);
+    final profiles = ref.read(profileRepositoryProvider);
     return StatusTabs(
       statuses: const <String, String>{'PENDING': 'Pending', 'IN_PROGRESS': 'In progress', 'COMPLETED': 'Completed', 'CANCELLED': 'Cancelled'},
       builder: (status) => ResourceSection(
@@ -202,10 +206,10 @@ class MaintenanceTab extends ConsumerWidget {
             'Log a request',
             Icons.add_rounded,
             title: 'Log a maintenance request',
-            fields: const <FieldSpec>[
-              FieldSpec('rentalUnitId', 'Unit id', required: true),
-              FieldSpec('title', 'Title', required: true),
-              FieldSpec('description', 'Description', kind: FieldKind.multiline),
+            fields: <FieldSpec>[
+              unitPicker(repo, required: true),
+              const FieldSpec('title', 'Title', required: true, hint: 'Leaking tap in the kitchen'),
+              const FieldSpec('description', 'Description', kind: FieldKind.multiline),
             ],
             run: (_, v) async {
               await repo.createMaintenance(v);
@@ -213,7 +217,7 @@ class MaintenanceTab extends ConsumerWidget {
             done: 'Request logged',
           ),
         ],
-        itemActions: maintenanceActions(repo),
+        itemActions: maintenanceActions(repo, profiles),
       ),
     );
   }
@@ -301,7 +305,7 @@ class InspectionsTab extends ConsumerWidget {
         load: () => repo.myInspections(status),
         detail: (m) => repo.inspection(pick(m, <String>['id'])),
         emptyTitle: 'No inspections here',
-        emptyMessage: 'Schedule an inspection from a unit, or here with the unit id.',
+        emptyMessage: 'Schedule an inspection of a unit here, or from the unit itself.',
         emptyIcon: Icons.fact_check_outlined,
         row: _inspectionRow,
         headerActions: <ItemAction>[
@@ -309,7 +313,7 @@ class InspectionsTab extends ConsumerWidget {
             'Schedule an inspection',
             Icons.add_rounded,
             title: 'Schedule an inspection',
-            fields: const <FieldSpec>[FieldSpec('rentalUnitId', 'Unit id', required: true), ..._inspectionFields],
+            fields: <FieldSpec>[unitPicker(repo, required: true), ..._inspectionFields],
             run: (_, v) async {
               await repo.createInspection(v);
             },
@@ -365,6 +369,7 @@ class NoticesTab extends ConsumerStatefulWidget {
 
 class _NoticesTabState extends ConsumerState<NoticesTab> {
   Map<String, String> _leases = const <String, String>{};
+  Map<String, String> _units = const <String, String>{};
   int _bump = 0;
 
   @override
@@ -386,7 +391,19 @@ class _NoticesTabState extends ConsumerState<NoticesTab> {
       }
       if (mounted) setState(() => _leases = options);
     } catch (_) {
-      // The form still works with a unit id when the leases cannot be loaded.
+      // The form falls back to choosing units when the leases cannot be loaded.
+    }
+    try {
+      final units = await ref.read(propertyRepositoryProvider).allUnitsRaw();
+      final options = <String, String>{};
+      for (final u in units) {
+        final id = pick(u, <String>['id', 'rentalUnitId']);
+        if (id.isEmpty) continue;
+        options[id] = 'Unit ${pick(u, <String>['unitNumber'], '-')}, ${pick(u, <String>['propertyTitle'], 'Property')}';
+      }
+      if (mounted) setState(() => _units = options);
+    } catch (_) {
+      // Without units the form simply has nobody to choose.
     }
   }
 
@@ -417,15 +434,11 @@ class _NoticesTabState extends ConsumerState<NoticesTab> {
             const FieldSpec('title', 'Title', required: true),
             const FieldSpec('content', 'Message', kind: FieldKind.multiline, required: true),
             if (_leases.isNotEmpty) FieldSpec('leaseIds', 'Tenants (by lease)', kind: FieldKind.multiSelect, required: true, options: _leases),
-            if (_leases.isEmpty) const FieldSpec('rentalUnitIds', 'Unit ids, separated by commas', required: true),
+            if (_leases.isEmpty) FieldSpec('rentalUnitIds', 'Units', kind: FieldKind.multiSelect, required: true, options: _units, helper: 'Everyone in the chosen units is notified.'),
             const FieldSpec('scheduledAt', 'Send at', kind: FieldKind.dateTime, helper: 'Leave empty to send now.'),
           ],
           run: (_, v) async {
             final body = <String, dynamic>{...v, 'channels': <String>['EMAIL']};
-            final units = body['rentalUnitIds'];
-            if (units is String) {
-              body['rentalUnitIds'] = units.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
-            }
             await repo.sendBulkNotice(body);
             if (mounted) setState(() => _bump++);
           },
@@ -566,8 +579,8 @@ class _BlacklistTabState extends ConsumerState<BlacklistTab> {
           'Blacklist a tenant',
           Icons.block_outlined,
           title: 'Blacklist a tenant',
-          fields: const <FieldSpec>[
-            FieldSpec('tenantId', 'Tenant id', required: true),
+          fields: <FieldSpec>[
+            tenantPicker(repo, required: true),
             FieldSpec('reason', 'Reason', kind: FieldKind.multiline, required: true),
             FieldSpec('notes', 'Notes', kind: FieldKind.multiline),
           ],
@@ -615,15 +628,11 @@ class _OwnerProfileTabState extends ConsumerState<OwnerProfileTab> {
           Icons.edit_outlined,
           title: 'Edit owner profile',
           initialFromItem: true,
-          fields: const <FieldSpec>[
-            FieldSpec('fullName', 'Full name'),
-            FieldSpec('phoneNumber', 'Phone', kind: FieldKind.phone),
-            FieldSpec('email', 'Email', kind: FieldKind.email),
-            FieldSpec('address.street', 'Street'),
-            FieldSpec('address.city', 'City'),
-            FieldSpec('address.state', 'State or county'),
-            FieldSpec('address.country', 'Country'),
-            FieldSpec('address.postalCode', 'Postal code'),
+          fields: <FieldSpec>[
+            const FieldSpec('fullName', 'Full name'),
+            const FieldSpec('phoneNumber', 'Phone', kind: FieldKind.phone),
+            const FieldSpec('email', 'Email', kind: FieldKind.email),
+            ...addressFields(required: false, coordinates: false),
           ],
           run: (m, v) async {
             await repo.updateOwner(pick(m, <String>['id']), v);

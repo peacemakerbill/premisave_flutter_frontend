@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/files/file_chooser.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/theme/brand.dart';
+import '../../core/utils/currencies.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/widgets.dart';
 import '../../data/models/json_utils.dart';
@@ -69,11 +70,11 @@ class DeveloperBusinessesTab extends ConsumerWidget {
           Icons.add_business_outlined,
           title: 'Add a business',
           subtitle: 'Its application is started for you. Complete it from the business page.',
-          fields: const <FieldSpec>[
+          fields: <FieldSpec>[
             FieldSpec('name', 'Business name', required: true, maxLength: 160),
             FieldSpec('tradingName', 'Trading name', maxLength: 160),
-            FieldSpec('country', 'Country code', required: true, maxLength: 2, hint: 'KE'),
-            FieldSpec('currency', 'Currency code', maxLength: 3, hint: 'KES'),
+            FieldSpec('country', 'Country', kind: FieldKind.countryCode, required: true),
+            FieldSpec('currency', 'Currency', kind: FieldKind.select, options: currencyOptions),
             FieldSpec('paymentMethods', 'Payment methods', kind: FieldKind.multiSelect, options: _methods),
             FieldSpec('contactEmail', 'Contact email', kind: FieldKind.email),
             FieldSpec('contactPhone', 'Contact phone', kind: FieldKind.phone, maxLength: 20),
@@ -195,9 +196,15 @@ class _DeveloperBusinessPageState extends ConsumerState<DeveloperBusinessPage> {
           FieldSpec('tradingName', 'Trading name', maxLength: 160),
           FieldSpec('registrationNumber', 'Registration number', maxLength: 60),
           FieldSpec('taxPin', 'Tax PIN', maxLength: 30),
-          FieldSpec('country', 'Country code', maxLength: 2),
+          FieldSpec('country', 'Country', kind: FieldKind.countryCode),
+          FieldSpec(
+            'physicalAddress',
+            'Physical address',
+            kind: FieldKind.address,
+            countryKey: 'country',
+            fills: <String, String>{'street': 'physicalAddress', 'city': 'city'},
+          ),
           FieldSpec('city', 'City', maxLength: 80),
-          FieldSpec('physicalAddress', 'Physical address', maxLength: 300),
           FieldSpec('website', 'Website', maxLength: 200),
           FieldSpec('industry', 'Industry', maxLength: 120),
           FieldSpec('businessDescription', 'What the business does', kind: FieldKind.multiline, maxLength: 2000),

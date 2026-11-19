@@ -9,6 +9,7 @@ import '../shared/ask_then_show.dart';
 import '../shared/resource_form.dart';
 import '../shared/resource_view.dart';
 import 'property_ops.dart';
+import 'property_pickers.dart';
 
 double _amount(Object? v) => v is num ? v.toDouble() : double.tryParse('$v') ?? 0;
 
@@ -57,14 +58,14 @@ class _LeasesTabState extends ConsumerState<LeasesTab> {
           'Create a lease',
           Icons.add_rounded,
           title: 'Create a lease',
-          fields: const <FieldSpec>[
-            FieldSpec('tenantId', 'Tenant id', required: true, helper: 'The tenant registers from the Tenancy menu. Copy their id from their profile.'),
-            FieldSpec('rentalUnitId', 'Unit id', helper: 'Leave empty to lease a whole property.'),
-            FieldSpec('propertyId', 'Property id', helper: 'Only for a whole property.'),
-            FieldSpec('startDate', 'Starts', kind: FieldKind.date, required: true),
-            FieldSpec('endDate', 'Ends', kind: FieldKind.date, required: true),
-            FieldSpec('monthlyRent', 'Rent per month (USD)', kind: FieldKind.number, required: true),
-            FieldSpec('securityDeposit', 'Security deposit (USD)', kind: FieldKind.number),
+          fields: <FieldSpec>[
+            tenantPicker(repo, required: true, helper: 'Search by name, email or phone. A tenant who is not listed can be registered from the Tenants tab.'),
+            unitPicker(repo, helper: 'Leave empty to lease a whole property.'),
+            propertyPicker(repo, helper: 'Only when leasing a whole property.'),
+            const FieldSpec('startDate', 'Starts', kind: FieldKind.date, required: true),
+            const FieldSpec('endDate', 'Ends', kind: FieldKind.date, required: true),
+            const FieldSpec('monthlyRent', 'Rent per month (USD)', kind: FieldKind.number, required: true),
+            const FieldSpec('securityDeposit', 'Security deposit (USD)', kind: FieldKind.number),
           ],
           run: (_, v) async {
             await repo.createLease(v);
@@ -332,12 +333,14 @@ class _TenantsTabState extends ConsumerState<TenantsTab> {
         subtitle: (m) => <String>[pick(m, <String>['phoneNumber']), pick(m, <String>['email'])].where((e) => e.isNotEmpty).join('  '),
       ),
       headerActions: <ItemAction>[
+        ItemAction('Blacklist', Icons.block_outlined, title: 'Blacklist', page: (_) => const BlacklistTab()),
         ItemAction(
-          'Find a tenant by id',
+          'Find a tenant',
           Icons.search_rounded,
           title: 'Find a tenant',
           page: (_) => AskThenShow(
-            fields: const <FieldSpec>[FieldSpec('id', 'Tenant id', required: true)],
+            intro: 'Search by name, email or phone number.',
+            fields: <FieldSpec>[tenantPicker(repo, key: 'id', required: true)],
             submitLabel: 'Find',
             fetch: (v) => repo.tenant(v['id'] as String),
           ),
@@ -346,14 +349,12 @@ class _TenantsTabState extends ConsumerState<TenantsTab> {
           'Register a tenant',
           Icons.person_add_alt_1_outlined,
           title: 'Register a tenant',
-          fields: const <FieldSpec>[
-            FieldSpec('fullName', 'Full name', required: true),
-            FieldSpec('phoneNumber', 'Phone', kind: FieldKind.phone, required: true),
-            FieldSpec('email', 'Email', kind: FieldKind.email, required: true),
-            FieldSpec('idNumber', 'Id number'),
-            FieldSpec('currentAddress.street', 'Street'),
-            FieldSpec('currentAddress.city', 'City'),
-            FieldSpec('currentAddress.country', 'Country'),
+          fields: <FieldSpec>[
+            const FieldSpec('fullName', 'Full name', required: true),
+            const FieldSpec('phoneNumber', 'Phone', kind: FieldKind.phone, required: true),
+            const FieldSpec('email', 'Email', kind: FieldKind.email, required: true),
+            const FieldSpec('idNumber', 'Id number'),
+            ...addressFields(prefix: 'currentAddress', required: false, coordinates: false),
           ],
           run: (_, v) async {
             await repo.registerTenant(v);
@@ -435,7 +436,7 @@ class _UnitRentTabState extends ConsumerState<UnitRentTab> {
           Icons.person_search_outlined,
           title: 'Rent due for a tenant',
           page: (_) => AskThenShow(
-            fields: const <FieldSpec>[FieldSpec('tenantId', 'Tenant id', required: true)],
+            fields: <FieldSpec>[tenantPicker(repo, required: true)],
             submitLabel: 'Show',
             fetch: (v) => repo.unitRentDue(unit, tenantId: v['tenantId'] as String),
           ),
@@ -445,7 +446,7 @@ class _UnitRentTabState extends ConsumerState<UnitRentTab> {
           Icons.account_balance_wallet_outlined,
           title: 'Balance for a tenant',
           page: (_) => AskThenShow(
-            fields: const <FieldSpec>[FieldSpec('tenantId', 'Tenant id', required: true)],
+            fields: <FieldSpec>[tenantPicker(repo, required: true)],
             submitLabel: 'Show',
             fetch: (v) => repo.unitBalanceForTenant(unit, v['tenantId'] as String),
           ),
@@ -455,7 +456,7 @@ class _UnitRentTabState extends ConsumerState<UnitRentTab> {
           Icons.lock_outline_rounded,
           title: 'Security deposit',
           page: (_) => AskThenShow(
-            fields: const <FieldSpec>[FieldSpec('tenantId', 'Tenant id', required: true)],
+            fields: <FieldSpec>[tenantPicker(repo, required: true)],
             submitLabel: 'Show',
             fetch: (v) => repo.depositForUnitTenant(unit, v['tenantId'] as String),
           ),
@@ -464,8 +465,8 @@ class _UnitRentTabState extends ConsumerState<UnitRentTab> {
           'Hold a deposit',
           Icons.lock_clock_outlined,
           title: 'Hold a security deposit',
-          fields: const <FieldSpec>[
-            FieldSpec('tenantId', 'Tenant id', required: true),
+          fields: <FieldSpec>[
+            tenantPicker(repo, required: true),
             FieldSpec('amount', 'Amount (USD)', kind: FieldKind.number, required: true),
           ],
           run: (_, v) async {
@@ -478,8 +479,8 @@ class _UnitRentTabState extends ConsumerState<UnitRentTab> {
           Icons.help_outline_rounded,
           title: 'Check a refund',
           page: (_) => AskThenShow(
-            fields: const <FieldSpec>[
-              FieldSpec('tenantId', 'Tenant id', required: true),
+            fields: <FieldSpec>[
+              tenantPicker(repo, required: true),
               FieldSpec('amount', 'Amount (USD)', kind: FieldKind.number, required: true),
             ],
             submitLabel: 'Check',
@@ -490,8 +491,8 @@ class _UnitRentTabState extends ConsumerState<UnitRentTab> {
           'Refund a deposit',
           Icons.undo_rounded,
           title: 'Refund a deposit',
-          fields: const <FieldSpec>[
-            FieldSpec('tenantId', 'Tenant id', required: true),
+          fields: <FieldSpec>[
+            tenantPicker(repo, required: true),
             FieldSpec('amount', 'Amount (USD)', kind: FieldKind.number, required: true),
             FieldSpec('reason', 'Reason', kind: FieldKind.multiline),
           ],
@@ -505,7 +506,7 @@ class _UnitRentTabState extends ConsumerState<UnitRentTab> {
           Icons.campaign_outlined,
           title: 'Send a notice',
           fields: const <FieldSpec>[
-            FieldSpec('tenantId', 'Tenant id', helper: 'Leave empty to notify everyone in the unit.'),
+            tenantPicker(repo, helper: 'Leave empty to notify everyone in the unit.'),
             FieldSpec('noticeType', 'Kind of notice', kind: FieldKind.select, required: true, options: noticeTypes),
             FieldSpec('title', 'Title', required: true),
             FieldSpec('content', 'Message', kind: FieldKind.multiline, required: true),

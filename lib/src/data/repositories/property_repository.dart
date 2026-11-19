@@ -124,6 +124,25 @@ class PropertyRepository {
 
   Future<Map<String, dynamic>> property(String id) => _one(_api.get('/api/v1/properties/${_id(id)}'));
 
+  /// Every unit of every property the owner has, each carrying its property's title as `propertyTitle`, so a unit can be
+  /// chosen from one list without knowing which property it is in.
+  Future<List<Map<String, dynamic>>> allUnitsRaw() async {
+    final properties = await propertiesRaw();
+    final groups = await Future.wait(properties.map((p) async {
+      final id = '${p['id'] ?? p['propertyId'] ?? ''}';
+      if (id.isEmpty) return <Map<String, dynamic>>[];
+      try {
+        final units = await unitsRaw(id);
+        return <Map<String, dynamic>>[
+          for (final u in units) <String, dynamic>{...u, 'propertyTitle': p['title'], 'propertyId': u['propertyId'] ?? id},
+        ];
+      } catch (_) {
+        return <Map<String, dynamic>>[];
+      }
+    }));
+    return <Map<String, dynamic>>[for (final g in groups) ...g];
+  }
+
   Future<Map<String, dynamic>> createProperty(Map<String, dynamic> request) => _one(_api.post('/api/v1/properties', body: request));
 
   Future<Map<String, dynamic>> updateProperty(String id, Map<String, dynamic> changes) => _one(_api.patch('/api/v1/properties/${_id(id)}', body: changes));
@@ -146,6 +165,9 @@ class PropertyRepository {
   // ------------------------------------------------------------------ tenants
 
   Future<Map<String, dynamic>> tenantProfile() => _one(_api.get('/api/v1/tenants/me'));
+
+  /// Tenants matching part of a name, email or phone number. Contact details come back partly hidden.
+  Future<List<Map<String, dynamic>>> searchTenants(String query) => _list('/api/v1/tenants/search', query: <String, dynamic>{'q': query});
 
   Future<Map<String, dynamic>> tenant(String id) => _one(_api.get('/api/v1/tenants/${_id(id)}'));
 

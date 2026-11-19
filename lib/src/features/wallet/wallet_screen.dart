@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/theme/brand.dart';
 import '../../core/utils/formatters.dart';
+import '../../core/utils/masking.dart';
 import '../../core/utils/money.dart';
 import '../../core/widgets/widgets.dart';
 import '../../data/models/wallet_models.dart';
@@ -93,6 +94,11 @@ class _WalletBody extends ConsumerWidget {
                 formatMoney(wallet.balance, wallet.currency),
                 style: context.display(size: 34, weight: FontWeight.w800, spacing: -1, color: Brand.cream),
               ),
+              if (wallet.defaultCurrencyBalance != null && wallet.defaultCurrency != wallet.currency)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text('About ${formatMoney(wallet.defaultCurrencyBalance, wallet.defaultCurrency)}', style: const TextStyle(fontSize: 13.5)),
+                ),
               const SizedBox(height: 14),
               InkWell(
                 onTap: () => copyText(context, wallet.accountNumber, done: 'Wallet email copied'),
@@ -115,36 +121,30 @@ class _WalletBody extends ConsumerWidget {
             child: InlineMessage('This wallet is frozen, so money cannot be moved. Contact support to have it unlocked.', kind: MessageKind.warning),
           ),
         const SizedBox(height: 16),
-        Row(
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
           children: <Widget>[
-            Expanded(
-              child: PButton(
-                label: 'Deposit',
-                icon: Icons.add_rounded,
-                onPressed: wallet.frozen
-                    ? null
-                    : () => showMoneyChooser(context, title: 'Deposit', subtitle: 'Choose how you want to add money.', options: MoneyFlows(context, ref).deposits()),
-              ),
+            PButton(
+              label: 'Deposit',
+              icon: Icons.add_rounded,
+              onPressed: wallet.frozen
+                  ? null
+                  : () => showMoneyChooser(context, title: 'Deposit', subtitle: 'Choose how you want to add money.', options: MoneyFlows(context, ref).deposits()),
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: PButton(
-                label: 'Send',
-                icon: Icons.north_east_rounded,
-                kind: PButtonKind.outline,
-                onPressed: wallet.frozen ? null : () => MoneyFlows(context, ref).sends().first.start(),
-              ),
+            PButton(
+              label: 'Send',
+              icon: Icons.north_east_rounded,
+              kind: PButtonKind.outline,
+              onPressed: wallet.frozen ? null : () => MoneyFlows(context, ref).sends().first.start(),
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: PButton(
-                label: 'Withdraw',
-                icon: Icons.south_west_rounded,
-                kind: PButtonKind.outline,
-                onPressed: wallet.frozen
-                    ? null
-                    : () => showMoneyChooser(context, title: 'Withdraw', subtitle: 'Choose where the money goes.', options: MoneyFlows(context, ref).withdrawals()),
-              ),
+            PButton(
+              label: 'Withdraw',
+              icon: Icons.south_west_rounded,
+              kind: PButtonKind.outline,
+              onPressed: wallet.frozen
+                  ? null
+                  : () => showMoneyChooser(context, title: 'Withdraw', subtitle: 'Choose where the money goes.', options: MoneyFlows(context, ref).withdrawals()),
             ),
           ],
         ),
@@ -154,11 +154,11 @@ class _WalletBody extends ConsumerWidget {
             MenuTile(
               icon: Icons.phone_iphone_rounded,
               title: 'M-Pesa',
-              subtitle: wallet.mpesaPhoneNumber ?? 'No number on the wallet yet',
+              subtitle: wallet.mpesaPhoneNumber == null ? 'No number on the wallet yet' : maskPhone(wallet.mpesaPhoneNumber),
               trailing: const SizedBox.shrink(),
             ),
             if (wallet.pochiPhoneNumber != null)
-              MenuTile(icon: Icons.storefront_outlined, title: 'Pochi la Biashara', subtitle: wallet.pochiPhoneNumber, trailing: const SizedBox.shrink()),
+              MenuTile(icon: Icons.storefront_outlined, title: 'Pochi la Biashara', subtitle: maskPhone(wallet.pochiPhoneNumber), trailing: const SizedBox.shrink()),
             MenuTile(
               icon: Icons.credit_card_rounded,
               title: 'Card',
@@ -168,7 +168,7 @@ class _WalletBody extends ConsumerWidget {
             MenuTile(
               icon: Icons.account_balance_outlined,
               title: 'PayPal',
-              subtitle: wallet.paypalEmail ?? 'Not connected',
+              subtitle: wallet.paypalEmail == null ? 'Not connected' : maskEmail(wallet.paypalEmail),
               trailing: const SizedBox.shrink(),
             ),
           ],

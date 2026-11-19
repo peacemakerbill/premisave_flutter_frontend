@@ -5,11 +5,13 @@ import 'package:go_router/go_router.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/theme/brand.dart';
 import '../../core/widgets/widgets.dart';
+import '../../data/models/country.dart';
 import '../../data/models/developer_models.dart';
 import '../../state/developer_session.dart';
 import '../../state/providers.dart';
 import '../auth/auth_scaffold.dart';
 import '../auth/social_buttons.dart';
+import '../places/country_field.dart';
 
 /// The sign in page of the developer portal: sign in, create an account, reset a forgotten password or ask for the
 /// confirmation email again. Developer accounts are separate from Premisave accounts.
@@ -30,7 +32,7 @@ class _DeveloperAuthPageState extends ConsumerState<DeveloperAuthPage> {
   final _first = TextEditingController();
   final _last = TextEditingController();
   final _company = TextEditingController();
-  final _country = TextEditingController(text: 'KE');
+  final _country = TextEditingController(text: 'Kenya');
   bool _busy = false;
   bool _agree = false;
   String? _error;
@@ -95,14 +97,15 @@ class _DeveloperAuthPageState extends ConsumerState<DeveloperAuthPage> {
     try {
       if (_tab == 1) {
         if (_first.text.trim().isEmpty || _last.text.trim().isEmpty) throw ApiException('Enter your first and last name.');
-        if (_country.text.trim().length != 2) throw ApiException('Enter the two letter country code, for example KE.');
+        final countryCode = Country.byName(_country.text.trim())?.code;
+        if (countryCode == null) throw ApiException('Choose your country from the list.');
         if (!_agree) throw ApiException('Agree to the terms to create an account.');
         final message = await ref.read(developerRepositoryProvider).signup(
               email: email,
               firstName: _first.text.trim(),
               lastName: _last.text.trim(),
               password: password,
-              country: _country.text.trim().toUpperCase(),
+              country: countryCode,
               companyName: _company.text.trim().isEmpty ? null : _company.text.trim(),
             );
         if (mounted) {
@@ -224,7 +227,7 @@ class _DeveloperAuthPageState extends ConsumerState<DeveloperAuthPage> {
               children: <Widget>[
                 Expanded(
                   flex: 3,
-                  child: PTextField(label: 'Country code', controller: _country, maxLength: 2, helper: 'Two letters, like KE.', textCapitalization: TextCapitalization.characters),
+                  child: CountryField(controller: _country),
                 ),
                 const SizedBox(width: 12),
                 Expanded(flex: 5, child: PTextField(label: 'Company', controller: _company, optional: true)),

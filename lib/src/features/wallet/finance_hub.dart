@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/utils/formatters.dart';
 import '../../core/utils/money.dart';
+import '../../data/repositories/profile_repository.dart';
 import '../../state/providers.dart';
 import '../overview/finance/finance_overview.dart';
 import '../shared/ask_then_show.dart';
 import '../shared/hub.dart';
+import '../shared/pickers.dart';
 import '../shared/resource_form.dart';
 import '../shared/resource_view.dart';
 
@@ -128,7 +130,8 @@ class _FilteredState extends State<_Filtered> {
   }
 }
 
-const FieldSpec _userFilter = FieldSpec('userId', 'User id');
+FieldSpec _userFilter(ProfileRepository profiles) =>
+    userPicker(profiles, label: 'User', helper: 'Search by name, username or email.', clearable: true);
 const Map<String, String> _statuses = <String, String>{'PENDING': 'Pending', 'SUCCESS': 'Successful', 'FAILED': 'Failed'};
 const Map<String, String> _providers = <String, String>{
   'MPESA': 'M-Pesa',
@@ -184,7 +187,7 @@ class _AdminWalletsTabState extends ConsumerState<AdminWalletsTab> {
       row: RowView(
         icon: Icons.account_balance_wallet_outlined,
         title: (m) => pick(m, <String>['accountNumber', 'email', 'userName', 'userId'], 'Wallet'),
-        subtitle: (m) => pick(m, <String>['userId']),
+        subtitle: (m) => pick(m, <String>['userName', 'fullName']),
         status: (m) => m['frozen'] == true ? 'FROZEN' : null,
         trailing: (m) => m['balance'] is num ? formatMoney(m['balance'] as num, pick(m, <String>['currency'], platformCurrency)) : null,
       ),
@@ -289,8 +292,8 @@ class AdminTransactionsTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final repo = ref.read(walletRepositoryProvider);
     return _Filtered(
-      filters: const <FieldSpec>[
-        _userFilter,
+      filters: <FieldSpec>[
+        _userFilter(ref.read(profileRepositoryProvider)),
         FieldSpec('type', 'Kind', kind: FieldKind.select, clearable: true, options: <String, String>{
           'DEPOSIT': 'Deposit',
           'WITHDRAWAL': 'Withdrawal',
@@ -315,8 +318,8 @@ class AdminDepositsTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final repo = ref.read(walletRepositoryProvider);
     return _Filtered(
-      filters: const <FieldSpec>[
-        _userFilter,
+      filters: <FieldSpec>[
+        _userFilter(ref.read(profileRepositoryProvider)),
         FieldSpec('status', 'Status', kind: FieldKind.select, clearable: true, options: _statuses),
         FieldSpec('provider', 'Provider', kind: FieldKind.select, clearable: true, options: _providers),
       ],
@@ -333,8 +336,8 @@ class AdminWithdrawalsTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final repo = ref.read(walletRepositoryProvider);
     return _Filtered(
-      filters: const <FieldSpec>[
-        _userFilter,
+      filters: <FieldSpec>[
+        _userFilter(ref.read(profileRepositoryProvider)),
         FieldSpec('status', 'Status', kind: FieldKind.select, clearable: true, options: _statuses),
         FieldSpec('provider', 'Provider', kind: FieldKind.select, clearable: true, options: _providers),
       ],
@@ -371,7 +374,7 @@ class AdminLedgerTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final repo = ref.read(walletRepositoryProvider);
     return _Filtered(
-      filters: const <FieldSpec>[_userFilter, FieldSpec('type', 'Kind')],
+      filters: <FieldSpec>[_userFilter(ref.read(profileRepositoryProvider)), const FieldSpec('type', 'Kind')],
       load: (f) => repo.financeLedger(userId: f['userId'] as String?, type: f['type'] as String?),
       row: _flowRow(Icons.menu_book_outlined),
     );
@@ -385,7 +388,7 @@ class AdminAdjustmentsTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final repo = ref.read(walletRepositoryProvider);
     return _Filtered(
-      filters: const <FieldSpec>[_userFilter],
+      filters: <FieldSpec>[_userFilter(ref.read(profileRepositoryProvider))],
       load: (f) => repo.adminAdjustments(userId: f['userId'] as String?),
       row: _flowRow(Icons.tune_rounded),
     );
@@ -394,7 +397,22 @@ class AdminAdjustmentsTab extends ConsumerWidget {
 
 // ------------------------------------------------------------ reconciliation
 
-/// Everything still pending, oldest first. Deposits and withdrawals can be approved or rejected here.
+/// How long a pending item has been waiting, in words.
+String _waiting(Object? minutes) {
+  final m = minutes is num ? minutes.toInt() : int.tryParse('$minutes') ?? 0;
+  if (m < 60) return plural(m, 'minute');
+  if (m < 60 * 48) return plural(m ~/ 60, 'hour');
+  return plural(m ~/ (60 * 24), 'day');
+}
+
+/// Where staff decide what to do with money that is stuck or did not go through. It has two lists:
+///
+/// Pending: deposits, withdrawals and M-Pesa refunds that have not been confirmed. Approving completes the payment and
+/// rejecting closes it, and both ask for confirmation first. Nothing happens automatically.
+///
+/// Failed: attempts that failed in the last 30 days. A failed attempt did not move money, so nothing here is approved. When a
+/// customer says they paid, staff check with the provider and, if the money did arrive, credit the wallet. That credit is
+/// recorded with a reason and the staff member's name, like any manual adjustment.
 class ReconciliationTab extends ConsumerStatefulWidget {
   const ReconciliationTab({super.key});
 
@@ -404,62 +422,133 @@ class ReconciliationTab extends ConsumerStatefulWidget {
 
 class _ReconciliationTabState extends ConsumerState<ReconciliationTab> {
   int _bump = 0;
+  bool _failed = false;
 
   @override
   Widget build(BuildContext context) {
     final repo = ref.read(walletRepositoryProvider);
     String id(Json m) => pick(m, <String>['id']);
     String kind(Json m) => pick(m, <String>['entityType']).toUpperCase();
+    bool isDeposit(Json m) => kind(m) == 'DEPOSIT';
+    bool isDisbursement(Json m) => kind(m) == 'DISBURSEMENT';
+    bool isReversal(Json m) => kind(m) == 'MPESA_REVERSAL';
+    bool isMpesaCheck(Json m) => kind(m).startsWith('MPESA_') && !isReversal(m);
     void changed() {
       if (mounted) setState(() => _bump++);
     }
 
-    return ResourceSection(
-      refreshKey: _bump,
-      load: repo.pendingItems,
-      intro: 'Money that is still pending. Approve it to complete it, or reject it with a reason.',
-      emptyTitle: 'Nothing to resolve',
-      emptyMessage: 'Every payment has reached a final state.',
-      emptyIcon: Icons.rule_rounded,
-      row: RowView(
-        icon: Icons.rule_rounded,
-        title: (m) => pick(m, <String>['displaySummary'], sentence(kind(m))),
-        subtitle: (m) => '${sentence(pick(m, <String>['provider']))}, pending ${pick(m, <String>['minutesPending'], '0')} minutes',
-        status: (m) => sentence(kind(m)),
-        trailing: _money,
-      ),
-      itemActions: <ItemAction>[
-        ItemAction(
-          'Approve',
-          Icons.check_circle_outline_rounded,
-          visible: (m) => kind(m).contains('DEPOSIT') || kind(m).contains('DISBURSEMENT'),
-          confirm: 'Complete this payment now.',
-          run: (m, _) async {
-            if (kind(m).contains('DEPOSIT')) {
-              await repo.approveDeposit(id(m));
-            } else {
-              await repo.approveDisbursement(id(m));
-            }
-            changed();
-          },
-          done: 'Approved',
+    return Column(
+      children: <Widget>[
+        SizedBox(
+          height: 52,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: ChoiceChip(label: const Text('Pending'), selected: !_failed, onSelected: (_) => setState(() => _failed = false)),
+              ),
+              ChoiceChip(label: const Text('Failed, last 30 days'), selected: _failed, onSelected: (_) => setState(() => _failed = true)),
+            ],
+          ),
         ),
-        ItemAction(
-          'Reject',
-          Icons.cancel_outlined,
-          danger: true,
-          title: 'Reject this payment',
-          visible: (m) => kind(m).contains('DEPOSIT') || kind(m).contains('DISBURSEMENT'),
-          fields: const <FieldSpec>[FieldSpec('reason', 'Reason', kind: FieldKind.multiline, required: true)],
-          run: (m, v) async {
-            if (kind(m).contains('DEPOSIT')) {
-              await repo.rejectDeposit(id(m), v['reason'] as String);
-            } else {
-              await repo.rejectDisbursement(id(m), v['reason'] as String);
-            }
-            changed();
-          },
-          done: 'Rejected',
+        Expanded(
+          child: ResourceSection(
+            refreshKey: '$_failed$_bump',
+            load: _failed ? () => repo.failedItems() : repo.pendingItems,
+            intro: _failed
+                ? 'These did not go through, so no money moved. If a customer says they paid, check with the provider first. If the money did arrive, credit their wallet.'
+                : 'These are not confirmed yet. Check with the provider, then approve to complete one or reject to close it. Nothing is approved on its own.',
+            emptyTitle: _failed ? 'Nothing failed' : 'Nothing to resolve',
+            emptyMessage: _failed ? 'No payment failed in the last 30 days.' : 'Every payment has reached a final state.',
+            emptyIcon: Icons.rule_rounded,
+            hidden: const <String>{'actionCode', 'resolvableViaApi', 'minutesPending', 'entityType', 'userId'},
+            row: RowView(
+              icon: _failed ? Icons.error_outline_rounded : Icons.hourglass_top_rounded,
+              title: (m) => pick(m, <String>['displaySummary'], sentence(kind(m))),
+              subtitle: (m) {
+                final who = pick(m, <String>['customer']);
+                final when = _failed ? timeAgo(DateTime.tryParse(pick(m, <String>['createdAt']))) : 'waiting ${_waiting(m['minutesPending'])}';
+                return <String>[if (who.isNotEmpty) who, when].join('\n');
+              },
+              status: (m) => _failed ? 'FAILED' : 'PENDING',
+              trailing: _money,
+            ),
+            itemActions: <ItemAction>[
+              ItemAction(
+                'Approve',
+                Icons.check_circle_outline_rounded,
+                visible: (m) => !_failed && (isDeposit(m) || isDisbursement(m) || isReversal(m)),
+                confirm: 'Approve only after you have checked with the provider that the money really moved. '
+                    'This completes the payment now and cannot be undone.',
+                run: (m, _) async {
+                  if (isDeposit(m)) {
+                    await repo.approveDeposit(id(m));
+                  } else if (isDisbursement(m)) {
+                    await repo.approveDisbursement(id(m));
+                  } else {
+                    await repo.approveReversal(id(m));
+                  }
+                  changed();
+                },
+                done: 'Approved',
+              ),
+              ItemAction(
+                'Reject',
+                Icons.cancel_outlined,
+                danger: true,
+                title: 'Reject this payment',
+                subtitle: 'The payment is closed as failed. Say why, so the customer and your team can see it.',
+                visible: (m) => !_failed && (isDeposit(m) || isDisbursement(m) || isReversal(m)),
+                fields: const <FieldSpec>[FieldSpec('reason', 'Reason', kind: FieldKind.multiline, required: true)],
+                run: (m, v) async {
+                  if (isDeposit(m)) {
+                    await repo.rejectDeposit(id(m), v['reason'] as String);
+                  } else if (isDisbursement(m)) {
+                    await repo.rejectDisbursement(id(m), v['reason'] as String);
+                  } else {
+                    await repo.rejectReversal(id(m), v['reason'] as String);
+                  }
+                  changed();
+                },
+                done: 'Rejected',
+              ),
+              ItemAction(
+                'Mark as checked',
+                Icons.done_all_rounded,
+                visible: (m) => !_failed && isMpesaCheck(m),
+                subtitle: 'This was only a check and no money was involved. It leaves the list.',
+                fields: const <FieldSpec>[FieldSpec('note', 'Note', kind: FieldKind.multiline)],
+                run: (m, v) async {
+                  await repo.closeOperation(id(m), note: (v['note'] as String?));
+                  changed();
+                },
+                done: 'Marked as checked',
+              ),
+              ItemAction(
+                'Credit the customer',
+                Icons.add_circle_outline_rounded,
+                title: 'Credit the customer',
+                subtitle: 'Only when the provider confirms the money arrived. The credit is recorded with your name and this reason.',
+                visible: (m) => _failed && (isDeposit(m) || isDisbursement(m)) && pick(m, <String>['userId']).isNotEmpty,
+                initialFromItem: true,
+                fields: const <FieldSpec>[
+                  FieldSpec('amount', 'Amount', kind: FieldKind.number, required: true),
+                  FieldSpec('reason', 'Reason', kind: FieldKind.multiline, required: true, hint: 'For example: confirmed with the provider on the day'),
+                ],
+                run: (m, v) async {
+                  await repo.creditWallet(pick(m, <String>['userId']), <String, dynamic>{
+                    'amount': _amount(v['amount']),
+                    'reason': '${v['reason']} (${pick(m, <String>['displaySummary'])}, ref ${pick(m, <String>['reference'])})',
+                    'reference': pick(m, <String>['reference']),
+                  });
+                  changed();
+                },
+                done: 'Wallet credited',
+              ),
+            ],
+          ),
         ),
       ],
     );

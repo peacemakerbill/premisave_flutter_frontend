@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart' show LaunchMode, launchUrl;
 
 import '../../core/theme/brand.dart';
 import '../../core/theme/palette.dart';
+import '../../core/utils/money.dart';
 import '../../core/widgets/widgets.dart';
 import '../../state/providers.dart';
 import '../../state/service_providers.dart';
@@ -13,7 +14,6 @@ import '../shared/service_widgets.dart';
 
 double _amount(Object? v) => v is num ? v.toDouble() : double.tryParse('$v') ?? 0;
 
-const FieldSpec _amountField = FieldSpec('amount', 'Amount', kind: FieldKind.number, required: true, helper: 'In the currency of your wallet.');
 
 /// A new key per form, so a retry after a dropped connection can never move the money twice.
 String _newReference() => 'app-${DateTime.now().microsecondsSinceEpoch}';
@@ -35,6 +35,17 @@ class MoneyFlows {
 
   final BuildContext context;
   final WidgetRef ref;
+
+  /// The currency amounts are typed in: the one the person chose in Settings, USD until they do.
+  String get _currency => ref.read(walletProvider).maybeWhen(data: (w) => w.defaultCurrency, orElse: () => platformCurrency);
+
+  FieldSpec get _amountField => FieldSpec(
+        'amount',
+        'Amount ($_currency)',
+        kind: FieldKind.number,
+        required: true,
+        helper: 'In your default currency. Change it under Settings.',
+      );
 
   void _refresh() {
     ref.invalidate(walletProvider);
@@ -107,32 +118,32 @@ class MoneyFlows {
             MoneyOption(Icons.phone_iphone_rounded, 'M-Pesa', 'A prompt comes to your phone', () => flow(
                   title: 'Deposit with M-Pesa',
                   subtitle: 'Leave the phone empty to use the number saved on your wallet.',
-                  fields: const <FieldSpec>[_amountField, FieldSpec('phoneNumber', 'M-Pesa phone', kind: FieldKind.phone, hint: '254712345678')],
+                  fields: <FieldSpec>[_amountField, const FieldSpec('phoneNumber', 'M-Pesa phone', kind: FieldKind.phone, hint: '2547...')],
                   call: (v, _) => repo.deposit(<String, dynamic>{...v, 'provider': 'MPESA'}),
                 )),
             MoneyOption(Icons.storefront_outlined, 'M-Pesa till', 'Pay from a business till with Express Checkout', () => flow(
                   title: 'Deposit from a till',
                   subtitle: 'The prompt goes to the phone registered as the till operator.',
-                  fields: const <FieldSpec>[_amountField, FieldSpec('payerTillNumber', 'Till number', required: true)],
+                  fields: <FieldSpec>[_amountField, const FieldSpec('payerTillNumber', 'Till number', required: true)],
                   call: (v, _) => repo.deposit(<String, dynamic>{...v, 'provider': 'MPESA_TILL'}),
                 )),
             MoneyOption(Icons.credit_card_rounded, 'Card', 'Charges your saved card', () => flow(
                   title: 'Deposit by card',
                   subtitle: 'Uses your default saved card. Save one under Linked accounts first.',
-                  fields: const <FieldSpec>[_amountField, FieldSpec('currency', 'Currency', hint: 'USD')],
+                  fields: <FieldSpec>[_amountField],
                   call: (v, _) => repo.deposit(<String, dynamic>{...v, 'provider': 'STRIPE'}),
                 )),
             MoneyOption(Icons.account_balance_outlined, 'PayPal', 'Approve the payment on PayPal', () => flow(
                   title: 'Deposit with PayPal',
-                  fields: const <FieldSpec>[_amountField, FieldSpec('currency', 'Currency', hint: 'USD')],
+                  fields: <FieldSpec>[_amountField],
                   call: (v, _) => repo.deposit(<String, dynamic>{...v, 'provider': 'PAYPAL'}),
                 )),
             MoneyOption(Icons.public_rounded, 'Flutterwave', 'Mobile money and cards across Africa', () => flow(
                   title: 'Deposit with Flutterwave',
-                  fields: const <FieldSpec>[
-                    _amountField,
-                    FieldSpec('currency', 'Currency', hint: 'USD'),
-                    FieldSpec('flutterwaveCountryCode', 'Country dialling code', hint: '233', helper: 'For mobile money.'),
+                  fields: <FieldSpec>[
+                    const FieldSpec('amount', 'Amount', kind: FieldKind.number, required: true, helper: 'In the money of the mobile network, shown next.'),
+                    const FieldSpec('currency', 'Network currency', required: true, hint: 'GHS', helper: 'The money the mobile network uses.'),
+                    const FieldSpec('flutterwaveCountryCode', 'Country dialling code', hint: '233', helper: 'For mobile money.'),
                     FieldSpec('flutterwaveMobileNetwork', 'Mobile network', hint: 'MTN', helper: 'For mobile money.'),
                     FieldSpec('flutterwavePaymentOptions', 'Checkout options', hint: 'card,banktransfer', helper: 'Leave empty to show every option.'),
                     FieldSpec('customerName', 'Your name'),
@@ -158,10 +169,10 @@ class MoneyFlows {
 
             MoneyOption(Icons.north_east_rounded, 'Send to another wallet', 'By the email of their wallet', () => flow(
                   title: 'Send money',
-                  fields: const <FieldSpec>[
-                    FieldSpec('recipientAccountNumber', 'Recipient wallet email', kind: FieldKind.email, required: true),
+                  fields: <FieldSpec>[
+                    const FieldSpec('recipientAccountNumber', 'Recipient wallet email', kind: FieldKind.email, required: true),
                     _amountField,
-                    FieldSpec('description', 'Note'),
+                    const FieldSpec('description', 'Note'),
                   ],
                   call: (v, ref) => repo.transferRaw(<String, dynamic>{...v, 'amount': _amount(v['amount']), 'reference': ref}),
                   submit: 'Send',
@@ -174,15 +185,15 @@ class MoneyFlows {
     return <MoneyOption>[
 MoneyOption(Icons.phone_iphone_rounded, 'Withdraw to M-Pesa', 'To your verified number', () => flow(
                   title: 'Withdraw to M-Pesa',
-                  fields: const <FieldSpec>[_amountField, FieldSpec('remarks', 'Note')],
+                  fields: <FieldSpec>[_amountField, const FieldSpec('remarks', 'Note')],
                   call: (v, ref) => repo.disburse(<String, dynamic>{...v, 'provider': 'MPESA', 'reference': ref}),
                   submit: 'Withdraw',
                 )),
             MoneyOption(Icons.storefront_outlined, 'Pay to Pochi la Biashara', 'To any Pochi number', () => flow(
                   title: 'Pay to Pochi la Biashara',
-                  fields: const <FieldSpec>[
+                  fields: <FieldSpec>[
                     _amountField,
-                    FieldSpec('phoneNumber', 'Pochi phone', kind: FieldKind.phone, hint: '254712345678', helper: 'Leave empty to use the number saved on your wallet.'),
+                    const FieldSpec('phoneNumber', 'Pochi phone', kind: FieldKind.phone, hint: '2547...', helper: 'Leave empty to use the number saved on your wallet.'),
                     FieldSpec('remarks', 'Note'),
                     FieldSpec('occasion', 'Occasion'),
                   ],
@@ -191,10 +202,9 @@ MoneyOption(Icons.phone_iphone_rounded, 'Withdraw to M-Pesa', 'To your verified 
                 )),
             MoneyOption(Icons.account_balance_outlined, 'Withdraw to PayPal', 'To a PayPal email', () => flow(
                   title: 'Withdraw to PayPal',
-                  fields: const <FieldSpec>[
+                  fields: <FieldSpec>[
                     _amountField,
-                    FieldSpec('destination', 'PayPal email', kind: FieldKind.email, required: true),
-                    FieldSpec('currency', 'Currency', hint: 'USD'),
+                    const FieldSpec('destination', 'PayPal email', kind: FieldKind.email, required: true),
                   ],
                   call: (v, ref) => repo.disburse(<String, dynamic>{...v, 'provider': 'PAYPAL', 'reference': ref}),
                   submit: 'Withdraw',
@@ -202,19 +212,19 @@ MoneyOption(Icons.phone_iphone_rounded, 'Withdraw to M-Pesa', 'To your verified 
             MoneyOption(Icons.account_balance_rounded, 'Withdraw to my bank', 'Through your linked Stripe account', () => flow(
                   title: 'Withdraw to my bank',
                   subtitle: 'Needs a bank linked under Linked accounts.',
-                  fields: const <FieldSpec>[_amountField, FieldSpec('currency', 'Currency', hint: 'USD')],
+                  fields: <FieldSpec>[_amountField],
                   call: (v, ref) => repo.disburse(<String, dynamic>{...v, 'provider': 'STRIPE', 'reference': ref}),
                   submit: 'Withdraw',
                 )),
             MoneyOption(Icons.public_rounded, 'Withdraw with Flutterwave', 'Bank or mobile money', () => flow(
                   title: 'Withdraw with Flutterwave',
-                  fields: const <FieldSpec>[
+                  fields: <FieldSpec>[
                     _amountField,
-                    FieldSpec('flutterwaveTransferType', 'To', kind: FieldKind.select, required: true, options: <String, String>{'BANK': 'A bank account', 'MOBILE_MONEY': 'A mobile money number'}),
+                    const FieldSpec('flutterwaveTransferType', 'To', kind: FieldKind.select, required: true, options: <String, String>{'BANK': 'A bank account', 'MOBILE_MONEY': 'A mobile money number'}),
                     FieldSpec('flutterwaveAccountBank', 'Bank code or network', required: true, hint: 'MTN'),
                     FieldSpec('flutterwaveAccountNumber', 'Account or phone number', required: true),
                     FieldSpec('flutterwaveBeneficiaryName', 'Account holder'),
-                    FieldSpec('currency', 'Currency', hint: 'USD'),
+                    const FieldSpec('currency', 'Payout currency', hint: 'GHS', helper: 'The money the account receives. Leave empty to send the amount above.'),
                   ],
                   call: (v, ref) => repo.disburse(<String, dynamic>{...v, 'provider': 'FLUTTERWAVE', 'reference': ref}),
                   submit: 'Withdraw',

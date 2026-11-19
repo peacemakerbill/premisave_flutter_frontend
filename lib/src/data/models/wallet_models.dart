@@ -12,6 +12,9 @@ class WalletModel {
         mpesaPhoneNumber = str(j['mpesaPhoneNumber']),
         pochiPhoneNumber = str(j['pochiPhoneNumber']),
         paypalEmail = str(j['paypalConnectedEmail'] ?? j['paypalEmail']),
+        paypalPayoutEmail = str(j['paypalEmail']),
+        defaultCurrency = strOr(j['defaultCurrency'], platformCurrency),
+        defaultCurrencyBalance = doubleOrNull(j['defaultCurrencyBalance']),
         hasSavedCard = boolOr(j['hasSavedCard']),
         cardBrand = str(j['cardBrand']),
         cardLast4 = str(j['cardLast4']);
@@ -26,6 +29,15 @@ class WalletModel {
   final String? mpesaPhoneNumber;
   final String? pochiPhoneNumber;
   final String? paypalEmail;
+
+  /// The PayPal address withdrawals are sent to, as saved under Settings.
+  final String? paypalPayoutEmail;
+
+  /// The currency the person chose to deal in. USD until they change it.
+  final String defaultCurrency;
+
+  /// The balance in [defaultCurrency] at today's rate. Null when the default is USD or no rate is known.
+  final double? defaultCurrencyBalance;
   final bool hasSavedCard;
   final String? cardBrand;
   final String? cardLast4;

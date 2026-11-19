@@ -219,11 +219,13 @@ class OwnerDashboard {
 
 class PropertyOccupancy {
   PropertyOccupancy.fromJson(Map<String, dynamic> j)
-      : title = strOr(asMap(j['property'])['title'], 'Property'),
+      : id = strOr(asMap(j['property'])['id']),
+        title = strOr(asMap(j['property'])['title'], 'Property'),
         totalUnits = intOr(j['totalUnits']),
         occupiedUnits = intOr(j['occupiedUnits']),
         occupancyRate = doubleOrNull(j['occupancyRate']) ?? 0;
 
+  final String id;
   final String title;
   final int totalUnits;
   final int occupiedUnits;

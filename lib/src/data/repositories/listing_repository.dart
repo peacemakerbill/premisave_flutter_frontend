@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 
 import '../../core/network/api_client.dart';
+import '../../core/network/api_exception.dart';
 import '../models/json_utils.dart';
 import '../models/listing_models.dart';
 import 'messenger_repository.dart' show LocalFile;
@@ -132,11 +133,30 @@ class ListingRepository {
   // ---------------------------------------------------------------- promotion
 
   /// Pays to feature a listing at the top of Explore for [days] days.
-  Future<Map<String, dynamic>> promote(String listingId, int days) async =>
-      asMap(await _api.post('/listings/promote', body: <String, dynamic>{'listingId': listingId, 'days': days}));
+  ///
+  /// [imageUrl] is one of the listing's own photos and [headline] a short line shown with the promotion. Both are optional.
+  Future<Map<String, dynamic>> promote(String listingId, int days, {String? imageUrl, String? headline}) async =>
+      _paid(asMap(await _api.post('/listings/promote', body: compact(<String, dynamic>{
+        'listingId': listingId,
+        'days': days,
+        'imageUrl': imageUrl,
+        'headline': headline,
+      }))));
+
+  /// The promotion calls answer 200 with success false when the wallet could not pay. That is an error to the person.
+  Map<String, dynamic> _paid(Map<String, dynamic> res) {
+    if (res['success'] == false) throw ApiException(strOr(res['message'], 'The payment did not go through.'));
+    return res;
+  }
+
+  /// What one day of promotion costs: {dailyRate, currency}.
+  Future<({double dailyRate, String currency})> promotionRate() async {
+    final res = asMap(await _api.get('/listings/promotions/rate'));
+    return (dailyRate: doubleOrNull(res['dailyRate']) ?? 0, currency: strOr(res['currency'], 'USD'));
+  }
 
   Future<Map<String, dynamic>> extendPromotion(String listingId, int days) async =>
-      asMap(await _api.post('/listings/${_id(listingId)}/extend', query: <String, dynamic>{'days': days}));
+      _paid(asMap(await _api.post('/listings/${_id(listingId)}/extend', query: <String, dynamic>{'days': days})));
 
   Future<List<Map<String, dynamic>>> myPromotions() async =>
       pageContent(await _api.get('/listings/promotions/my', query: <String, dynamic>{'size': 50}));
@@ -189,6 +209,12 @@ class ListingRepository {
       })));
 
   Future<Map<String, dynamic>> adminListing(String id) async => asMap(await _api.get('/admin/listings/${_id(id)}'));
+
+  /// The marketplace settings for staff: {reviewRequired}. With review off new listings are approved at once.
+  Future<Map<String, dynamic>> listingSettings() async => asMap(await _api.get('/admin/listings/settings'));
+
+  Future<Map<String, dynamic>> setListingReview(bool required) async =>
+      asMap(await _api.put('/admin/listings/settings', body: <String, dynamic>{'reviewRequired': required}));
 
   Future<String> approveListing(String id) async => _text(await _api.put('/admin/listings/${_id(id)}/approve'));
 

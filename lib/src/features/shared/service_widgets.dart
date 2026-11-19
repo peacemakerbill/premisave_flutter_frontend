@@ -18,7 +18,7 @@ Future<T?> showFormSheet<T>(
     showDragHandle: true,
     backgroundColor: context.surfaceColor,
     builder: (ctx) => Padding(
-      padding: EdgeInsets.fromLTRB(20, 0, 20, 20 + MediaQuery.of(ctx).viewInsets.bottom),
+      padding: EdgeInsets.fromLTRB(20, 14, 12, 20 + MediaQuery.of(ctx).viewInsets.bottom),
       child: SingleChildScrollView(
         child: Center(
           child: ConstrainedBox(
@@ -27,14 +27,38 @@ Future<T?> showFormSheet<T>(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                Text(title, style: ctx.display(size: 20, weight: FontWeight.w800)),
-                if (subtitle != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(subtitle, style: TextStyle(fontSize: 13.5, height: 1.4, color: ctx.mutedColor)),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Text(title, style: ctx.display(size: 19, weight: FontWeight.w800)),
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Close',
+                      visualDensity: VisualDensity.compact,
+                      onPressed: () => Navigator.of(ctx).maybePop(),
+                      icon: Icon(Icons.close_rounded, size: 21, color: ctx.mutedColor),
+                    ),
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      if (subtitle != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(subtitle, style: TextStyle(fontSize: 13.5, height: 1.4, color: ctx.mutedColor)),
+                        ),
+                      const SizedBox(height: 16),
+                      child,
+                    ],
                   ),
-                const SizedBox(height: 18),
-                child,
+                ),
               ],
             ),
           ),

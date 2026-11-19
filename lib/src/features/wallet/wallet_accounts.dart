@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart' show LaunchMode, launchUrl;
 
 import '../../core/network/api_exception.dart';
+import '../../core/utils/formatters.dart';
 import '../../core/utils/money.dart';
 import '../../state/providers.dart';
 import '../../state/service_providers.dart';
@@ -445,14 +446,14 @@ class MerchantTab extends ConsumerWidget {
               children: <Widget>[
                 ResourceSection(
                   load: repo.merchantApplications,
-                  detail: (m) => repo.merchantApplication(pick(m, <String>['id'])),
+                  detail: (m) => repo.merchantApplication(pick(m, <String>['applicationId', 'id'])),
                   intro: 'Applications to accept payments. Start one from the Developers portal.',
                   emptyTitle: 'No applications',
                   emptyIcon: Icons.storefront_outlined,
                   row: RowView(
                     icon: Icons.storefront_outlined,
-                    title: (m) => pick(m, <String>['businessName', 'tradingName', 'name', 'id'], 'Application'),
-                    subtitle: (m) => pick(m, <String>['status']),
+                    title: (m) => pick(m, <String>['businessName', 'tradingName', 'name'], 'Application'),
+                    subtitle: (m) => <String>[sentence(pick(m, <String>['status'])), pick(m, <String>['country'])].where((e) => e.isNotEmpty).join(' - '),
                     status: (m) => pick(m, <String>['status']),
                   ),
                 ),
@@ -462,8 +463,8 @@ class MerchantTab extends ConsumerWidget {
                   emptyIcon: Icons.pin_outlined,
                   row: RowView(
                     icon: Icons.pin_outlined,
-                    title: (m) => pick(m, <String>['number', 'shortcode', 'tillNumber', 'merchantNumber', 'id'], 'Number'),
-                    subtitle: (m) => pick(m, <String>['type', 'businessName', 'description']),
+                    title: (m) => pick(m, <String>['merchantNumber', 'number', 'shortcode', 'tillNumber'], 'Number'),
+                    subtitle: (m) => pick(m, <String>['businessName', 'type', 'description']),
                     status: (m) => pick(m, <String>['status']),
                   ),
                 ),

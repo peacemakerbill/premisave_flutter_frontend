@@ -4,6 +4,7 @@ import '../../core/network/api_exception.dart';
 import '../../core/theme/brand.dart';
 import '../../core/theme/palette.dart';
 import '../../core/utils/formatters.dart';
+import '../../core/utils/money.dart';
 import '../../core/widgets/widgets.dart';
 import '../../data/models/json_utils.dart';
 import '../../data/repositories/envelope.dart';
@@ -61,29 +62,58 @@ String displayValue(Object? v) {
   return s;
 }
 
-const Set<String> _alwaysHidden = <String>{'_id', '__v', '_class', 'password', 'passwordHash', 'secret'};
+const Set<String> _alwaysHidden = <String>{'_id', '__v', '_class', 'password', 'passwordHash', 'secret', 'version'};
+
+/// Fields that describe the record rather than its content. They go last, small.
+const Set<String> _recordKeys = <String>{'createdAt', 'updatedAt', 'deletedAt', 'createdDate', 'lastModifiedDate'};
+
+/// Flags that only matter when they are set.
+const Set<String> _quietFlags = <String>{'deleted', 'archived', 'isDeleted', 'isArchived'};
+
+final RegExp _machineId = RegExp(r'^[0-9a-fA-F]{20,}$|^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F-]{20,}$');
+final RegExp _moneyKey = RegExp(r'(amount|total|price|rate|fee|balance|rent|cost|deposit|charge|commission|revenue|payout)', caseSensitive: false);
+
+bool _isIdKey(String key) => key == 'id' || key.endsWith('Id') || key.endsWith('Ids') || key.endsWith('ID');
 
 /// Every field of a record as label and value rows. Nested records are indented under their name.
+///
+/// Machine ids (a 24 character hex string or a UUID) are not shown, because nobody can read them. Short references such as
+/// an order number stay. An amount that comes with a `currency` is written as "KES 2,093" and the currency row is dropped.
+/// Dates and times are written for people, flags that are off stay quiet, and when the record says when it was made and
+/// changed, that goes at the bottom in small type.
 class MapDetail extends StatelessWidget {
-  const MapDetail(this.data, {super.key, this.hidden = const <String>{}, this.depth = 0});
+  const MapDetail(this.data, {super.key, this.hidden = const <String>{}, this.depth = 0, this.showIds = false});
 
   final Json data;
   final Set<String> hidden;
   final int depth;
 
+  /// Show machine ids too, for screens used by support staff.
+  final bool showIds;
+
+  String? get _currency {
+    final c = data['currency'] ?? data['currencyCode'];
+    return c is String && c.trim().isNotEmpty ? c.trim().toUpperCase() : null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final rows = <Widget>[];
+    final record = <Widget>[];
+    final currency = _currency;
+    var usedCurrency = false;
     data.forEach((key, value) {
       if (_alwaysHidden.contains(key) || hidden.contains(key)) return;
       if (value == null) return;
       if (value is String && value.isEmpty) return;
       if (value is List && value.isEmpty) return;
+      if (!showIds && _isIdKey(key) && value is String && _machineId.hasMatch(value)) return;
+      if (_quietFlags.contains(key) && value == false) return;
       if (value is Map) {
         final inner = asMap(value);
         if (inner.isEmpty) return;
         rows.add(_Heading(humanize(key), depth));
-        rows.add(MapDetail(inner, hidden: hidden, depth: depth + 1));
+        rows.add(MapDetail(inner, hidden: hidden, depth: depth + 1, showIds: showIds));
         return;
       }
       if (value is List && value.first is Map) {
@@ -94,13 +124,28 @@ class MapDetail extends StatelessWidget {
             padding: EdgeInsets.only(left: 10.0 * (depth + 1), top: 4),
             child: Text('#$n', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800, color: context.mutedColor)),
           ));
-          rows.add(MapDetail(asMap(item), hidden: hidden, depth: depth + 1));
+          rows.add(MapDetail(asMap(item), hidden: hidden, depth: depth + 1, showIds: showIds));
           n++;
         }
         return;
       }
+      if (key == 'currency' || key == 'currencyCode') {
+        // Shown on its own only when no amount in this record uses it. Decided after the loop.
+        return;
+      }
+      if (_recordKeys.contains(key)) {
+        record.add(_DetailRow(humanize(key), displayValue(value), depth, quiet: true));
+        return;
+      }
+      if (currency != null && value is num && _moneyKey.hasMatch(key)) {
+        usedCurrency = true;
+        rows.add(_DetailRow(humanize(key), formatMoney(value, currency), depth));
+        return;
+      }
       rows.add(_DetailRow(humanize(key), displayValue(value), depth));
     });
+    if (currency != null && !usedCurrency) rows.add(_DetailRow('Currency', currency, depth));
+    rows.addAll(record);
     if (rows.isEmpty) return Text('Nothing to show.', style: TextStyle(color: context.mutedColor));
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: rows);
   }
@@ -115,31 +160,38 @@ class _Heading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(left: 10.0 * depth, top: 12, bottom: 2),
-      child: Text(text, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: context.pal.accent)),
+      padding: EdgeInsets.only(left: 10.0 * depth, top: 14, bottom: 4),
+      child: Text(text.toUpperCase(), style: TextStyle(fontSize: 11, letterSpacing: 0.6, fontWeight: FontWeight.w800, color: context.pal.accent)),
     );
   }
 }
 
 class _DetailRow extends StatelessWidget {
-  const _DetailRow(this.label, this.value, this.depth);
+  const _DetailRow(this.label, this.value, this.depth, {this.quiet = false});
 
   final String label;
   final String value;
   final int depth;
+  final bool quiet;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(10.0 * depth, 4, 0, 4),
+    final size = quiet ? 12.0 : 13.5;
+    return Container(
+      padding: EdgeInsets.fromLTRB(10.0 * depth, quiet ? 5 : 8, 0, quiet ? 5 : 8),
+      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: context.borderColor.op(0.55)))),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Expanded(flex: 2, child: Text(label, style: TextStyle(fontSize: 13, color: context.mutedColor))),
-          const SizedBox(width: 10),
+          Expanded(flex: 2, child: Text(label, style: TextStyle(fontSize: quiet ? 11.5 : 12.5, color: context.mutedColor))),
+          const SizedBox(width: 12),
           Expanded(
             flex: 3,
-            child: SelectableText(value, textAlign: TextAlign.end, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
+            child: SelectableText(
+              value,
+              textAlign: TextAlign.end,
+              style: TextStyle(fontSize: size, fontWeight: quiet ? FontWeight.w500 : FontWeight.w700, color: quiet ? context.mutedColor : null),
+            ),
           ),
         ],
       ),
@@ -149,12 +201,15 @@ class _DetailRow extends StatelessWidget {
 
 /// How one record reads as a row in a list.
 class RowView {
-  const RowView({required this.title, this.subtitle, this.status, this.trailing, this.icon = Icons.article_outlined});
+  const RowView({required this.title, this.subtitle, this.status, this.trailing, this.image, this.icon = Icons.article_outlined});
 
   final String Function(Json m) title;
   final String? Function(Json m)? subtitle;
   final String? Function(Json m)? status;
   final String? Function(Json m)? trailing;
+
+  /// A photo for the row. It replaces the icon in the list and tops the detail sheet.
+  final String? Function(Json m)? image;
   final IconData icon;
 }
 
@@ -354,7 +409,7 @@ class _ResourceSectionState extends State<ResourceSection> {
       context,
       title: widget.row.title(shown),
       subtitle: widget.row.subtitle?.call(shown),
-      child: _ItemSheet(item: shown, actions: widget.itemActions, hidden: widget.hidden, onChanged: _reload),
+      child: _ItemSheet(item: shown, actions: widget.itemActions, hidden: widget.hidden, image: widget.row.image?.call(shown), onChanged: _reload),
     );
   }
 
@@ -416,6 +471,25 @@ class _RowCard extends StatelessWidget {
   final Json item;
   final VoidCallback onTap;
 
+  Widget _leading(BuildContext context, String? image) {
+    final box = BorderRadius.circular(context.radius(12));
+    final icon = Container(
+      width: 42,
+      height: 42,
+      decoration: BoxDecoration(color: context.pal.accent.op(0.12), borderRadius: box),
+      child: Icon(row.icon, size: 21, color: context.pal.accent),
+    );
+    if (image == null || image.isEmpty) return icon;
+    return ClipRRect(
+      borderRadius: box,
+      child: SizedBox(
+        width: 54,
+        height: 54,
+        child: Image.network(image, fit: BoxFit.cover, errorBuilder: (_, __, ___) => icon),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final subtitle = row.subtitle?.call(item);
@@ -426,12 +500,7 @@ class _RowCard extends StatelessWidget {
       onTap: onTap,
       child: Row(
         children: <Widget>[
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(color: context.pal.accent.op(0.12), borderRadius: BorderRadius.circular(context.radius(12))),
-            child: Icon(row.icon, size: 21, color: context.pal.accent),
-          ),
+          _leading(context, row.image?.call(item)),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -458,8 +527,9 @@ class _RowCard extends StatelessWidget {
 }
 
 class _ItemSheet extends StatelessWidget {
-  const _ItemSheet({required this.item, required this.actions, required this.hidden, required this.onChanged});
+  const _ItemSheet({required this.item, required this.actions, required this.hidden, required this.onChanged, this.image});
 
+  final String? image;
   final Json item;
   final List<ItemAction> actions;
   final Set<String> hidden;
@@ -470,6 +540,16 @@ class _ItemSheet extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
+        if (image != null && image!.isNotEmpty) ...<Widget>[
+          ClipRRect(
+            borderRadius: BorderRadius.circular(context.radius(14)),
+            child: AspectRatio(
+              aspectRatio: 16 / 9,
+              child: Image.network(image!, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const SizedBox.shrink()),
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
         MapDetail(item, hidden: hidden),
         const SizedBox(height: 16),
         ActionBar(

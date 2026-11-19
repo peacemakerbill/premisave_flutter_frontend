@@ -84,6 +84,24 @@ class _BookingCardState extends ConsumerState<BookingCard> {
     }
   }
 
+  void _open(String title) {
+    final b = widget.booking;
+    showFormSheet<void>(
+      context,
+      title: title,
+      subtitle: widget.asOwner ? 'Booked by ${b.tenantName ?? 'a guest'}' : 'Hosted by ${b.ownerName ?? 'the owner'}',
+      child: _BookingDetails(
+        booking: b,
+        asOwner: widget.asOwner,
+        busy: _busy,
+        onCancel: () async {
+          Navigator.of(context).pop();
+          await _cancel();
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final b = widget.booking;
@@ -91,6 +109,7 @@ class _BookingCardState extends ConsumerState<BookingCard> {
     final who = widget.asOwner ? b.tenantName : b.ownerName;
     return PCard(
       margin: const EdgeInsets.only(bottom: 12),
+      onTap: () => _open(title.maybeWhen(data: (t) => t, orElse: () => 'Booking')),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -138,6 +157,56 @@ class _BookingCardState extends ConsumerState<BookingCard> {
           ],
         ],
       ),
+    );
+  }
+}
+
+/// Everything about one booking, shown when its card is opened.
+class _BookingDetails extends StatelessWidget {
+  const _BookingDetails({required this.booking, required this.asOwner, required this.busy, required this.onCancel});
+
+  final BookingModel booking;
+  final bool asOwner;
+  final bool busy;
+  final VoidCallback onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    final b = booking;
+    final nights = b.checkIn != null && b.checkOut != null ? b.checkOut!.difference(b.checkIn!).inDays : null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Align(alignment: Alignment.centerLeft, child: StatusChip(b.status)),
+        const SizedBox(height: 12),
+        if (b.checkIn != null) KeyValueLine('Check in', formatDate(b.checkIn!)),
+        if (b.checkOut != null) KeyValueLine('Check out', formatDate(b.checkOut!)),
+        if (nights != null && nights > 0) KeyValueLine('Length of stay', plural(nights, 'night')),
+        if (b.units != null && b.units! > 1) KeyValueLine('Units', '${b.units}'),
+        if (asOwner && b.tenantName != null) KeyValueLine('Guest', b.tenantName!),
+        if (!asOwner && b.ownerName != null) KeyValueLine('Host', b.ownerName!),
+        const Divider(height: 24),
+        KeyValueLine('Total', formatMoney(b.totalAmount, b.currency), bold: true),
+        if (b.priceUnit != null) KeyValueLine('Priced', sentence(b.priceUnit)),
+        if (b.escrowStatus != null) KeyValueLine('Payment', sentence(b.escrowStatus)),
+        if (b.refundAmount != null && b.status == 'CANCELLED') KeyValueLine('Refunded', formatMoney(b.refundAmount, b.currency)),
+        if (b.cancellationPolicy != null) KeyValueLine('Cancellation policy', sentence(b.cancellationPolicy)),
+        if (b.message != null && b.message!.isNotEmpty) ...<Widget>[
+          const Divider(height: 24),
+          Text('Message', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: context.mutedColor)),
+          const SizedBox(height: 4),
+          Text(b.message!, style: const TextStyle(fontSize: 14, height: 1.4)),
+        ],
+        if (b.status == 'NEEDS_REVIEW')
+          const Padding(
+            padding: EdgeInsets.only(top: 12),
+            child: InlineMessage('The payment result could not be confirmed. Staff are checking it.', kind: MessageKind.warning),
+          ),
+        if (b.cancellable) ...<Widget>[
+          const SizedBox(height: 16),
+          PButton(label: 'Cancel booking', kind: PButtonKind.outline, loading: busy, expand: true, onPressed: onCancel),
+        ],
+      ],
     );
   }
 }

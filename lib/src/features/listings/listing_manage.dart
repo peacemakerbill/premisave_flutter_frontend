@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart' show ImagePicker;
 
 import '../../core/network/api_exception.dart';
 import '../../core/theme/brand.dart';
+import '../../core/utils/formatters.dart';
 import '../../core/utils/money.dart';
 import '../../core/widgets/widgets.dart';
 import '../../data/models/json_utils.dart';
@@ -16,6 +17,7 @@ import '../shared/resource_form.dart';
 import '../shared/resource_view.dart';
 import 'bookings_screen.dart';
 import 'listing_form.dart';
+import 'promotion_form.dart';
 import '../shared/service_widgets.dart';
 import 'listing_widgets.dart';
 import 'wishlists_screen.dart';
@@ -95,7 +97,7 @@ class _ManageListingsTabState extends ConsumerState<ManageListingsTab> {
 
   static const Map<String, String> _statuses = <String, String>{
     'PENDING': 'Waiting for review',
-    'APPROVED': 'Live',
+    'ACTIVE': 'Approved',
     'REJECTED': 'Rejected',
     'ARCHIVED': 'Archived',
   };
@@ -142,7 +144,7 @@ class _ManageListingsTabState extends ConsumerState<ManageListingsTab> {
             load: () => _repo.myListingsRaw(status: _status),
             detail: (m) => _repo.listingRaw(id(m)),
             emptyTitle: 'No listings here',
-            emptyMessage: 'Create a listing and Premisave reviews it before the public can see it.',
+            emptyMessage: 'Create a listing, then promote it to make it visible to clients.',
             emptyIcon: Icons.home_work_outlined,
             hidden: const <String>{'imageUrls', 'mainImageUrl', 'latitude', 'longitude'},
             row: RowView(
@@ -151,6 +153,7 @@ class _ManageListingsTabState extends ConsumerState<ManageListingsTab> {
               subtitle: (m) => <String>[categoryLabel(pick(m, <String>['category'])), pick(m, <String>['city'])].where((e) => e.isNotEmpty).join(' in '),
               status: (m) => pick(m, <String>['status']),
               trailing: _price,
+              image: (m) => pick(m, <String>['mainImageUrl']),
             ),
             headerActions: <ItemAction>[
               ItemAction(
@@ -179,13 +182,8 @@ class _ManageListingsTabState extends ConsumerState<ManageListingsTab> {
                 'Promote',
                 Icons.campaign_outlined,
                 title: 'Promote this listing',
-                subtitle: 'A promoted listing is shown first in Explore.',
-                fields: const <FieldSpec>[FieldSpec('days', 'Number of days', kind: FieldKind.integer, required: true, initial: 7)],
-                run: (m, v) async {
-                  await _repo.promote(id(m), (v['days'] as num).toInt());
-                },
-                done: 'Promotion started',
-                visible: (m) => pick(m, <String>['status']) == 'APPROVED',
+                page: (m) => _FormPage(child: PromotionForm(listing: m)),
+                visible: (m) => pick(m, <String>['status']) == 'ACTIVE',
               ),
               ItemAction(
                 'Extend promotion',
@@ -502,23 +500,68 @@ class _ListingCalendarPageState extends ConsumerState<ListingCalendarPage> {
   }
 }
 
-/// The promotions of the signed in owner.
-class PromotionsTab extends ConsumerWidget {
+/// The promotions of the signed in owner. A promotion is what makes a listing visible to clients.
+class PromotionsTab extends ConsumerStatefulWidget {
   const PromotionsTab({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PromotionsTab> createState() => _PromotionsTabState();
+}
+
+class _PromotionsTabState extends ConsumerState<PromotionsTab> {
+  int _bump = 0;
+
+  String _until(Json m) {
+    final d = DateTime.tryParse(pick(m, <String>['endDate', 'expiresAt', 'endsAt']));
+    if (d == null) return '';
+    final status = pick(m, <String>['status']);
+    return status == 'EXPIRED' ? 'Ended ${formatDate(d)}' : 'Until ${formatDate(d)}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return ResourceSection(
+      refreshKey: _bump,
       load: () => ref.read(listingRepositoryProvider).myPromotions(),
-      intro: 'Start a promotion from a listing in My listings. Promoted listings are shown first in Explore.',
+      intro: 'A listing is only shown to clients while it is promoted. Start a promotion, choose the photo it shows, and it appears first in Explore.',
       emptyTitle: 'No promotions yet',
+      emptyMessage: 'Promote a listing to make it visible to clients.',
       emptyIcon: Icons.campaign_outlined,
+      hidden: const <String>{'imageUrl', 'listingTitle', 'headline', 'listingId', 'status'},
       row: RowView(
         icon: Icons.campaign_outlined,
-        title: (m) => pick(m, <String>['listingTitle', 'title', 'listingId'], 'Promotion'),
-        subtitle: (m) => 'Until ${displayValue(m['endDate'] ?? m['expiresAt'] ?? m['endsAt'])}',
+        title: (m) => pick(m, <String>['listingTitle', 'title'], 'Promotion'),
+        subtitle: (m) {
+          final headline = pick(m, <String>['headline']);
+          return <String>[if (headline.isNotEmpty) headline, _until(m)].where((e) => e.isNotEmpty).join('\n');
+        },
         status: (m) => pick(m, <String>['status']),
+        trailing: (m) => m['totalAmount'] is num ? formatMoney((m['totalAmount'] as num).toDouble(), pick(m, <String>['currency'], 'USD')) : null,
+        image: (m) => pick(m, <String>['imageUrl']),
       ),
+      headerActions: <ItemAction>[
+        ItemAction(
+          'Promote a listing',
+          Icons.add_rounded,
+          title: 'Promote a listing',
+          page: (_) => _FormPage(child: PromotionForm(key: UniqueKey())),
+        ),
+      ],
+      itemActions: <ItemAction>[
+        ItemAction(
+          'Add days',
+          Icons.more_time_rounded,
+          title: 'Add days',
+          subtitle: 'Extends this promotion. The days are paid from your wallet.',
+          fields: const <FieldSpec>[FieldSpec('days', 'Days to add', kind: FieldKind.integer, required: true, initial: 7)],
+          run: (m, v) async {
+            await ref.read(listingRepositoryProvider).extendPromotion(pick(m, <String>['listingId']), (v['days'] as num).toInt());
+            ref.invalidate(walletProvider);
+          },
+          done: 'Promotion extended',
+          visible: (m) => pick(m, <String>['status']) == 'ACTIVE' || pick(m, <String>['status']) == 'EXPIRED',
+        ),
+      ],
     );
   }
 }

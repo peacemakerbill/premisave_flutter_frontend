@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -205,7 +207,16 @@ class PSelectField<T> extends StatelessWidget {
     this.enabled = true,
     this.optional = false,
     this.searchable = false,
+    this.remoteSearch,
+    this.onChoice,
   });
+
+  /// Asks a server for matches as the person types, for lists too long to load at once (people, units). When it is
+  /// set the search box always shows, and [options] only needs to hold the current choice so its label can be shown.
+  final Future<List<PChoice<T>>> Function(String query)? remoteSearch;
+
+  /// Told which option was picked, with its label, so a caller using [remoteSearch] can keep it for display.
+  final ValueChanged<PChoice<T>?>? onChoice;
 
   final String label;
   final List<PChoice<T>> options;
@@ -262,17 +273,21 @@ class PSelectField<T> extends StatelessWidget {
         title: label,
         options: options,
         value: value,
-        searchable: searchable || options.length > 12,
+        searchable: searchable || remoteSearch != null || options.length > 12,
         clearable: optional,
+        remote: remoteSearch,
       ),
     );
-    if (result != null) onChanged(result.value);
+    if (result == null) return;
+    onChanged(result.value);
+    onChoice?.call(result.choice);
   }
 }
 
 class _Picked<T> {
-  const _Picked(this.value);
+  const _Picked(this.value, [this.choice]);
   final T? value;
+  final PChoice<T>? choice;
 }
 
 class _PickerSheet<T> extends StatefulWidget {
@@ -282,6 +297,7 @@ class _PickerSheet<T> extends StatefulWidget {
     required this.value,
     required this.searchable,
     required this.clearable,
+    this.remote,
   });
 
   final String title;
@@ -289,6 +305,7 @@ class _PickerSheet<T> extends StatefulWidget {
   final T? value;
   final bool searchable;
   final bool clearable;
+  final Future<List<PChoice<T>>> Function(String query)? remote;
 
   @override
   State<_PickerSheet<T>> createState() => _PickerSheetState<T>();
@@ -296,12 +313,57 @@ class _PickerSheet<T> extends StatefulWidget {
 
 class _PickerSheetState<T> extends State<_PickerSheet<T>> {
   String _q = '';
+  Timer? _debounce;
+  List<PChoice<T>> _found = <PChoice<T>>[];
+  bool _searching = false;
+  String? _searchError;
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  void _typed(String v) {
+    setState(() => _q = v);
+    final remote = widget.remote;
+    if (remote == null) return;
+    _debounce?.cancel();
+    if (v.trim().length < 2) {
+      setState(() {
+        _found = <PChoice<T>>[];
+        _searching = false;
+        _searchError = null;
+      });
+      return;
+    }
+    setState(() => _searching = true);
+    _debounce = Timer(const Duration(milliseconds: 350), () async {
+      try {
+        final list = await remote(v.trim());
+        if (!mounted || _q != v) return;
+        setState(() {
+          _found = list;
+          _searching = false;
+          _searchError = null;
+        });
+      } catch (e) {
+        if (!mounted || _q != v) return;
+        setState(() {
+          _found = <PChoice<T>>[];
+          _searching = false;
+          _searchError = 'The search did not work. Try again.';
+        });
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final items = widget.options
-        .where((o) => _q.isEmpty || o.label.toLowerCase().contains(_q.toLowerCase()))
-        .toList();
+    final remote = widget.remote != null;
+    final items = remote
+        ? _found
+        : widget.options.where((o) => _q.isEmpty || o.label.toLowerCase().contains(_q.toLowerCase())).toList();
     return ConstrainedBox(
       constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.8),
       child: Padding(
@@ -329,16 +391,22 @@ class _PickerSheetState<T> extends State<_PickerSheet<T>> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
                 child: TextField(
-                  autofocus: false,
-                  onChanged: (v) => setState(() => _q = v),
-                  decoration: _decoration(context, hint: 'Search', prefix: const Icon(Icons.search, size: 20)),
+                  autofocus: remote,
+                  onChanged: _typed,
+                  decoration: _decoration(context, hint: remote ? 'Type a name, email or number' : 'Search', prefix: const Icon(Icons.search, size: 20)),
                 ),
               ),
             Flexible(
               child: items.isEmpty
                   ? Padding(
                       padding: const EdgeInsets.all(32),
-                      child: Text('No matches', style: TextStyle(color: context.mutedColor)),
+                      child: Text(
+                        _searching
+                            ? 'Searching'
+                            : _searchError ?? (remote && _q.trim().length < 2 ? 'Type at least two letters to search.' : 'No matches'),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: context.mutedColor),
+                      ),
                     )
                   : ListView.builder(
                       shrinkWrap: true,
@@ -352,7 +420,7 @@ class _PickerSheetState<T> extends State<_PickerSheet<T>> {
                               ? null
                               : Text(o.description!, maxLines: 2, overflow: TextOverflow.ellipsis),
                           trailing: isSel ? Icon(Icons.check_rounded, color: context.scheme.primary) : null,
-                          onTap: () => Navigator.of(context).pop(_Picked<T>(o.value)),
+                          onTap: () => Navigator.of(context).pop(_Picked<T>(o.value, o)),
                         );
                       },
                     ),

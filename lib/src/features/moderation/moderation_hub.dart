@@ -7,6 +7,9 @@ import '../../state/providers.dart';
 import '../listings/listing_manage.dart';
 import '../shared/hub.dart';
 import '../shared/resource_view.dart';
+import '../../core/network/api_exception.dart';
+import '../../core/theme/brand.dart';
+import '../../core/widgets/widgets.dart';
 
 /// Staff menu for everything on the listing service: listings waiting for review, every listing in each state, and the
 /// bookings whose payment or payout needs a person.
@@ -18,8 +21,9 @@ class ModerationHub extends StatelessWidget {
     return HubPage(
       title: 'Moderation',
       tabs: <HubTab>[
-        HubTab('To review', Icons.pending_actions_outlined, (_) => const _AdminListings(status: 'PENDING', intro: 'New and edited listings wait here until they are approved or rejected.')),
-        HubTab('Live', Icons.check_circle_outline_rounded, (_) => const _AdminListings(status: 'APPROVED')),
+        HubTab('Settings', Icons.tune_rounded, (_) => const _ReviewSettings()),
+        HubTab('To review', Icons.pending_actions_outlined, (_) => const _AdminListings(status: 'PENDING', intro: 'Listings wait here only while review is switched on in Settings. Approve or reject each one.')),
+        HubTab('Approved', Icons.check_circle_outline_rounded, (_) => const _AdminListings(status: 'ACTIVE')),
         HubTab('Rejected', Icons.block_outlined, (_) => const _AdminListings(status: 'REJECTED')),
         HubTab('Archived', Icons.archive_outlined, (_) => const _AdminListings(archived: true)),
         HubTab('Deleted', Icons.delete_outline_rounded, (_) => const _AdminListings(deleted: true, intro: 'Soft deleted listings can be restored or removed for good.')),
@@ -64,10 +68,10 @@ class _AdminListings extends ConsumerWidget {
         ItemAction(
           'Approve',
           Icons.check_rounded,
-          confirm: 'The listing becomes visible to everyone in Explore.',
+          confirm: 'The listing is approved. The owner can then promote it, and clients see it while it is promoted.',
           run: (m, _) async => repo.approveListing(id(m)),
           done: 'Listing approved',
-          visible: (m) => pick(m, <String>['status']) != 'APPROVED' && m['deleted'] != true,
+          visible: (m) => pick(m, <String>['status']) != 'ACTIVE' && m['deleted'] != true,
         ),
         ItemAction(
           'Reject',
@@ -168,6 +172,89 @@ class _BookingsToReview extends ConsumerWidget {
           confirm: 'Queues the owner payout again.',
           run: (m, _) async => repo.retryPayout(id(m)),
           done: 'Payout queued',
+        ),
+      ],
+    );
+  }
+}
+
+/// The switch that decides whether new listings need a person's review.
+class _ReviewSettings extends ConsumerStatefulWidget {
+  const _ReviewSettings();
+
+  @override
+  ConsumerState<_ReviewSettings> createState() => _ReviewSettingsState();
+}
+
+class _ReviewSettingsState extends ConsumerState<_ReviewSettings> {
+  late Future<Json> _future;
+  bool _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = ref.read(listingRepositoryProvider).listingSettings();
+  }
+
+  Future<void> _set(bool on) async {
+    setState(() => _busy = true);
+    try {
+      final res = await ref.read(listingRepositoryProvider).setListingReview(on);
+      if (!mounted) return;
+      setState(() => _future = Future<Json>.value(res));
+      showToast(context, on ? 'Review is on' : 'Review is off');
+    } catch (e) {
+      if (mounted) showToast(context, ApiException.from(e).message);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PageBody(
+      maxWidth: 640,
+      children: <Widget>[
+        FutureBuilder<Json>(
+          future: _future,
+          builder: (context, snap) {
+            if (snap.connectionState != ConnectionState.done) {
+              return const Padding(padding: EdgeInsets.all(40), child: Center(child: CircularProgressIndicator()));
+            }
+            if (snap.hasError) {
+              return ErrorState(error: snap.error!, onRetry: () => setState(() => _future = ref.read(listingRepositoryProvider).listingSettings()));
+            }
+            final on = snap.data?['reviewRequired'] == true;
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: PCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    SwitchListTile.adaptive(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Review new listings', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                      subtitle: Text(on ? 'On' : 'Off', style: TextStyle(color: context.mutedColor)),
+                      value: on,
+                      onChanged: _busy ? null : _set,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      on
+                          ? 'A new listing waits in To review. An owner can promote it only after you approve it.'
+                          : 'A new listing is approved the moment it is created. Nothing waits for review.',
+                      style: TextStyle(fontSize: 13.5, height: 1.45, color: context.mutedColor),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Either way, clients only see a listing while it is promoted. The promotion is what makes it visible.',
+                      style: TextStyle(fontSize: 13.5, height: 1.45, color: context.mutedColor),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
         ),
       ],
     );

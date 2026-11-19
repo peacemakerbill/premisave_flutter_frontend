@@ -7,9 +7,13 @@ import '../../core/theme/brand.dart';
 import '../../core/theme/palette.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/widgets.dart';
+import '../../data/models/country.dart';
+import '../../data/models/place.dart';
 import '../../data/repositories/messenger_repository.dart' show LocalFile;
 import '../../state/providers.dart';
 import '../../state/service_providers.dart';
+import '../places/address_search_field.dart';
+import '../places/country_field.dart';
 import '../shared/service_widgets.dart';
 
 /// The most photos a listing can have, and the most the listing service accepts in one request.
@@ -52,6 +56,11 @@ class _ListingFormSheetState extends ConsumerState<ListingFormSheet> {
   bool _busy = false;
   String? _error;
 
+  /// Where the address search put the listing on the map. Sent with the listing so it can be found by area.
+  double? _lat;
+  double? _lng;
+  String? _countryCode;
+
   bool get _editing => widget.existing != null;
 
   String get _listingId => (widget.existing?['id'] ?? widget.existing?['listingId'] ?? '').toString();
@@ -70,6 +79,13 @@ class _ListingFormSheetState extends ConsumerState<ListingFormSheet> {
       final v = e[key];
       if (v != null) _ctl(key).text = _plain(v);
     }
+    final lat = e['latitude'];
+    final lng = e['longitude'];
+    if (lat is num && lng is num) {
+      _lat = lat.toDouble();
+      _lng = lng.toDouble();
+    }
+    _countryCode = Country.byName(_val('country'))?.code;
     final amenities = e['amenities'];
     if (amenities is List) _ctl('amenities').text = amenities.join(', ');
     for (final key in const <String>['hasWifi', 'hasKitchen', 'furnished', 'hasGarage', 'hasTitleDeed', 'renewable']) {
@@ -97,6 +113,21 @@ class _ListingFormSheetState extends ConsumerState<ListingFormSheet> {
       c.dispose();
     }
     super.dispose();
+  }
+
+  /// A place was chosen in the address box: fill the city and country from it and keep its map position.
+  void _placeChosen(Place p) {
+    final line = p.streetLine.isNotEmpty ? p.streetLine : (p.isBare ? '' : p.title);
+    if (line.isNotEmpty) _ctl('address').text = line;
+    final town = p.city ?? p.district;
+    if (town != null && town.isNotEmpty) _ctl('city').text = town;
+    final country = p.country;
+    if (country != null && country.isNotEmpty) _ctl('country').text = country;
+    setState(() {
+      _lat = p.latitude;
+      _lng = p.longitude;
+      _countryCode = p.countryCode ?? _countryCode;
+    });
   }
 
   Widget _field(String key, String label, {TextInputType? keyboard, String? hint, bool optional = false, int maxLines = 1, IconData? icon}) {
@@ -198,6 +229,8 @@ class _ListingFormSheetState extends ConsumerState<ListingFormSheet> {
       'city': _val('city'),
       'country': _val('country'),
       'address': _val('address'),
+      if (_lat != null && _lng != null) 'latitude': _lat,
+      if (_lat != null && _lng != null) 'longitude': _lng,
     };
 
     switch (_category) {
@@ -383,9 +416,22 @@ class _ListingFormSheetState extends ConsumerState<ListingFormSheet> {
         ],
         _field('title', 'Title', hint: 'Sunny two bedroom apartment in Kilimani', icon: Icons.title_rounded),
         _field('description', 'Description', maxLines: 5),
-        _field('city', 'City', optional: true, icon: Icons.location_city_outlined),
-        _field('country', 'Country', optional: true, icon: Icons.public_rounded),
-        _field('address', 'Address', optional: true, icon: Icons.place_outlined),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 14),
+          child: CountryField(controller: _ctl('country'), optional: true, onCountry: (c) => setState(() => _countryCode = c?.code)),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 14),
+          child: AddressSearchField(
+            label: 'Address',
+            controller: _ctl('address'),
+            optional: true,
+            countryCode: _countryCode,
+            mapTitle: 'Choose the location of the listing',
+            onPlace: _placeChosen,
+          ),
+        ),
+        _field('city', 'City or town', optional: true, icon: Icons.location_city_outlined),
         ..._details(),
         Text(_editing ? 'Add photos' : 'Photos', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: context.mutedColor)),
         const SizedBox(height: 8),
@@ -399,12 +445,12 @@ class _ListingFormSheetState extends ConsumerState<ListingFormSheet> {
         Text(
           _editing
               ? 'Photos added here join the ones already on the listing. Use Photos in the listing menu to remove, reorder or choose the cover.'
-              : 'Up to $maxListingPhotos photos. The first one is the cover. Premisave reviews a new listing before the public can see it.',
+              : 'Up to $maxListingPhotos photos. The first one is the cover. Once it is approved, promote it so clients can find it.',
           style: TextStyle(fontSize: 12.5, height: 1.45, color: pal.ink3),
         ),
         if (_error != null) ...<Widget>[const SizedBox(height: 14), InlineMessage(_error!, kind: MessageKind.error)],
         const SizedBox(height: 18),
-        PButton(label: _editing ? 'Save changes' : 'Submit for review', icon: _editing ? Icons.save_outlined : Icons.publish_rounded, expand: true, loading: _busy, onPressed: _submit),
+        PButton(label: _editing ? 'Save changes' : 'Create listing', icon: _editing ? Icons.save_outlined : Icons.publish_rounded, expand: true, loading: _busy, onPressed: _submit),
       ],
     );
   }

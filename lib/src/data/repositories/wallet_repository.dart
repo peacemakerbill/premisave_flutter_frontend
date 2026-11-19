@@ -88,6 +88,12 @@ class WalletRepository {
 
   Future<Map<String, dynamic>> balanceInfo() async => unwrapMap(await _api.get('/wallet/balance'));
 
+  /// The whole wallet as the service sends it, including the numbers and emails saved on it.
+  Future<Map<String, dynamic>> walletRaw() async => unwrapMap(await _api.get('/wallet'));
+
+  /// Chooses the currency the person deals in. The balance stays in USD.
+  Future<void> updateDefaultCurrency(String code) => _api.put('/wallet/default-currency', body: <String, dynamic>{'currency': code});
+
   Future<void> freeze() => _api.put('/wallet/freeze');
 
   Future<void> unfreeze() => _api.put('/wallet/unfreeze');
@@ -282,6 +288,10 @@ class WalletRepository {
 
   /// Everything waiting for a decision, oldest first. Each row says what kind of thing it is in entityType.
   Future<List<Map<String, dynamic>>> pendingItems() async => rows(await _api.get('/admin/reconciliation/pending'));
+
+  /// Deposits, withdrawals, transfers and payments that failed in the last [days] days.
+  Future<List<Map<String, dynamic>>> failedItems({int days = 30}) async =>
+      rows(await _api.get('/admin/reconciliation/failed', query: <String, dynamic>{'days': days}));
 
   Future<void> approveDeposit(String id) => _api.post('/admin/reconciliation/deposits/${Uri.encodeComponent(id)}/approve');
 

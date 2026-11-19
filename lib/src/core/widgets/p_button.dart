@@ -18,6 +18,9 @@ class PButton extends StatelessWidget {
     this.small = false,
   });
 
+  /// How wide a button that fills its row may get.
+  static const double maxExpandedWidth = 320;
+
   final String label;
   final VoidCallback? onPressed;
   final IconData? icon;
@@ -59,13 +62,13 @@ class PButton extends StatelessWidget {
         break;
     }
 
-    final height = small ? 38.0 : 50.0;
+    final height = small ? 34.0 : 44.0;
     final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(context.radius(small ? 10 : 14)),
+      borderRadius: BorderRadius.circular(context.radius(small ? 9 : 12)),
       side: border == null ? BorderSide.none : BorderSide(color: border, width: 1.4),
     );
     final textStyle = TextStyle(
-      fontSize: small ? 13 : 15,
+      fontSize: small ? 12.5 : 14,
       fontWeight: FontWeight.w700,
       letterSpacing: 0.1,
     );
@@ -81,16 +84,16 @@ class PButton extends StatelessWidget {
             child: CircularProgressIndicator(strokeWidth: 2.2, color: fg),
           )
         else if (icon != null)
-          Icon(icon, size: small ? 16 : 19),
+          Icon(icon, size: small ? 15 : 17),
         if (loading || icon != null) SizedBox(width: small ? 6 : 9),
         Flexible(child: Text(label, overflow: TextOverflow.ellipsis)),
       ],
     );
 
     final style = ButtonStyle(
-      minimumSize: WidgetStatePropertyAll<Size>(Size(small ? 0 : 64, height)),
+      minimumSize: WidgetStatePropertyAll<Size>(Size(small ? 0 : 56, height)),
       padding: WidgetStatePropertyAll<EdgeInsetsGeometry>(
-        EdgeInsets.symmetric(horizontal: small ? 14 : 22),
+        EdgeInsets.symmetric(horizontal: small ? 12 : 20),
       ),
       shape: WidgetStatePropertyAll<OutlinedBorder>(shape),
       textStyle: WidgetStatePropertyAll<TextStyle>(textStyle),
@@ -113,6 +116,15 @@ class PButton extends StatelessWidget {
         ? TextButton(onPressed: handler, style: style, child: content)
         : FilledButton(onPressed: handler, style: style, child: content);
 
-    return expand ? SizedBox(width: double.infinity, child: button) : button;
+    // A button that fills its row stops growing at a comfortable width, so on a wide screen it is not a long bar.
+    return expand
+        ? Center(
+            heightFactor: 1,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: maxExpandedWidth),
+              child: SizedBox(width: double.infinity, child: button),
+            ),
+          )
+        : button;
   }
 }
