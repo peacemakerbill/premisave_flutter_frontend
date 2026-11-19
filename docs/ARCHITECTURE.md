@@ -144,6 +144,7 @@ Pages that a link from an email opens (`/verify`, `/reset-password`, `/admin-inv
 | `AsyncBody<T>` | Turns an `AsyncValue` into a skeleton while loading, a retry on failure and your builder on success |
 | `LoadingState`, `EmptyState`, `ErrorState`, `SkeletonList` | The states a list passes through |
 | `PButton`, `PTextField`, `PScaffold` | Buttons, fields and the page background with the theme's texture |
+| `showCenteredSheet` | Every pop-up: forms, pickers, choosers and detail panels. It opens a card in the middle of the screen, with a dimmed backdrop, rounded corners and a height that follows the keyboard, on phones and wide screens alike. Use it in place of `showModalBottomSheet`, which is no longer used anywhere in the app |
 
 Colours always come from `context.pal`, a getter on `BuildContext` that returns the active `AppPalette`. A literal colour in a widget is a bug: it looks fine in one theme and unreadable in the next. Text styles come from the theme's font choice, so changing the font changes every screen.
 

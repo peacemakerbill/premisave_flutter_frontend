@@ -107,18 +107,40 @@ class DeveloperSession extends Notifier<DeveloperSessionState> {
   }
 
   /// Signs in or up with Google, Facebook or GitHub. Returns false when the person closed the sign in window.
+  ///
+  /// The developer service has OAuth clients of its own, so the client ids come from the service and not from the app's
+  /// settings. Linux and Windows cannot run the providers' own sign in, so they open the browser, receive a code on a
+  /// local port and let the service trade it.
   Future<bool> signInSocial(String provider) async {
-    final String? credential;
-    switch (provider) {
-      case 'google':
-        credential = await SocialAuthService.googleIdToken();
-      case 'facebook':
-        credential = await SocialAuthService.facebookAccessToken();
-      default:
-        credential = await SocialAuthService.githubCode();
+    final repo = ref.read(developerRepositoryProvider);
+    final ids = (await repo.socialProviders()).clientIds;
+    final id = ids[provider];
+    final String token;
+    if (SocialAuthService.usesCodeFlow) {
+      final String? code;
+      switch (provider) {
+        case 'google':
+          code = await SocialAuthService.googleAuthCode(clientId: id);
+        case 'facebook':
+          code = await SocialAuthService.facebookAuthCode(appId: id);
+        default:
+          code = await SocialAuthService.githubCode(clientId: id);
+      }
+      if (code == null) return false;
+      token = await repo.socialLogin(provider, code: code, redirectUri: SocialAuthService.codeRedirectUri);
+    } else {
+      final String? credential;
+      switch (provider) {
+        case 'google':
+          credential = await SocialAuthService.googleIdToken(clientId: id);
+        case 'facebook':
+          credential = await SocialAuthService.facebookAccessToken();
+        default:
+          credential = await SocialAuthService.githubCode(clientId: id);
+      }
+      if (credential == null) return false;
+      token = await repo.socialLogin(provider, token: credential);
     }
-    if (credential == null) return false;
-    final token = await ref.read(developerRepositoryProvider).socialLogin(provider, credential);
     await signInWithToken(token);
     return true;
   }

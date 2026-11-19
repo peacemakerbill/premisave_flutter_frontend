@@ -44,7 +44,7 @@ class _AdminUserDetailScreenState extends ConsumerState<AdminUserDetailScreen> {
   }
 
   Future<void> _changeRole(UserModel u) async {
-    final picked = await showModalBottomSheet<Role>(
+    final picked = await showCenteredSheet<Role>(
       context: context,
       useSafeArea: true,
       builder: (ctx) => ListView(

@@ -11,7 +11,7 @@ Future<T?> showFormSheet<T>(
   String? subtitle,
   required Widget child,
 }) {
-  return showModalBottomSheet<T>(
+  return showCenteredSheet<T>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,

@@ -167,7 +167,7 @@ class _StoryState extends ConsumerState<_Story> with SingleTickerProviderStateMi
 
   Future<void> _react(StatusPost p) async {
     final repo = ref.read(messengerRepositoryProvider);
-    final pick = await _whilePaused<String>(() => showModalBottomSheet<String>(
+    final pick = await _whilePaused<String>(() => showCenteredSheet<String>(
           context: context,
           useSafeArea: true,
           builder: (ctx) => SafeArea(
@@ -200,7 +200,7 @@ class _StoryState extends ConsumerState<_Story> with SingleTickerProviderStateMi
   }
 
   Future<void> _comments(StatusPost p) async {
-    await _whilePaused<void>(() => showModalBottomSheet<void>(
+    await _whilePaused<void>(() => showCenteredSheet<void>(
           context: context,
           isScrollControlled: true,
           useSafeArea: true,

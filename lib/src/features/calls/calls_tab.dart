@@ -43,7 +43,7 @@ class CallsTab extends ConsumerWidget {
   }
 
   Future<void> _createLink(BuildContext context, WidgetRef ref) async {
-    final media = await showModalBottomSheet<CallMedia>(
+    final media = await showCenteredSheet<CallMedia>(
       context: context,
       builder: (ctx) => SafeArea(
         child: Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
@@ -188,7 +188,7 @@ class _CallRow extends ConsumerWidget {
 /// The "New call" sheet: pick one person and ring them. Groups are called from the group's own chat.
 Future<void> showNewCallSheet(BuildContext context, WidgetRef ref) async {
   var media = CallMedia.video;
-  await showModalBottomSheet<void>(
+  await showCenteredSheet<void>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,

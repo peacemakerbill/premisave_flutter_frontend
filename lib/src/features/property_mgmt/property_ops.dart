@@ -527,7 +527,9 @@ class _ReportBlockState extends State<_ReportBlock> {
         if (snap.connectionState != ConnectionState.done) {
           return const SkeletonList(count: 1, height: 90, shrink: true);
         }
-        if (snap.hasError) return ErrorState(error: snap.error!, onRetry: () => setState(() => _future = widget.load()));
+        if (snap.hasError) return ErrorState(error: snap.error!, onRetry: () => setState(() {
+              _future = widget.load();
+            }));
         final data = snap.data ?? <String, dynamic>{};
         return PCard(child: data.isEmpty ? const Text('Nothing to report for this period.') : MapDetail(data));
       },

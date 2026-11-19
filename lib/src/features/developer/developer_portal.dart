@@ -141,7 +141,11 @@ class _OverviewTabState extends ConsumerState<_OverviewTab> {
     final account = widget.account;
     return PageBody(
       maxWidth: 820,
-      onRefresh: () async => setState(() => _future = _load()),
+      onRefresh: () async {
+        setState(() {
+          _future = _load();
+        });
+      },
       children: <Widget>[
         PageTitle('Hello ${account.fullName}', subtitle: 'Build on Premisave payments.'),
         if (!account.emailVerified)
@@ -159,7 +163,9 @@ class _OverviewTabState extends ConsumerState<_OverviewTab> {
           future: _future,
           builder: (context, snap) {
             if (snap.connectionState != ConnectionState.done) return const SkeletonList(count: 2, height: 90, shrink: true);
-            if (snap.hasError) return ErrorState(error: snap.error!, onRetry: () => setState(() => _future = _load()));
+            if (snap.hasError) return ErrorState(error: snap.error!, onRetry: () => setState(() {
+              _future = _load();
+            }));
             final d = snap.data!;
             final sandbox = d.apps.where((a) => pick(a, <String>['environment']).toLowerCase() == 'sandbox').length;
             final pendingTransfers = d.transfers.where((t) => pick(t, <String>['status']) == 'PENDING').length;

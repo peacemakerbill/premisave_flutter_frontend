@@ -131,9 +131,15 @@ class DeveloperRepository {
     return (providers: stringList(data['providers']), clientIds: ids);
   }
 
-  /// Signs in or up with what the provider gave the browser: Google's ID token, Facebook's access token or GitHub's code.
-  Future<String> socialLogin(String provider, String token) async {
-    final res = await _api.post('/api/v1/auth/social/${_id(provider)}', body: <String, dynamic>{'token': token});
+  /// Signs in or up with what the provider gave the app: Google's ID token, Facebook's access token or GitHub's code
+  /// ([token]), or, on Linux and Windows, an authorization code and the redirect address it was issued for ([code] and
+  /// [redirectUri]), which the service trades with the provider.
+  Future<String> socialLogin(String provider, {String? token, String? code, String? redirectUri}) async {
+    final res = await _api.post('/api/v1/auth/social/${_id(provider)}', body: <String, dynamic>{
+      if (token != null) 'token': token,
+      if (code != null) 'code': code,
+      if (redirectUri != null) 'redirectUri': redirectUri,
+    });
     return strOr(unwrapMap(res)['accessToken']);
   }
 

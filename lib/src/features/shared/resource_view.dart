@@ -328,7 +328,9 @@ class _ResourceSectionState extends State<ResourceSection> {
 
   void _reload() {
     if (!mounted) return;
-    setState(() => _future = widget.load());
+    setState(() {
+      _future = widget.load();
+    });
   }
 
   Future<void> _open(Json item) async {
@@ -531,7 +533,9 @@ class _ResourceViewState extends State<ResourceView> {
 
   void _reload() {
     if (!mounted) return;
-    setState(() => _future = widget.load());
+    setState(() {
+      _future = widget.load();
+    });
   }
 
   @override

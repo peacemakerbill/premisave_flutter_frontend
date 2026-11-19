@@ -94,7 +94,7 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
   Future<void> _assign(ApplicationDetail a) async {
     final reviewers = await ref.read(reviewersProvider.future);
     if (!mounted) return;
-    final picked = await showModalBottomSheet<StaffMember>(
+    final picked = await showCenteredSheet<StaffMember>(
       context: context,
       useSafeArea: true,
       builder: (ctx) => ListView(

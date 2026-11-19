@@ -62,7 +62,7 @@ class _GroupInfoScreenState extends ConsumerState<GroupInfoScreen> {
 
   Future<void> _addMembers(MGroup g) async {
     var picked = <String>{};
-    final ok = await showModalBottomSheet<bool>(
+    final ok = await showCenteredSheet<bool>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
@@ -105,7 +105,7 @@ class _GroupInfoScreenState extends ConsumerState<GroupInfoScreen> {
       if (m.id.isNotEmpty) ('profile', Icons.person_outline_rounded, 'View profile', false),
       if (iAmAdmin && !m.isOwner && (iAmOwner || !m.isAdmin)) ('remove', Icons.person_remove_outlined, 'Remove from group', true),
     ];
-    final pick = await showModalBottomSheet<String>(
+    final pick = await showCenteredSheet<String>(
       context: context,
       useSafeArea: true,
       builder: (ctx) => SafeArea(

@@ -11,6 +11,7 @@ import '../../state/providers.dart';
 import '../../state/service_providers.dart';
 import '../shared/service_widgets.dart';
 import 'wallet_forms.dart';
+import 'wallet_money.dart';
 
 /// Payments: the balance of the wallet, the ways to move money, and the latest activity. Talks to the wallet service.
 class WalletScreen extends ConsumerStatefulWidget {
@@ -120,7 +121,9 @@ class _WalletBody extends ConsumerWidget {
               child: PButton(
                 label: 'Deposit',
                 icon: Icons.add_rounded,
-                onPressed: wallet.frozen ? null : () => showFormSheet<void>(context, title: 'Deposit with M-Pesa', child: DepositSheet(wallet: wallet)),
+                onPressed: wallet.frozen
+                    ? null
+                    : () => showMoneyChooser(context, title: 'Deposit', subtitle: 'Choose how you want to add money.', options: MoneyFlows(context, ref).deposits()),
               ),
             ),
             const SizedBox(width: 10),
@@ -129,7 +132,7 @@ class _WalletBody extends ConsumerWidget {
                 label: 'Send',
                 icon: Icons.north_east_rounded,
                 kind: PButtonKind.outline,
-                onPressed: wallet.frozen ? null : () => showFormSheet<void>(context, title: 'Send money', subtitle: 'To another Premisave wallet.', child: TransferSheet(wallet: wallet)),
+                onPressed: wallet.frozen ? null : () => MoneyFlows(context, ref).sends().first.start(),
               ),
             ),
             const SizedBox(width: 10),
@@ -138,7 +141,9 @@ class _WalletBody extends ConsumerWidget {
                 label: 'Withdraw',
                 icon: Icons.south_west_rounded,
                 kind: PButtonKind.outline,
-                onPressed: wallet.frozen ? null : () => showFormSheet<void>(context, title: 'Withdraw', child: WithdrawSheet(wallet: wallet)),
+                onPressed: wallet.frozen
+                    ? null
+                    : () => showMoneyChooser(context, title: 'Withdraw', subtitle: 'Choose where the money goes.', options: MoneyFlows(context, ref).withdrawals()),
               ),
             ),
           ],

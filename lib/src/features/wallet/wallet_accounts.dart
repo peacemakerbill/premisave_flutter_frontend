@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart' show LaunchMode, launchUrl;
 
+import '../../core/network/api_exception.dart';
 import '../../core/utils/money.dart';
 import '../../state/providers.dart';
 import '../../state/service_providers.dart';
@@ -362,17 +363,29 @@ class _ConsentsTabState extends ConsumerState<ConsentsTab> {
 
     return ResourceSection(
       refreshKey: _bump,
-      load: repo.consents,
+      load: () async {
+        try {
+          return await repo.consents();
+        } on ApiException catch (e) {
+          // The wallet service answers 404 when payment requests are not switched on (COMMERCIAL_PREMISAVE_ENABLED).
+          if (e.isNotFound) return <Map<String, dynamic>>[];
+          rethrow;
+        }
+      },
       intro: 'A business can ask to charge your wallet. Nothing is taken until you approve.',
       emptyTitle: 'No requests',
       emptyMessage: 'Payment requests from businesses show here.',
       emptyIcon: Icons.fact_check_outlined,
       row: RowView(
         icon: Icons.fact_check_outlined,
-        title: (m) => pick(m, <String>['merchantName', 'merchantId'], 'Payment request'),
+        title: (m) => pick(m, <String>['merchant', 'merchantName'], 'Payment request'),
         subtitle: (m) => pick(m, <String>['description', 'kind']),
         status: (m) => pick(m, <String>['status']),
-        trailing: (m) => m['amountCents'] is num ? formatMoney((m['amountCents'] as num) / 100) : null,
+        trailing: (m) {
+          final text = pick(m, <String>['amountUsd', 'maxPerChargeUsd']);
+          final value = double.tryParse(text);
+          return value == null ? null : formatMoney(value);
+        },
       ),
       itemActions: <ItemAction>[
         ItemAction(

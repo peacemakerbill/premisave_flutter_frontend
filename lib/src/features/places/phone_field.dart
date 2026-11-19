@@ -164,7 +164,7 @@ class _PhoneFieldState extends State<PhoneField> {
   }
 
   Future<void> _choose() async {
-    final picked = await showModalBottomSheet<Country>(
+    final picked = await showCenteredSheet<Country>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,

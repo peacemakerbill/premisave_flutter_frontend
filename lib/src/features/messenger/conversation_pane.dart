@@ -150,7 +150,7 @@ class _ConversationPaneState extends ConsumerState<ConversationPane> with Widget
     final fileUrl = resolveMedia(m.mediaUrl);
 
     if (m.status == MDelivery.failed && m.isPending) {
-      final pick = await showModalBottomSheet<String>(
+      final pick = await showCenteredSheet<String>(
         context: context,
         useSafeArea: true,
         builder: (ctx) => SafeArea(
@@ -166,7 +166,7 @@ class _ConversationPaneState extends ConsumerState<ConversationPane> with Widget
     }
     if (m.isPending) return;
 
-    final action = await showModalBottomSheet<String>(
+    final action = await showCenteredSheet<String>(
       context: context,
       useSafeArea: true,
       showDragHandle: true,
@@ -266,7 +266,7 @@ class _ConversationPaneState extends ConsumerState<ConversationPane> with Widget
   }
 
   Future<void> _chatMenu(MChat chat) async {
-    final action = await showModalBottomSheet<String>(
+    final action = await showCenteredSheet<String>(
       context: context,
       useSafeArea: true,
       builder: (ctx) => SafeArea(

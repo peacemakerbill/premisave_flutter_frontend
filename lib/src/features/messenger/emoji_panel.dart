@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/brand.dart';
 import '../../core/theme/palette.dart';
+import '../../core/widgets/popup.dart';
 
 /// The six reactions offered first, under a message.
 const List<String> kQuickReactions = <String>['👍', '❤️', '😂', '😮', '😢', '🙏'];
@@ -83,7 +84,7 @@ class EmojiPanel extends StatelessWidget {
 
 /// Opens the full list of emoji in a sheet and returns the one chosen, or null.
 Future<String?> pickEmoji(BuildContext context) {
-  return showModalBottomSheet<String>(
+  return showCenteredSheet<String>(
     context: context,
     useSafeArea: true,
     showDragHandle: true,

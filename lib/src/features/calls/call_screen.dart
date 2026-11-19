@@ -78,7 +78,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
     final call = _s.call;
     // A host of a group call can leave and let it carry on, or end it for everyone.
     if (_s.isManager && call.isGroupLike) {
-      final choice = await showModalBottomSheet<String>(
+      final choice = await showCenteredSheet<String>(
         context: context,
         backgroundColor: CallColors.control,
         shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
@@ -121,7 +121,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
 
   Future<void> _showSheet(_Panel panel) async {
     if (panel == _Panel.chat) _s.setChatOpen(true);
-    await showModalBottomSheet<void>(
+    await showCenteredSheet<void>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
@@ -136,7 +136,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
   }
 
   Future<void> _more() async {
-    final action = await showModalBottomSheet<String>(
+    final action = await showCenteredSheet<String>(
       context: context,
       backgroundColor: CallColors.bg,
       isScrollControlled: true,
@@ -518,7 +518,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
   }
 
   Future<void> _pickReaction() async {
-    final emoji = await showModalBottomSheet<String>(
+    final emoji = await showCenteredSheet<String>(
       context: context,
       backgroundColor: CallColors.control,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),

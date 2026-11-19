@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart' show LaunchMode, launchUrl;
 
+import '../../core/theme/brand.dart';
+import '../../core/theme/palette.dart';
 import '../../core/widgets/widgets.dart';
 import '../../state/providers.dart';
 import '../../state/service_providers.dart';
@@ -16,22 +18,31 @@ const FieldSpec _amountField = FieldSpec('amount', 'Amount', kind: FieldKind.num
 /// A new key per form, so a retry after a dropped connection can never move the money twice.
 String _newReference() => 'app-${DateTime.now().microsecondsSinceEpoch}';
 
-/// Every way to put money in, take money out and settle a payment that was made on a provider's own page.
-class MoneyTab extends ConsumerStatefulWidget {
-  const MoneyTab({super.key});
+/// One way to move money: a title, a line of help, and what to start when it is picked.
+class MoneyOption {
+  const MoneyOption(this.icon, this.title, this.subtitle, this.start);
 
-  @override
-  ConsumerState<MoneyTab> createState() => _MoneyTabState();
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Future<void> Function() start;
 }
 
-class _MoneyTabState extends ConsumerState<MoneyTab> {
+/// Every form behind the wallet's money screens. The Money tab and the Overview buttons both use it, so a deposit or a
+/// withdrawal offers the same gateways wherever it is started.
+class MoneyFlows {
+  MoneyFlows(this.context, this.ref);
+
+  final BuildContext context;
+  final WidgetRef ref;
+
   void _refresh() {
     ref.invalidate(walletProvider);
     ref.invalidate(walletTransactionsProvider);
   }
 
   /// Opens a form, sends it, and then tells the person what the provider answered, with a link when there is one.
-  Future<void> _flow({
+  Future<void> flow({
     required String title,
     String? subtitle,
     required List<FieldSpec> fields,
@@ -50,7 +61,7 @@ class _MoneyTabState extends ConsumerState<MoneyTab> {
         answer = await call(values, reference);
       },
     );
-    if (!ok || !mounted) return;
+    if (!ok || !context.mounted) return;
     _refresh();
     await _showAnswer(title, answer ?? const <String, dynamic>{});
   }
@@ -60,8 +71,8 @@ class _MoneyTabState extends ConsumerState<MoneyTab> {
     final Json data = inner is Map ? Map<String, dynamic>.from(inner) : raw;
     final success = data['success'] != false;
     final message = pick(data, <String>['message'], pick(raw, <String>['message'], success ? 'Done' : 'Not completed'));
-    final ref = pick(data, <String>['transactionId', 'disbursementId', 'id']);
-    final isLink = ref.startsWith('http');
+    final code = pick(data, <String>['transactionId', 'disbursementId', 'id']);
+    final isLink = code.startsWith('http');
     await showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -71,59 +82,52 @@ class _MoneyTabState extends ConsumerState<MoneyTab> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Text(message),
-            if (ref.isNotEmpty && !isLink) ...<Widget>[
+            if (code.isNotEmpty && !isLink) ...<Widget>[
               const SizedBox(height: 12),
               const Text('Reference', style: TextStyle(fontWeight: FontWeight.w700)),
-              SelectableText(ref),
+              SelectableText(code),
               const SizedBox(height: 6),
               const Text('Keep it. You need it to confirm the payment after you have paid.', style: TextStyle(fontSize: 12.5)),
             ],
           ],
         ),
         actions: <Widget>[
-          if (ref.isNotEmpty && !isLink) TextButton(onPressed: () => copyText(ctx, ref, done: 'Reference copied'), child: const Text('Copy reference')),
-          if (isLink) TextButton(onPressed: () => launchUrl(Uri.parse(ref), mode: LaunchMode.externalApplication), child: const Text('Open payment page')),
+          if (code.isNotEmpty && !isLink) TextButton(onPressed: () => copyText(ctx, code, done: 'Reference copied'), child: const Text('Copy reference')),
+          if (isLink) TextButton(onPressed: () => launchUrl(Uri.parse(code), mode: LaunchMode.externalApplication), child: const Text('Open payment page')),
           TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Close')),
         ],
       ),
     );
   }
 
-  Widget _tile(IconData icon, String title, String subtitle, VoidCallback onTap) => MenuTile(icon: icon, title: title, subtitle: subtitle, onTap: onTap);
-
-  @override
-  Widget build(BuildContext context) {
+  List<MoneyOption> deposits() {
     final repo = ref.read(walletRepositoryProvider);
-    return PageBody(
-      maxWidth: 760,
-      children: <Widget>[
-        const SectionHeader('Deposit'),
-        MenuGroup(
-          children: <Widget>[
-            _tile(Icons.phone_iphone_rounded, 'M-Pesa', 'A prompt comes to your phone', () => _flow(
+    return <MoneyOption>[
+
+            MoneyOption(Icons.phone_iphone_rounded, 'M-Pesa', 'A prompt comes to your phone', () => flow(
                   title: 'Deposit with M-Pesa',
                   subtitle: 'Leave the phone empty to use the number saved on your wallet.',
                   fields: const <FieldSpec>[_amountField, FieldSpec('phoneNumber', 'M-Pesa phone', kind: FieldKind.phone, hint: '254712345678')],
                   call: (v, _) => repo.deposit(<String, dynamic>{...v, 'provider': 'MPESA'}),
                 )),
-            _tile(Icons.storefront_outlined, 'M-Pesa till', 'Pay from a business till with Express Checkout', () => _flow(
+            MoneyOption(Icons.storefront_outlined, 'M-Pesa till', 'Pay from a business till with Express Checkout', () => flow(
                   title: 'Deposit from a till',
                   subtitle: 'The prompt goes to the phone registered as the till operator.',
                   fields: const <FieldSpec>[_amountField, FieldSpec('payerTillNumber', 'Till number', required: true)],
                   call: (v, _) => repo.deposit(<String, dynamic>{...v, 'provider': 'MPESA_TILL'}),
                 )),
-            _tile(Icons.credit_card_rounded, 'Card', 'Charges your saved card', () => _flow(
+            MoneyOption(Icons.credit_card_rounded, 'Card', 'Charges your saved card', () => flow(
                   title: 'Deposit by card',
                   subtitle: 'Uses your default saved card. Save one under Linked accounts first.',
                   fields: const <FieldSpec>[_amountField, FieldSpec('currency', 'Currency', hint: 'USD')],
                   call: (v, _) => repo.deposit(<String, dynamic>{...v, 'provider': 'STRIPE'}),
                 )),
-            _tile(Icons.account_balance_outlined, 'PayPal', 'Approve the payment on PayPal', () => _flow(
+            MoneyOption(Icons.account_balance_outlined, 'PayPal', 'Approve the payment on PayPal', () => flow(
                   title: 'Deposit with PayPal',
                   fields: const <FieldSpec>[_amountField, FieldSpec('currency', 'Currency', hint: 'USD')],
                   call: (v, _) => repo.deposit(<String, dynamic>{...v, 'provider': 'PAYPAL'}),
                 )),
-            _tile(Icons.public_rounded, 'Flutterwave', 'Mobile money and cards across Africa', () => _flow(
+            MoneyOption(Icons.public_rounded, 'Flutterwave', 'Mobile money and cards across Africa', () => flow(
                   title: 'Deposit with Flutterwave',
                   fields: const <FieldSpec>[
                     _amountField,
@@ -136,7 +140,7 @@ class _MoneyTabState extends ConsumerState<MoneyTab> {
                   ],
                   call: (v, _) => repo.deposit(<String, dynamic>{...v, 'provider': 'FLUTTERWAVE'}),
                 )),
-            _tile(Icons.currency_bitcoin_rounded, 'Crypto', 'Pay with a cryptocurrency', () => _flow(
+            MoneyOption(Icons.currency_bitcoin_rounded, 'Crypto', 'Pay with a cryptocurrency', () => flow(
                   title: 'Deposit with crypto',
                   fields: const <FieldSpec>[
                     FieldSpec('amount', 'Amount', kind: FieldKind.number, required: true),
@@ -145,12 +149,14 @@ class _MoneyTabState extends ConsumerState<MoneyTab> {
                   ],
                   call: (v, _) => repo.deposit(<String, dynamic>{...v, 'provider': 'NOWPAYMENTS'}),
                 )),
-          ],
-        ),
-        const SectionHeader('Send and withdraw'),
-        MenuGroup(
-          children: <Widget>[
-            _tile(Icons.north_east_rounded, 'Send to another wallet', 'By the email of their wallet', () => _flow(
+    ];
+  }
+
+  List<MoneyOption> sends() {
+    final repo = ref.read(walletRepositoryProvider);
+    return <MoneyOption>[
+
+            MoneyOption(Icons.north_east_rounded, 'Send to another wallet', 'By the email of their wallet', () => flow(
                   title: 'Send money',
                   fields: const <FieldSpec>[
                     FieldSpec('recipientAccountNumber', 'Recipient wallet email', kind: FieldKind.email, required: true),
@@ -160,13 +166,19 @@ class _MoneyTabState extends ConsumerState<MoneyTab> {
                   call: (v, ref) => repo.transferRaw(<String, dynamic>{...v, 'amount': _amount(v['amount']), 'reference': ref}),
                   submit: 'Send',
                 )),
-            _tile(Icons.phone_iphone_rounded, 'Withdraw to M-Pesa', 'To your verified number', () => _flow(
+                ];
+  }
+
+  List<MoneyOption> withdrawals() {
+    final repo = ref.read(walletRepositoryProvider);
+    return <MoneyOption>[
+MoneyOption(Icons.phone_iphone_rounded, 'Withdraw to M-Pesa', 'To your verified number', () => flow(
                   title: 'Withdraw to M-Pesa',
                   fields: const <FieldSpec>[_amountField, FieldSpec('remarks', 'Note')],
                   call: (v, ref) => repo.disburse(<String, dynamic>{...v, 'provider': 'MPESA', 'reference': ref}),
                   submit: 'Withdraw',
                 )),
-            _tile(Icons.storefront_outlined, 'Pay to Pochi la Biashara', 'To any Pochi number', () => _flow(
+            MoneyOption(Icons.storefront_outlined, 'Pay to Pochi la Biashara', 'To any Pochi number', () => flow(
                   title: 'Pay to Pochi la Biashara',
                   fields: const <FieldSpec>[
                     _amountField,
@@ -177,7 +189,7 @@ class _MoneyTabState extends ConsumerState<MoneyTab> {
                   call: (v, ref) => repo.disburseToPochi(<String, dynamic>{...v, 'reference': ref}),
                   submit: 'Pay',
                 )),
-            _tile(Icons.account_balance_outlined, 'Withdraw to PayPal', 'To a PayPal email', () => _flow(
+            MoneyOption(Icons.account_balance_outlined, 'Withdraw to PayPal', 'To a PayPal email', () => flow(
                   title: 'Withdraw to PayPal',
                   fields: const <FieldSpec>[
                     _amountField,
@@ -187,14 +199,14 @@ class _MoneyTabState extends ConsumerState<MoneyTab> {
                   call: (v, ref) => repo.disburse(<String, dynamic>{...v, 'provider': 'PAYPAL', 'reference': ref}),
                   submit: 'Withdraw',
                 )),
-            _tile(Icons.account_balance_rounded, 'Withdraw to my bank', 'Through your linked Stripe account', () => _flow(
+            MoneyOption(Icons.account_balance_rounded, 'Withdraw to my bank', 'Through your linked Stripe account', () => flow(
                   title: 'Withdraw to my bank',
                   subtitle: 'Needs a bank linked under Linked accounts.',
                   fields: const <FieldSpec>[_amountField, FieldSpec('currency', 'Currency', hint: 'USD')],
                   call: (v, ref) => repo.disburse(<String, dynamic>{...v, 'provider': 'STRIPE', 'reference': ref}),
                   submit: 'Withdraw',
                 )),
-            _tile(Icons.public_rounded, 'Withdraw with Flutterwave', 'Bank or mobile money', () => _flow(
+            MoneyOption(Icons.public_rounded, 'Withdraw with Flutterwave', 'Bank or mobile money', () => flow(
                   title: 'Withdraw with Flutterwave',
                   fields: const <FieldSpec>[
                     _amountField,
@@ -207,7 +219,7 @@ class _MoneyTabState extends ConsumerState<MoneyTab> {
                   call: (v, ref) => repo.disburse(<String, dynamic>{...v, 'provider': 'FLUTTERWAVE', 'reference': ref}),
                   submit: 'Withdraw',
                 )),
-            _tile(Icons.currency_bitcoin_rounded, 'Withdraw crypto', 'To a crypto address', () => _flow(
+            MoneyOption(Icons.currency_bitcoin_rounded, 'Withdraw crypto', 'To a crypto address', () => flow(
                   title: 'Withdraw crypto',
                   fields: const <FieldSpec>[
                     FieldSpec('amount', 'Amount', kind: FieldKind.number, required: true),
@@ -218,30 +230,32 @@ class _MoneyTabState extends ConsumerState<MoneyTab> {
                   call: (v, ref) => repo.disburse(<String, dynamic>{...v, 'provider': 'NOWPAYMENTS', 'reference': ref}),
                   submit: 'Withdraw',
                 )),
-          ],
-        ),
-        const SectionHeader('After you have paid'),
-        MenuGroup(
-          children: <Widget>[
-            _tile(Icons.verified_outlined, 'Confirm a card payment', 'With the payment intent id', () => _flow(
+    ];
+  }
+
+  List<MoneyOption> confirmations() {
+    final repo = ref.read(walletRepositoryProvider);
+    return <MoneyOption>[
+
+            MoneyOption(Icons.verified_outlined, 'Confirm a card payment', 'With the payment intent id', () => flow(
                   title: 'Confirm a card payment',
                   fields: const <FieldSpec>[FieldSpec('paymentIntentId', 'Payment intent id', required: true)],
                   call: (v, _) => repo.confirmStripeDeposit(v['paymentIntentId'] as String),
                   submit: 'Confirm',
                 )),
-            _tile(Icons.verified_outlined, 'Confirm a PayPal payment', 'With the order id', () => _flow(
+            MoneyOption(Icons.verified_outlined, 'Confirm a PayPal payment', 'With the order id', () => flow(
                   title: 'Confirm a PayPal payment',
                   fields: const <FieldSpec>[FieldSpec('orderId', 'Order id', required: true)],
                   call: (v, _) => repo.confirmPaypalDeposit(v['orderId'] as String),
                   submit: 'Confirm',
                 )),
-            _tile(Icons.verified_outlined, 'Confirm a Flutterwave payment', 'With the transaction reference', () => _flow(
+            MoneyOption(Icons.verified_outlined, 'Confirm a Flutterwave payment', 'With the transaction reference', () => flow(
                   title: 'Confirm a Flutterwave payment',
                   fields: const <FieldSpec>[FieldSpec('txRef', 'Transaction reference', required: true)],
                   call: (v, _) => repo.confirmFlutterwaveDeposit(v['txRef'] as String),
                   submit: 'Confirm',
                 )),
-            _tile(Icons.mark_email_read_outlined, 'Verify a crypto withdrawal', 'With the code sent to you', () => _flow(
+            MoneyOption(Icons.mark_email_read_outlined, 'Verify a crypto withdrawal', 'With the code sent to you', () => flow(
                   title: 'Verify a crypto withdrawal',
                   fields: const <FieldSpec>[
                     FieldSpec('disbursementId', 'Withdrawal id', required: true),
@@ -250,9 +264,72 @@ class _MoneyTabState extends ConsumerState<MoneyTab> {
                   call: (v, _) => repo.verifyNowPaymentsWithdrawal(v['disbursementId'] as String, v['verificationCode'] as String),
                   submit: 'Verify',
                 )),
-          ],
-        ),
+    ];
+  }
+}
+
+/// Every way to put money in, take money out and settle a payment that was made on a provider's own page.
+class MoneyTab extends ConsumerWidget {
+  const MoneyTab({super.key});
+
+  Widget _group(List<MoneyOption> options) => MenuGroup(
+        children: <Widget>[for (final o in options) MenuTile(icon: o.icon, title: o.title, subtitle: o.subtitle, onTap: o.start)],
+      );
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final flows = MoneyFlows(context, ref);
+    return PageBody(
+      maxWidth: 760,
+      children: <Widget>[
+        const SectionHeader('Deposit'),
+        _group(flows.deposits()),
+        const SectionHeader('Send and withdraw'),
+        _group(<MoneyOption>[...flows.sends(), ...flows.withdrawals()]),
+        const SectionHeader('After you have paid'),
+        _group(flows.confirmations()),
       ],
     );
   }
+}
+
+/// A pop-up in the middle of the screen that lists every gateway for a deposit or a withdrawal. Picking one closes the
+/// pop-up and opens that gateway's form.
+Future<void> showMoneyChooser(BuildContext context, {required String title, String? subtitle, required List<MoneyOption> options}) async {
+  final picked = await showCenteredSheet<MoneyOption>(
+    context: context,
+    builder: (ctx) => Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(title, style: ctx.display(size: 20, weight: FontWeight.w800)),
+          if (subtitle != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(subtitle, style: TextStyle(fontSize: 13.5, height: 1.4, color: ctx.mutedColor)),
+            ),
+          const SizedBox(height: 12),
+          Flexible(
+            child: ListView(
+              shrinkWrap: true,
+              children: <Widget>[
+                for (final o in options)
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(o.icon, color: ctx.pal.accent),
+                    title: Text(o.title, style: const TextStyle(fontWeight: FontWeight.w700)),
+                    subtitle: Text(o.subtitle, style: TextStyle(color: ctx.mutedColor, fontSize: 12.5)),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () => Navigator.of(ctx).pop(o),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+  if (picked != null && context.mounted) await picked.start();
 }

@@ -411,7 +411,8 @@ Being straight about what is not finished saves everyone a debugging session.
 - **Saving a new card needs Stripe's card form**, which the app does not include. Cards can be listed, made the default, removed and charged, and a card saved elsewhere is confirmed with its setup id.
 - **Documents can be previewed only when they are images.** A PDF is not shown inline.
 - **A calendar block can be removed in the same session it was made.** The listing service returns a block's code only when it is created.
-- **Developer social sign in by code flow does not work on Linux and Windows.** Use email and password there, or the web build.
+- **Developer social sign in on Linux and Windows uses the code flow**, so the developer service needs `GOOGLE_CLIENT_SECRET` (Facebook and GitHub already have theirs) and `http://localhost:3000/auth.html` must be registered as a redirect address with each provider. Close the web build first, because both listen on port 3000.
+- **The wallet Requests tab needs `COMMERCIAL_PREMISAVE_ENABLED=true` in the wallet service.** With it off the endpoint answers 404 and the tab shows an empty list.
 - **The email links need the right address.** Set `FRONTEND_URL` in the auth-service and `DEVELOPER_PORTAL_URL` in the developer service to where the app is served (the developer one ends in `/developers`). A production host must send every unknown path to `index.html`.
 - **Money is shown in USD unless a service names another currency.** The wallet and property services both keep money in USD, so amounts that arrive with no currency are shown as USD. Short stay bookings carry their own currency and are shown with it.
 - **Photos for a new listing are limited to 10 MB each and 40 MB in all**, which is the listing service's own limit. Photos picked on a phone are scaled down first.

@@ -249,7 +249,11 @@ class _ListingPhotosPageState extends ConsumerState<ListingPhotosPage> {
     _future = ref.read(listingRepositoryProvider).listingRaw(widget.listingId);
   }
 
-  void _reload() => setState(() => _future = ref.read(listingRepositoryProvider).listingRaw(widget.listingId));
+  void _reload() {
+    setState(() {
+      _future = ref.read(listingRepositoryProvider).listingRaw(widget.listingId);
+    });
+  }
 
   Future<void> _run(Future<void> Function() call, String done) async {
     setState(() => _busy = true);
@@ -568,13 +572,19 @@ class _CurrencyTabState extends ConsumerState<CurrencyTab> {
   Widget build(BuildContext context) {
     return PageBody(
       maxWidth: 720,
-      onRefresh: () async => setState(() => _future = ref.read(listingRepositoryProvider).currencyRates()),
+      onRefresh: () async {
+        setState(() {
+          _future = ref.read(listingRepositoryProvider).currencyRates();
+        });
+      },
       children: <Widget>[
         FutureBuilder<({String base, Map<String, dynamic> rates})>(
           future: _future,
           builder: (context, snap) {
             if (snap.connectionState != ConnectionState.done) return const SkeletonList(count: 3, height: 56, shrink: true);
-            if (snap.hasError) return ErrorState(error: snap.error!, onRetry: () => setState(() => _future = ref.read(listingRepositoryProvider).currencyRates()));
+            if (snap.hasError) return ErrorState(error: snap.error!, onRetry: () => setState(() {
+              _future = ref.read(listingRepositoryProvider).currencyRates();
+            }));
             final data = snap.data!;
             final codes = data.rates.keys.toList()..sort();
             return Padding(

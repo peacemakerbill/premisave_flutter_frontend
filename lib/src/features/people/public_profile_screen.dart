@@ -63,7 +63,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
   }
 
   Future<void> _openReviewSheet(ReviewModel? existing) async {
-    final result = await showModalBottomSheet<_ReviewResult>(
+    final result = await showCenteredSheet<_ReviewResult>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,

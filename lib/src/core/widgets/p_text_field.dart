@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../theme/brand.dart';
 import '../utils/formatters.dart';
+import 'popup.dart';
 
 InputDecoration _decoration(
   BuildContext context, {
@@ -253,7 +254,7 @@ class PSelectField<T> extends StatelessWidget {
   }
 
   Future<void> _open(BuildContext context) async {
-    final result = await showModalBottomSheet<_Picked<T>>(
+    final result = await showCenteredSheet<_Picked<T>>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,

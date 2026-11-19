@@ -44,7 +44,8 @@ class _SocialAuthButtonsState extends ConsumerState<SocialAuthButtons> {
   String? _active;
 
   Future<void> _run(String provider) async {
-    final reason = SocialAuthService.unavailableReason(provider);
+    // A screen with its own sign in (the developer portal) checks what it needs when it runs, using its own client ids.
+    final reason = widget.onSignIn == null ? SocialAuthService.unavailableReason(provider) : null;
     if (reason != null) {
       (widget.onNotice ?? widget.onError)(reason);
       return;

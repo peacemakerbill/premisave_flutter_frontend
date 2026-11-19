@@ -138,4 +138,8 @@ GitHub is the one provider that works on **every** platform with the same flow, 
 | The backend answers 400 or 401 after the provider approved | The backend cannot verify the proof | Check its `.env` for the provider's ID and secret, and read its log |
 | Facebook works for you but not for a friend | The app is in development mode | Add them as testers, or publish the app |
 
+## Developer portal sign in
+
+The developer portal (`/developers`) has its own accounts and its own OAuth clients, so it asks the developer service which client IDs to use (`GET /api/v1/auth/social/providers`) instead of reading them from the app's environment file. It follows the same split as the main sign in: web, Android, iOS and macOS send a token, while Linux and Windows open the browser, catch the code on the local port and send the code together with the redirect address. The developer service trades the code with the provider, so for Google it also needs `GOOGLE_CLIENT_SECRET` (Facebook and GitHub already have secrets there). Register `http://localhost:3000/auth.html`, the same redirect as above, under Authorized redirect URIs for Google and Valid OAuth Redirect URIs for Facebook.
+
 Native sign in on Android, iOS and macOS needs each platform's own registration (Google services files, Facebook native configuration, URL schemes). The Dart side is written and the native files are not in this repository yet. Web, Linux, Windows and GitHub everywhere work with the steps above.

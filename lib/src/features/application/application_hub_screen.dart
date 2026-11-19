@@ -45,7 +45,7 @@ class _ApplicationHubScreenState extends ConsumerState<ApplicationHubScreen> {
   }
 
   Future<void> _start(AppMeta meta) async {
-    final picked = await showModalBottomSheet<_StartChoice>(
+    final picked = await showCenteredSheet<_StartChoice>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,

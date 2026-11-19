@@ -165,6 +165,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       // The developer portal has its own accounts and works signed in or out of Premisave. Its emails link here.
       GoRoute(path: '/developers', pageBuilder: (_, s) => fadePage(s, const DeveloperPortalPage())),
       GoRoute(path: '/developers/verify-email', pageBuilder: (_, s) => fadePage(s, DeveloperVerifyEmailPage(token: s.uri.queryParameters['token']))),
+      // The "secure my account" link in the developer emails. The sign in page has the forgot password button.
+      GoRoute(path: '/developers/forgot-password', redirect: (_, __) => '/developers'),
       GoRoute(path: '/developers/reset-password', pageBuilder: (_, s) => fadePage(s, DeveloperResetPasswordPage(token: s.uri.queryParameters['token']))),
       GoRoute(path: '/verify-email', redirect: (_, s) => '/developers/verify-email${s.uri.hasQuery ? '?${s.uri.query}' : ''}'),
       GoRoute(path: '/security-report', pageBuilder: (_, s) => fadePage(s, SecurityReportScreen(token: s.uri.queryParameters['token']))),

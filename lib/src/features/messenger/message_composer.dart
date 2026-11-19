@@ -244,7 +244,7 @@ class _MessageComposerState extends State<MessageComposer> {
   }
 
   Future<void> _attach() async {
-    final choice = await showModalBottomSheet<String>(
+    final choice = await showCenteredSheet<String>(
       context: context,
       useSafeArea: true,
       showDragHandle: true,

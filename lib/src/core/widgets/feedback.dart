@@ -7,7 +7,14 @@ import 'p_button.dart';
 import 'p_text_field.dart';
 
 void showToast(BuildContext context, String message, {bool error = false}) {
-  final messenger = ScaffoldMessenger.maybeOf(context);
+  // A screen that is closing in the same frame cannot be asked for its messenger, so say nothing rather than throw.
+  if (!context.mounted) return;
+  ScaffoldMessengerState? messenger;
+  try {
+    messenger = ScaffoldMessenger.maybeOf(context);
+  } catch (_) {
+    return;
+  }
   if (messenger == null) return;
   messenger
     ..hideCurrentSnackBar()

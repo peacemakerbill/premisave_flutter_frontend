@@ -121,7 +121,7 @@ class AppearanceButton extends StatelessWidget {
 }
 
 Future<void> showAppearanceSheet(BuildContext context) {
-  return showModalBottomSheet<void>(
+  return showCenteredSheet<void>(
     context: context,
     isScrollControlled: true,
     showDragHandle: false,

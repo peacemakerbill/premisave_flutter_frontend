@@ -82,7 +82,7 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
   }
 
   Future<void> _create() async {
-    final created = await showModalBottomSheet<bool>(
+    final created = await showCenteredSheet<bool>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,

@@ -12,7 +12,7 @@ import 'call_widgets.dart';
 /// Opens the member list to add more people to the running call. They ring straight away.
 Future<void> addPeopleToCall(BuildContext context, CallSession session) async {
   final already = session.call.people.where((p) => p.state == PersonState.joined || p.state == PersonState.invited).map((p) => p.userId).toSet();
-  final picked = await showModalBottomSheet<Set<String>>(
+  final picked = await showCenteredSheet<Set<String>>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,

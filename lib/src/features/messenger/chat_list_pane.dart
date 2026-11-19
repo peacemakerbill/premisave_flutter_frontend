@@ -39,7 +39,7 @@ class _ChatListPaneState extends ConsumerState<ChatListPane> {
   void _openChat(MChat chat) => context.go('/messages/chat/${Uri.encodeComponent(chat.id)}');
 
   Future<void> _chatMenu(MChat chat) async {
-    final action = await showModalBottomSheet<String>(
+    final action = await showCenteredSheet<String>(
       context: context,
       useSafeArea: true,
       builder: (ctx) => SafeArea(
@@ -79,7 +79,7 @@ class _ChatListPaneState extends ConsumerState<ChatListPane> {
   }
 
   Future<void> _newMenu() async {
-    final action = await showModalBottomSheet<String>(
+    final action = await showCenteredSheet<String>(
       context: context,
       useSafeArea: true,
       builder: (ctx) => SafeArea(

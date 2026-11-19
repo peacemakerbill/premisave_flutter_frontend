@@ -69,12 +69,12 @@ Open `/wallet`. A person with no wallet sees **Open my wallet**, which calls `PO
 
 | Tab | What it does | Calls |
 | --- | --- | --- |
-| Overview | Balance, deposit, send, withdraw, payment methods, latest activity | `GET /wallet`, `POST /wallet/deposit`, `POST /wallet/transfer`, `POST /disbursements` |
+| Overview | Balance, deposit, send, withdraw, payment methods, latest activity. Deposit, Send and Withdraw each open a centred chooser that lists every gateway (M-Pesa, M-Pesa till, Pochi, card, PayPal, Flutterwave, crypto, bank and wallet to wallet) and continue into the matching form | `GET /wallet`, `POST /wallet/deposit`, `POST /wallet/transfer`, `POST /disbursements` |
 | Money | Deposit by M-Pesa, M-Pesa till, card, PayPal, Flutterwave and crypto. Send to a wallet. Withdraw to M-Pesa, Pochi, PayPal, bank, Flutterwave and crypto. Confirm a payment made on a provider page | `POST /wallet/deposit`, `POST /wallet/transfer`, `POST /disbursements`, `POST /disbursements/b2pochi`, `POST /disbursements/nowpayments/{id}/verify`, `POST /wallet/deposit/stripe/confirm`, `.../paypal/confirm`, `.../flutterwave/confirm` |
 | History | All activity, deposits, withdrawals, transfers and payments, with status and date filters | `GET /transactions/history`, `/deposits/history`, `/disbursements/history`, `/wallet/transfer/history`, `/payments/history` |
 | Statement | Money in and out for a period | `POST /wallet/statement` |
 | Linked accounts | Saved cards (list, default, remove, confirm), PayPal (link, confirm, disconnect), Flutterwave (link, confirm, unlink), bank through Stripe Connect (link, refresh, unlink) | `GET` and `DELETE /wallet/stripe/cards`, `PUT /wallet/stripe/cards/{id}/default`, `POST /wallet/stripe/setup-intent`, `POST /wallet/stripe/setup-intent/confirm`, `/wallet/paypal/*`, `/wallet/flutterwave/*`, `/wallet/stripe/connect/*` |
-| Requests | Payment requests from businesses: approve, decline, revoke | `GET /wallet/consents`, `POST /wallet/consents/{id}/approve`, `/decline`, `/revoke` |
+| Requests | Payment requests from businesses: approve, decline, revoke. The wallet service serves these only with `COMMERCIAL_PREMISAVE_ENABLED=true`; with it off the endpoint answers 404 and the tab shows an empty list | `GET /wallet/consents`, `POST /wallet/consents/{id}/approve`, `/decline`, `/revoke` |
 | Merchant | Applications to accept payments and merchant numbers | `GET /wallet/merchant-applications`, `GET /wallet/merchant-numbers` |
 | Settings | Freeze and unfreeze, the M-Pesa number, the Pochi number, the PayPal email | `GET /wallet/balance`, `PUT /wallet/freeze`, `/unfreeze`, `/mpesa-phone`, `/pochi-phone`, `/paypal-email` |
 

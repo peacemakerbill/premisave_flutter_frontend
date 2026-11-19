@@ -110,8 +110,10 @@ class SocialAuthService {
       );
 
   /// Google ID token, or null when the person cancelled.
-  static Future<String?> googleIdToken() async {
-    if (_googleViaBrowser) return _googleIdTokenViaBrowser();
+  ///
+  /// [clientId] overrides the app's own Google client, for a service that has an OAuth client of its own (the developer service).
+  static Future<String?> googleIdToken({String? clientId}) async {
+    if (_googleViaBrowser) return _googleIdTokenViaBrowser(clientId);
     try {
       final account = await _googleClient.signIn();
       if (account == null) return null;
@@ -134,15 +136,16 @@ class SocialAuthService {
   /// Google's own sign in page in a browser window. It hands back an ID token in the address
   /// fragment, which is what the backend verifies. The redirect (the same one GitHub uses) must be
   /// listed under Authorized redirect URIs on the Google OAuth client.
-  static Future<String?> _googleIdTokenViaBrowser() async {
+  static Future<String?> _googleIdTokenViaBrowser(String? clientId) async {
+    final id = _pick(clientId, AppConfig.googleClientId);
     final redirect = Uri.tryParse(AppConfig.githubRedirectUri);
-    if (redirect == null || AppConfig.googleClientId.isEmpty) {
+    if (redirect == null || id.isEmpty) {
       throw ApiException(unavailableReason('google') ?? 'Google sign in is not set up.');
     }
     final state = _randomState();
     final nonce = _randomState();
     final authorize = Uri.https('accounts.google.com', '/o/oauth2/v2/auth', <String, String>{
-      'client_id': AppConfig.googleClientId,
+      'client_id': id,
       'redirect_uri': AppConfig.githubRedirectUri,
       'response_type': 'id_token',
       'scope': 'openid email profile',
@@ -185,14 +188,15 @@ class SocialAuthService {
 
   /// Google authorization code for Linux and Windows desktop, or null when the person cancelled.
   /// The code goes to the backend together with [codeRedirectUri].
-  static Future<String?> googleAuthCode() async {
+  static Future<String?> googleAuthCode({String? clientId}) async {
+    final id = _pick(clientId, AppConfig.googleClientId);
     final redirect = Uri.tryParse(AppConfig.githubRedirectUri);
-    if (redirect == null || AppConfig.googleClientId.isEmpty) {
+    if (redirect == null || id.isEmpty) {
       throw ApiException(unavailableReason('google') ?? 'Google sign in is not set up.');
     }
     final state = _randomState();
     final authorize = Uri.https('accounts.google.com', '/o/oauth2/v2/auth', <String, String>{
-      'client_id': AppConfig.googleClientId,
+      'client_id': id,
       'redirect_uri': AppConfig.githubRedirectUri,
       'response_type': 'code',
       'scope': 'openid email profile',
@@ -203,14 +207,15 @@ class SocialAuthService {
   }
 
   /// Facebook authorization code for Linux and Windows desktop, or null when the person cancelled.
-  static Future<String?> facebookAuthCode() async {
+  static Future<String?> facebookAuthCode({String? appId}) async {
+    final id = _pick(appId, AppConfig.facebookAppId);
     final redirect = Uri.tryParse(AppConfig.githubRedirectUri);
-    if (redirect == null || AppConfig.facebookAppId.isEmpty) {
+    if (redirect == null || id.isEmpty) {
       throw ApiException(unavailableReason('facebook') ?? 'Facebook sign in is not set up.');
     }
     final state = _randomState();
     final authorize = Uri.https('www.facebook.com', '/v19.0/dialog/oauth', <String, String>{
-      'client_id': AppConfig.facebookAppId,
+      'client_id': id,
       'redirect_uri': AppConfig.githubRedirectUri,
       'response_type': 'code',
       'scope': 'email,public_profile',
@@ -273,14 +278,15 @@ class SocialAuthService {
   }
 
   /// GitHub authorization code, or null when the person cancelled.
-  static Future<String?> githubCode() async {
+  static Future<String?> githubCode({String? clientId}) async {
+    final id = _pick(clientId, AppConfig.githubClientId);
     final redirect = Uri.tryParse(AppConfig.githubRedirectUri);
-    if (redirect == null || AppConfig.githubClientId.isEmpty) {
+    if (redirect == null || id.isEmpty) {
       throw ApiException('GitHub sign-in is not set up. Add GITHUB_CLIENT_ID and GITHUB_REDIRECT_URI to your environment file.');
     }
     final state = _randomState();
     final authorize = Uri.https('github.com', '/login/oauth/authorize', <String, String>{
-      'client_id': AppConfig.githubClientId,
+      'client_id': id,
       'redirect_uri': AppConfig.githubRedirectUri,
       'scope': 'read:user user:email',
       'state': state,
@@ -330,6 +336,9 @@ class SocialAuthService {
       );
     }
   }
+
+  /// The client id a service supplied, or the app's own when it supplied none.
+  static String _pick(String? given, String fallback) => given != null && given.trim().isNotEmpty ? given.trim() : fallback;
 
   static bool _cancelled(String? text) => text != null && text.toUpperCase().contains('CANCEL');
 

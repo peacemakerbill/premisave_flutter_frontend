@@ -110,7 +110,7 @@ Future<String?> showFolderPicker(
   String? start,
   String? floor,
 }) {
-  return showModalBottomSheet<String>(
+  return showCenteredSheet<String>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
